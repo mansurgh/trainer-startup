@@ -9,12 +9,22 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilledButton(
       onPressed: onPressed,
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        if (icon != null) ...[
-          Icon(icon), const SizedBox(width: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon), const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+            ),
+          ),
         ],
-        Text(label),
-      ]),
+      ),
     );
   }
 }

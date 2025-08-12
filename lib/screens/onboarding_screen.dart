@@ -32,9 +32,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: 24),
               Form(key: _form, child: Column(children: [
                 Row(children: [
-                  Expanded(child: DropdownButtonFormField(
+                  Expanded(child: DropdownButtonFormField<String>(
                     value: gender,
-                    decoration: const InputDecoration(labelText: 'Пол'),
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Пол', isDense: true),
                     items: const [
                       DropdownMenuItem(value: 'm', child: Text('Мужской')),
                       DropdownMenuItem(value: 'f', child: Text('Женский')),
@@ -51,9 +52,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   Expanded(child: TextFormField(initialValue: '$weight', decoration: const InputDecoration(labelText: 'Вес (кг)'), keyboardType: const TextInputType.numberWithOptions(decimal: true), onSaved: (v)=>weight=double.tryParse(v??'70')??70)),
                 ]),
                 const SizedBox(height: 12),
-                DropdownButtonFormField(
+                DropdownButtonFormField<String>(
                   value: goal,
-                  decoration: const InputDecoration(labelText: 'Цель тренинга'),
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Цель тренинга', isDense: true),
                   items: const [
                     DropdownMenuItem(value: 'muscle_gain', child: Text('Набор мышц')),
                     DropdownMenuItem(value: 'fat_loss', child: Text('Снижение жира')),

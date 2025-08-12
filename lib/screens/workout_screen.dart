@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
 import '../state/app_providers.dart';
+import 'video_coach_screen.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
   const WorkoutScreen({super.key});
@@ -46,16 +47,62 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         body: Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           child: Column(children: [
-            Text(work ? 'РАБОТА' : 'ОТДЫХ', style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w900, color: work ? scheme.primary : Colors.tealAccent)),
-            const SizedBox(height: 8),
-            Text('Раунд $round / $rounds', style: const TextStyle(color: Colors.white70)),
-            const SizedBox(height: 24),
-            Expanded(child: Center(child: _Ring(progress: progress, label: _fmt(sec)))),
-            Row(children: [
-              Expanded(child: FilledButton.tonal(onPressed: (){ setState(()=>{ work=true, sec=30, round=1, running=false }); t?.cancel(); }, child: const Text('Сброс'))),
-              const SizedBox(width: 12),
-              Expanded(child: FilledButton(onPressed: _toggle, child: Text(running ? 'Пауза' : 'Старт'))),
-            ]),
+              Text(work ? 'РАБОТА' : 'ОТДЫХ', style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w900, color: work ? scheme.primary : Colors.tealAccent)),
+              const SizedBox(height: 8),
+              Text('Раунд $round / $rounds', style: const TextStyle(color: Colors.white70)),
+              const SizedBox(height: 24),
+              GlassCard(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // превью gif
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.asset(
+                        'assets/gifs/squat.gif',
+                        height: 90,
+                        width: 90,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 90,
+                          width: 90,
+                          alignment: Alignment.center,
+                          color: Colors.white.withOpacity(0.08),
+                          child: const Icon(Icons.fitness_center, color: Colors.white70),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Присед со штангой', style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 6),
+                          Text('Подсказка: корпус стабилен, колени по траектории носков.',
+                              style: const TextStyle(color: Colors.white70)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.tonal(
+                      onPressed: () async {
+                        // быстрая навигация в видео‑коуч
+                        if (!mounted) return;
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VideoCoachScreen()));
+                      },
+                      child: const Icon(Icons.videocam_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(child: Center(child: _Ring(progress: progress, label: _fmt(sec)))),
+              Row(children: [
+                Expanded(child: FilledButton.tonal(onPressed: (){ setState(()=>{ work=true, sec=30, round=1, running=false }); t?.cancel(); }, child: const Text('Сброс'))),
+                const SizedBox(width: 12),
+                Expanded(child: FilledButton(onPressed: _toggle, child: Text(running ? 'Пауза' : 'Старт'))),
+              ]),
           ]),
         ),
       ),
