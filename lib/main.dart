@@ -5,17 +5,17 @@ import 'screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: PulseFitProApp()));
+  runApp(const ProviderScope(child: TrainerApp()));
 }
 
-class PulseFitProApp extends StatelessWidget {
-  const PulseFitProApp({super.key});
+class TrainerApp extends StatelessWidget {
+  const TrainerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'PulseFit Pro',
+      title: 'trainer.',
       theme: buildTheme(),
       home: const OnboardingScreen(),
     );

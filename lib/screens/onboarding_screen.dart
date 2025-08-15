@@ -26,7 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('PulseFit Pro', style: Theme.of(context).textTheme.displaySmall!.copyWith(fontWeight: FontWeight.w900)),
+              Text('trainer.', style: Theme.of(context).textTheme.displaySmall!.copyWith(fontWeight: FontWeight.w900)),
               const SizedBox(height: 8),
               Text('Создадим профиль и первую программу под твою цель.', style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70)),
               const SizedBox(height: 24),

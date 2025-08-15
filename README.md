@@ -1,6 +1,6 @@
-# pulsefit_pro
+# trainer
 
-A new Flutter project.
+A Flutter fitness project.
 
 ## Getting Started
 
