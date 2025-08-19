@@ -1,84 +1,131 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
-import '../core/widgets.dart';
-import '../models/user_model.dart';
-import '../state/app_providers.dart';
-import 'home_screen.dart';
+import 'body_scan_screen.dart';
 
-class OnboardingScreen extends ConsumerStatefulWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
   @override
-  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  final _form = GlobalKey<FormState>();
-  String gender = 'm';
-  int age = 20; int height = 175; double weight = 70; String goal = 'muscle_gain';
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  final _name = TextEditingController();
+  final _age = TextEditingController();
+  final _height = TextEditingController();
+  final _weight = TextEditingController();
+
+  String? _gender; // 'm'|'f'
+  String? _goal;   // 'fat_loss'|'muscle_gain'|'fitness'
+
+  bool get _canContinue =>
+      _name.text.trim().isNotEmpty &&
+      _age.text.trim().isNotEmpty &&
+      _height.text.trim().isNotEmpty &&
+      _weight.text.trim().isNotEmpty &&
+      _gender != null &&
+      _goal != null;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [_name, _age, _height, _weight]) {
+      c.addListener(() => setState(() {}));
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_name, _age, _height, _weight]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('trainer.', style: Theme.of(context).textTheme.displaySmall!.copyWith(fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              Text('Создадим профиль и первую программу под твою цель.', style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.white70)),
-              const SizedBox(height: 24),
-              Form(key: _form, child: Column(children: [
-                Row(children: [
-                  Expanded(child: DropdownButtonFormField<String>(
-                    value: gender,
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Пол', isDense: true),
-                    items: const [
-                      DropdownMenuItem(value: 'm', child: Text('Мужской')),
-                      DropdownMenuItem(value: 'f', child: Text('Женский')),
-                      DropdownMenuItem(value: 'o', child: Text('Другое')),
-                    ], onChanged: (v){ if (v!=null) setState(()=>gender=v); },
-                  )),
-                  const SizedBox(width: 12),
-                  Expanded(child: TextFormField(initialValue: '$age', decoration: const InputDecoration(labelText: 'Возраст'), keyboardType: TextInputType.number, onSaved: (v)=>age=int.tryParse(v??'20')??20)),
-                ]),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(child: TextFormField(initialValue: '$height', decoration: const InputDecoration(labelText: 'Рост (см)'), keyboardType: TextInputType.number, onSaved: (v)=>height=int.tryParse(v??'175')??175)),
-                  const SizedBox(width: 12),
-                  Expanded(child: TextFormField(initialValue: '$weight', decoration: const InputDecoration(labelText: 'Вес (кг)'), keyboardType: const TextInputType.numberWithOptions(decimal: true), onSaved: (v)=>weight=double.tryParse(v??'70')??70)),
-                ]),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: goal,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Цель тренинга', isDense: true),
-                  items: const [
-                    DropdownMenuItem(value: 'muscle_gain', child: Text('Набор мышц')),
-                    DropdownMenuItem(value: 'fat_loss', child: Text('Снижение жира')),
-                    DropdownMenuItem(value: 'endurance', child: Text('Выносливость')),
-                  ], onChanged: (v){ if(v!=null) setState(()=>goal=v); },
-                ),
-                const SizedBox(height: 24),
-                PrimaryButton(
-                  label: 'Создать профиль', icon: Icons.rocket_launch_rounded,
-                  onPressed: () async {
-                    _form.currentState?.save();
-                    final user = UserModel(id: 'u-1', gender: gender, age: age, height: height, weight: weight, goal: goal);
-                    ref.read(userProvider.notifier).set(user);
+        appBar: AppBar(title: const Text('Профиль')),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            TextField(
+              controller: _name,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(labelText: 'Имя'),
+            ),
+            const SizedBox(height: 12),
 
-                    await ref.read(planProvider.notifier).loadForToday(user.id);
-                    if (context.mounted) {
-                      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
-                    }
-                  },
+            // Пол — выпадающий список
+            DropdownButtonFormField<String>(
+              value: _gender,
+              decoration: const InputDecoration(labelText: 'Пол'),
+              items: const [
+                DropdownMenuItem(value: 'm', child: Text('Мужской')),
+                DropdownMenuItem(value: 'f', child: Text('Женский')),
+              ],
+              onChanged: (v) => setState(() => _gender = v),
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _age,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(labelText: 'Возраст'),
+                  ),
                 ),
-              ])),
-            ]),
-          ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _height,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(labelText: 'Рост (см)'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _weight,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(labelText: 'Вес (кг)'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Цель — выпадающий список
+            DropdownButtonFormField<String>(
+              value: _goal,
+              decoration: const InputDecoration(labelText: 'Цель'),
+              items: const [
+                DropdownMenuItem(value: 'fat_loss', child: Text('Похудение')),
+                DropdownMenuItem(value: 'muscle_gain', child: Text('Набор массы')),
+                DropdownMenuItem(value: 'fitness', child: Text('Поддержание формы')),
+              ],
+              onChanged: (v) => setState(() => _goal = v),
+            ),
+
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: _canContinue
+                  ? () async {
+                      // открываем загрузку фото тела; закрытие — крестиком
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const BodyScanScreen()),
+                      );
+                    }
+                  : null,
+              child: const Text('Продолжить'),
+            ),
+          ],
         ),
       ),
     );

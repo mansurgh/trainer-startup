@@ -1,38 +1,43 @@
 class UserModel {
   final String id;
-  final String gender; // m/f/other
-  final int age;
-  final int height; // cm
-  final double weight; // kg
-  final String goal; // e.g. "muscle_gain", "fat_loss"
-  final bool isPro;
-  final int requestsToday;
-  final DateTime? lastRequestDate;
+  final String? name;           // <= ИМЯ
+  final String? gender;         // m/f
+  final int? age;
+  final int? height;            // cm
+  final double? weight;         // kg
+  final String? goal;           // fat_loss | muscle_gain | fitness
+  final String? bodyImagePath;  // локальный путь к фото
 
   const UserModel({
     required this.id,
-    required this.gender,
-    required this.age,
-    required this.height,
-    required this.weight,
-    required this.goal,
-    this.isPro = false,
-    this.requestsToday = 0,
-    this.lastRequestDate,
+    this.name,
+    this.gender,
+    this.age,
+    this.height,
+    this.weight,
+    this.goal,
+    this.bodyImagePath,
   });
 
   UserModel copyWith({
-    String? gender, int? age, int? height, double? weight, String? goal,
-    bool? isPro, int? requestsToday, DateTime? lastRequestDate,
-  }) => UserModel(
-    id: id,
-    gender: gender ?? this.gender,
-    age: age ?? this.age,
-    height: height ?? this.height,
-    weight: weight ?? this.weight,
-    goal: goal ?? this.goal,
-    isPro: isPro ?? this.isPro,
-    requestsToday: requestsToday ?? this.requestsToday,
-    lastRequestDate: lastRequestDate ?? this.lastRequestDate,
-  );
+    String? id,
+    String? name,
+    String? gender,
+    int? age,
+    int? height,
+    double? weight,
+    String? goal,
+    String? bodyImagePath,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      gender: gender ?? this.gender,
+      age: age ?? this.age,
+      height: height ?? this.height,
+      weight: weight ?? this.weight,
+      goal: goal ?? this.goal,
+      bodyImagePath: bodyImagePath ?? this.bodyImagePath,
+    );
+  }
 }

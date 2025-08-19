@@ -1,32 +1,50 @@
 import 'package:flutter/material.dart';
-import '../core/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'tabs/training_tab.dart';
 import 'tabs/nutrition_tab.dart';
 import 'tabs/profile_tab.dart';
+import '../core/theme.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
+
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int index = 0;
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _index = 0;
+
+  // Сделали const, чтобы убрать предупреждение анализатора (B)
+  final pages = const [
+    TrainingTab(),
+    NutritionTab(),
+    ProfileTab(),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final pages = const [TrainingTab(), NutritionTab(), ProfileTab()];
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: SafeArea(child: pages[index]),
+        body: SafeArea(child: pages[_index]),
         bottomNavigationBar: NavigationBar(
-          height: 72,
-          selectedIndex: index,
-          onDestinationSelected: (i) => setState(() => index = i),
+          selectedIndex: _index,
+          onDestinationSelected: (i) => setState(() => _index = i),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.fitness_center_rounded), label: 'Тренировка'),
-            NavigationDestination(icon: Icon(Icons.restaurant_rounded), label: 'Питание'),
-            NavigationDestination(icon: Icon(Icons.person_rounded), label: 'Профиль'),
+            NavigationDestination(
+              icon: Icon(Icons.fitness_center_rounded),
+              label: 'Тренировка',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.restaurant_menu_rounded),
+              label: 'Питание',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_rounded),
+              label: 'Профиль',
+            ),
           ],
         ),
       ),

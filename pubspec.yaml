@@ -14,16 +14,34 @@ dependencies:
   flutter_animate: ^4.5.0
   image_picker: ^1.1.2
   intl: ^0.19.0
-
-  cupertino_icons: ^1.0.8
+  window_manager: ^0.3.9 # опционально, чтобы на десктопе заголовок окна был "trainer."
+  http: ^1.2.2
+  cached_network_image: ^3.4.1
+  flutter_dotenv: ^5.1.0
+  video_player: ^2.8.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_native_splash: ^2.4.6 # опционально, нативный splash
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
-    - assets/gifs/
+    - .env
+    #- assets/placeholder/profile.png
+    - assets/placeholder/profile.jpg
+    - assets/gifs/motivation/m1.gif
+    - assets/gifs/motivation/m2.gif
+   # - assets/gifs/exercises/squat.gif
+
+flutter_native_splash:
+  color: "#0B0B0F"
+  image: assets/logo/trainer_mark.png
+  android_12:
+    color: "#0B0B0F"
+    image: assets/logo/trainer_mark.png
+  web: false
+
+

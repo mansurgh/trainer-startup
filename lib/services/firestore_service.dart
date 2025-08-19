@@ -1,27 +1,90 @@
+import 'dart:collection';
+import 'package:flutter/foundation.dart';
 import '../models/message_model.dart';
 import '../models/daily_plan_model.dart';
 
-/// Simple in-memory store; swap with Firebase later.
+/// Простая in‑memory заглушка Firestore.
+/// Сообщения + дневные планы с минимальным CRUD.
+/// Добавлены методы getPlans / upsertPlan, чтобы не падали провайдеры.
 class FirestoreService {
-  final _messages = <String, List<MessageModel>>{}; // userId -> messages
-  final _plans = <String, List<DailyPlanModel>>{};  // userId -> plans
+  // Сообщения (messageId -> MessageModel)
+  final _messages = SplayTreeMap<String, MessageModel>();
+  // Планы (ключ "userId|yyyy-mm-dd")
+  final _plans = <String, DailyPlanModel>{};
 
-  Stream<List<MessageModel>> watchMessages(String userId) async* {
-    yield _messages[userId] ?? [];
+  // ===== Messages =====
+  Future<void> saveMessage(MessageModel m) async {
+    _messages[m.id] = m;
   }
 
-  Future<void> addMessage(MessageModel m) async {
-    final list = _messages.putIfAbsent(m.userId, () => []);
-    list.add(m);
+  Future<List<MessageModel>> getMessages(String userId) async {
+    final res = _messages.values
+        .where((e) => e.userId == userId)
+        .toList()
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return res;
   }
 
+  Future<void> deleteMessage(String id) async {
+    if (_messages[id] != null) {
+      _messages.remove(id);
+    }
+  }
+
+  // ===== Plans =====
+  /// Вернуть ВСЕ планы пользователя (отсортированы по дате по возрастанию)
   Future<List<DailyPlanModel>> getPlans(String userId) async {
-    return _plans[userId] ?? [];
+    final res = _plans.values
+        .where((p) => p.userId == userId)
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    return res;
   }
 
-  Future<void> upsertPlan(DailyPlanModel p) async {
-    final list = _plans.putIfAbsent(p.userId, () => []);
-    final idx = list.indexWhere((e) => e.date.day == p.date.day && e.date.month == p.date.month && e.date.year == p.date.year);
-    if (idx >= 0) list[idx] = p; else list.add(p);
+  /// Получить план на конкретную дату
+  Future<DailyPlanModel?> getPlanFor(String userId, DateTime date) async {
+    final key = _planKey(userId, date);
+    return _plans[key];
   }
+
+  /// Создать/обновить план (upsert)
+  Future<void> upsertPlan(DailyPlanModel plan) async {
+    final key = _planKey(plan.userId, plan.date);
+    _plans[key] = plan;
+  }
+
+  /// Сохранить план (совместимость со старым кодом)
+  Future<void> savePlan(DailyPlanModel plan) => upsertPlan(plan);
+
+  /// Пометить тренировку выполненной на сегодня
+  Future<void> markTodayWorkoutDone(String userId) async {
+    final now = DateTime.now();
+    final key = _planKey(userId, now);
+    final current = _plans[key];
+    if (current != null) {
+      _plans[key] = current.copyWith(workoutDone: true);
+    } else {
+      _plans[key] = DailyPlanModel(
+        id: '${userId}_${_ymd(now)}',
+        userId: userId,
+        date: DateTime(now.year, now.month, now.day),
+        workoutDone: true,
+        proteinLeft: 0,
+        supplementsLeft: const [],
+        targetProtein: 0,
+        targetSupplements: const [],
+      );
+    }
+  }
+
+  // ===== Utils =====
+  @visibleForTesting
+  void clearAll() {
+    _messages.clear();
+    _plans.clear();
+  }
+
+  String _planKey(String userId, DateTime date) => '$userId|${_ymd(date)}';
+  String _ymd(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
