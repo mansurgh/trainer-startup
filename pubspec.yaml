@@ -17,8 +17,10 @@ dependencies:
   window_manager: ^0.3.9 # опционально, чтобы на десктопе заголовок окна был "trainer."
   http: ^1.2.2
   cached_network_image: ^3.4.1
-  flutter_dotenv: ^5.1.0
   video_player: ^2.8.6
+  chewie: ^1.7.5
+  # ← вернули, чтобы не править твои файлы, где уже есть import 'flutter_dotenv'
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -29,11 +31,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - .env
     #- assets/placeholder/profile.png
     - assets/placeholder/profile.jpg
     - assets/gifs/motivation/m1.gif
     - assets/gifs/motivation/m2.gif
+    - assets/logo/trainer_mark.png
    # - assets/gifs/exercises/squat.gif
 
 flutter_native_splash:
@@ -43,5 +45,3 @@ flutter_native_splash:
     color: "#0B0B0F"
     image: assets/logo/trainer_mark.png
   web: false
-
-

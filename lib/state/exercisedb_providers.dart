@@ -1,17 +1,30 @@
+// lib/state/exercisedb_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/exercisedb_service.dart';
+import '../models/exercise.dart';
+import '../services/exercise_db_service.dart';
 
-final exerciseDbServiceProvider = Provider<ExerciseDbService>((ref) => ExerciseDbService());
+/// Ключ берём из --dart-define=RAPIDAPI_KEY=...
+const _rapidApiKey =
+    String.fromEnvironment('RAPIDAPI_KEY', defaultValue: '');
 
-// Вернёт imageUrl (PNG/GIF) по названию упражнения
-final exerciseImageByNameProvider = FutureProvider.family<String?, String>((ref, name) async {
-  final svc = ref.read(exerciseDbServiceProvider);
-  final list = await svc.searchByName(name, limit: 1);
-  if (list.isEmpty) return null;
-  return list.first.imageUrl;
+final exerciseDbServiceProvider = Provider<ExerciseDbService>((ref) {
+  return ExerciseDbService(apiKey: _rapidApiKey);
 });
 
-// Пример: присед
-final squatImageProvider = FutureProvider<String?>((ref) async {
-  return ref.watch(exerciseImageByNameProvider('barbell squat').future);
+/// Упражнение по имени + сразу формируем gifUrl через /image (stream)
+final exerciseByNameProvider =
+    FutureProvider.family<Exercise?, String>((ref, name) async {
+  final api = ref.read(exerciseDbServiceProvider);
+  final ex = await api.getByName(name);
+  if (ex == null) return null;
+
+  if ((ex.gifUrl == null || ex.gifUrl!.isEmpty) && ex.id.isNotEmpty) {
+    final gif = api.buildGifUrl(
+      exerciseId: ex.id,
+      resolution: '180',
+      keyInQuery: true, // ключ в query — удобно для прямой подстановки
+    );
+    return ex.copyWith(gifUrl: gif);
+  }
+  return ex;
 });
