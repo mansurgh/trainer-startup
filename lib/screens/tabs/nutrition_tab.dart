@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,7 +17,8 @@ class NutritionTab extends ConsumerStatefulWidget {
 
 class _NutritionTabState extends ConsumerState<NutritionTab> {
   Future<void> _chooseFridgePhoto() async {
-    final img = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final picker = ImagePicker();
+    final img = await picker.pickImage(source: ImageSource.gallery);
     if (img == null) return;
     ref.read(fridgeProvider.notifier).setImage(img.path);
     if (!mounted) return;
@@ -40,18 +42,23 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
         ];
         var suggested = <String>['Оливковое масло', 'Овсянка', 'Йогурт греческий'];
 
+        // выбранные (галочки) для FilterChip — стартуем со всех включенных
+        var selectedProducts = suggested.toSet();
+
         void addToPlan(MealItem r) {
           final meals = ref.read(mealScheduleProvider);
           int target = meals.indexWhere((m) => m.name.toLowerCase().contains('обед'));
           if (target < 0) target = 0;
           ref.read(mealScheduleProvider.notifier).addItem(target, r);
-          setSheet(() => recipes = recipes.where((e) => e != r).toList());
+          // удаляем из предложений НАДЁЖНО — по имени, а не по ссылке на объект
+          setSheet(() => recipes.removeWhere((e) => e.name == r.name));
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Добавлено в "${meals[target].name}"')),
           );
         }
 
         void markSuggested(String p) {
+          // если нужно именно убрать из списка целиком:
           setSheet(() => suggested = suggested.where((e) => e != p).toList());
         }
 
@@ -72,11 +79,13 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                   const SizedBox(height: 10),
                   ...recipes.map((r) => ListTile(
                         dense: true,
-                        title: Text('${r.name} • ${r.grams} г • ${r.kcal} ккал'),
-                        trailing: FilledButton.tonal(
-                          onPressed: () => addToPlan(r),
-                          child: const Text('В рацион'),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
                         ),
+                        title: Text(r.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        subtitle: Text('${r.grams} г • ${r.kcal} ккал', style: const TextStyle(color: Colors.white70)),
+                        trailing: FilledButton.tonal(onPressed: () => addToPlan(r), child: const Text('В рацион')),
                       )),
                   if (recipes.isEmpty)
                     const Padding(
@@ -91,16 +100,22 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: suggested
-                        .map((p) => InputChip(
-                              label: Text(p),
-                              selected: false,
-                              onPressed: () => markSuggested(p),
-                              deleteIcon: const Icon(Icons.check_rounded),
-                              onDeleted: () => markSuggested(p),
-                              backgroundColor: Colors.white.withValues(alpha: 0.06),
-                            ))
-                        .toList(),
+                    children: suggested.map((p) {
+                      final selected = selectedProducts.contains(p);
+                      return FilterChip(
+                        label: Text(p),
+                        selected: selected,
+                        onSelected: (val) {
+                          setSheet(() {
+                            if (val) {
+                              selectedProducts.add(p);
+                            } else {
+                              selectedProducts.remove(p);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
                   ),
                   if (suggested.isEmpty)
                     const Padding(
@@ -110,8 +125,8 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                   const SizedBox(height: 10),
                   FilledButton(
                     onPressed: () => ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('Партнёрский магазин (заглушка)'))),
-                    child: const Text('Купить выбранное'),
+                        .showSnackBar(const SnackBar(content: Text('Партнёрский магазин — скоро ✨'))),
+                    child: const Text('Купить всё выбранное'),
                   ),
                 ],
               ),
@@ -148,7 +163,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
             ),
             const SizedBox(height: 12),
 
-            // краткий план на сегодня
+            // краткий план на сегодня — ТАЙМЛАЙН
             Card(
               color: Colors.white.withValues(alpha: 0.04),
               elevation: 0,
@@ -168,14 +183,41 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    ...meals.take(3).map((m) => Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '• ${m.name}: ${m.items.map((e) => e.name).take(2).join(', ')}'
-                            '${m.items.length > 2 ? '…' : ''}',
-                            style: const TextStyle(color: Colors.white70),
+                    ...meals.take(3).map((m) {
+                      final items = m.items.map((e) => e.name).join(', ');
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Column(
+                            children: [
+                              const SizedBox(height: 6),
+                              Container(width: 14, height: 14, decoration: const BoxDecoration(color: Color(0xFFB7A6FF), shape: BoxShape.circle)),
+                              Container(width: 2, height: 48, color: Colors.white.withValues(alpha: 0.18)),
+                            ],
                           ),
-                        )),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(m.name, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                  const SizedBox(height: 6),
+                                  Text(items.isEmpty ? '—' : items, style: const TextStyle(color: Colors.white70)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ],
                 ),
               ),
@@ -189,41 +231,52 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
               child: const Padding(
                 padding: EdgeInsets.all(16),
-                child: Text(
-                  'Фото холодильника — рацион, рецепты и советы.\n'
-                  'План на сегодня — редактируй вручную или генерируй по фото.',
-                  style: TextStyle(color: Colors.white70),
-                ),
+                child: Text('Загружай фото холодильника — подскажем, что докупить и что приготовить.'),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Фото холодильника: до/после
-            fridge.imagePath == null
-                ? FilledButton(
-                    onPressed: _chooseFridgePhoto,
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [Icon(Icons.image_search_rounded), SizedBox(width: 8), Text('Фото холодильника')],
-                    ),
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: _analyzeFridge,
-                          child: const Text('Анализ текущей фотки'),
-                        ),
+            // фото холодильника
+            if (fridge.imagePath == null)
+              OutlinedButton.icon(
+                onPressed: _chooseFridgePhoto,
+                icon: const Icon(Icons.add_a_photo_rounded),
+                label: const Text('Загрузить фото холодильника'),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Image.file(
+                        // ignore: use_build_context_synchronously
+                        // (мы уже проверяем mounted выше)
+                        File(fridge.imagePath!),
+                        height: 160,
+                        fit: BoxFit.cover,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton.tonal(
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        FilledButton(
+                          onPressed: _analyzeFridge,
+                          child: const Text('Предложить рецепты'),
+                        ),
+                        const SizedBox(height: 8),
+                        FilledButton.tonal(
                           onPressed: _chooseFridgePhoto,
                           child: const Text('Изменить фото'),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                ],
+              ),
           ],
         ),
       ),

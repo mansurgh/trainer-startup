@@ -1,115 +1,170 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MealScheduleScreen extends StatefulWidget {
+import '../core/theme.dart';
+import '../state/meal_schedule_state.dart';
+
+class MealScheduleScreen extends ConsumerWidget {
   const MealScheduleScreen({super.key});
+
   @override
-  State<MealScheduleScreen> createState() => _MealScheduleScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final meals = ref.watch(mealScheduleProvider);
+    return GradientScaffold(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Полный рацион'),
+          actions: [
+            IconButton(
+              onPressed: () {
+                ref.read(mealScheduleProvider.notifier).addMeal('Новый блок');
+              },
+              icon: const Icon(Icons.add_rounded),
+              tooltip: 'Добавить блок',
+            ),
+          ],
+        ),
+        body: ReorderableListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          itemCount: meals.length,
+          buildDefaultDragHandles: false, // перетаскиваем за любую область карточки
+          itemBuilder: (context, index) {
+            final block = meals[index];
+            return ReorderableDragStartListener(
+              key: ValueKey('meal-$index'),
+              index: index,
+              child: _MealBlockCard(index: index),
+            );
+          },
+          onReorder: (oldIndex, newIndex) {
+            ref.read(mealScheduleProvider.notifier).reorderMeals(oldIndex, newIndex);
+          },
+          proxyDecorator: (child, index, animation) {
+            return Material(
+              color: Colors.transparent,
+              child: Transform.scale(scale: 1.02, child: child),
+            );
+          },
+        ),
+      ),
+    );
+  }
 }
 
-class _MealScheduleScreenState extends State<MealScheduleScreen> {
-  final List<String> meals = ['Завтрак', 'Обед', 'Ужин'];
-  final Map<String, List<String>> plan = {
-    'Завтрак': [],
-    'Обед': [],
-    'Ужин': [],
-  };
-
-  // предложенные позиции
-  final List<String> suggested = [
-    'Овсянка', 'Яйца', 'Курица с рисом', 'Творог', 'Салат'
-  ];
-  final Set<String> chosen = {};
-
-  void _addChosenTo(String meal) {
-    setState(() {
-      plan[meal]!.addAll(chosen);
-      // удалить из предложенных после добавления
-      suggested.removeWhere((e) => chosen.contains(e));
-      chosen.clear();
-    });
-  }
+class _MealBlockCard extends ConsumerWidget {
+  final int index;
+  const _MealBlockCard({required this.index});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Расписание питания'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Секция предложенных
-          if (suggested.isNotEmpty) ...[
-            const Text('Предложенные продукты', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: suggested.map((name) {
-                final selected = chosen.contains(name);
-                return FilterChip(
-                  label: Text(name),
-                  selected: selected,
-                  onSelected: (_) {
-                    setState(() {
-                      if (selected) {
-                        chosen.remove(name);
-                      } else {
-                        chosen.add(name);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-          ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final meals = ref.watch(mealScheduleProvider);
+    final block = meals[index];
+    final notifier = ref.read(mealScheduleProvider.notifier);
 
-          for (final meal in meals) _mealCard(meal),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  initialValue: block.name,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  decoration: const InputDecoration(isDense: true, border: InputBorder.none, hintText: 'Название блока'),
+                  onChanged: (v) => notifier.renameMeal(index, v),
+                ),
+              ),
+              IconButton(
+                onPressed: () => notifier.removeMeal(index),
+                icon: const Icon(Icons.delete_outline_rounded),
+                tooltip: 'Удалить блок',
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Table(
+            columnWidths: const {
+              0: FlexColumnWidth(3),
+              1: FlexColumnWidth(2),
+              2: FlexColumnWidth(2),
+              3: IntrinsicColumnWidth(),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              const TableRow(children: [
+                _Hdr('Блюдо'), _Hdr('Грамм'), _Hdr('Ккал'), SizedBox.shrink(),
+              ]),
+              ...List.generate(block.items.length, (i) {
+                final d = block.items[i];
+                final nameCtrl = TextEditingController(text: d.name);
+                final gramsCtrl = TextEditingController(text: d.grams.toString());
+                final kcalCtrl  = TextEditingController(text: d.kcal.toString());
+                return TableRow(children: [
+                  _Txt(controller: nameCtrl, onChanged: (v) {
+                    notifier.editItem(index, i, MealItem(name: v, grams: d.grams, kcal: d.kcal));
+                  }),
+                  _Num(controller: gramsCtrl, onChanged: (v) {
+                    final g = int.tryParse(v) ?? d.grams;
+                    notifier.editItem(index, i, MealItem(name: d.name, grams: g, kcal: d.kcal));
+                  }),
+                  _Num(controller: kcalCtrl, onChanged: (v) {
+                    final k = int.tryParse(v) ?? d.kcal;
+                    notifier.editItem(index, i, MealItem(name: d.name, grams: d.grams, kcal: k));
+                  }),
+                  IconButton(
+                    onPressed: () => notifier.deleteItem(index, i),
+                    icon: const Icon(Icons.close_rounded),
+                    tooltip: 'Удалить блюдо',
+                  ),
+                ]);
+              }),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              FilledButton.tonal(
+                onPressed: () => notifier.addItem(index, MealItem(name: 'Новое блюдо', grams: 100, kcal: 120)),
+                child: const Text('Добавить блюдо'),
+              ),
+            ],
+          ),
         ],
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: FilledButton(
-          onPressed: chosen.isEmpty ? null : () => _addChosenTo('Обед'), // пример: добавляем в «Обед»; подстрой под свою логику
-          child: const Text('Добавить выбранные в рацион'),
-        ),
-      ),
     );
   }
+}
 
-  Widget _mealCard(String meal) {
-    final items = plan[meal]!;
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(meal, style: const TextStyle(fontWeight: FontWeight.w700)),
-                const Spacer(),
-                const Icon(Icons.drag_indicator_rounded, color: Colors.white24), // если используешь Reorderable, оставь
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (items.isEmpty)
-              const Text('Пусто', style: TextStyle(color: Colors.white60))
-            else
-              Column(
-                children: items
-                    .map((e) => ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(e),
-                        ))
-                    .toList(),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+class _Hdr extends StatelessWidget {
+  final String t; const _Hdr(this.t);
+  @override Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+    child: Text(t, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white70)),
+  );
+}
+
+class _Txt extends StatelessWidget {
+  final TextEditingController controller; final ValueChanged<String> onChanged;
+  const _Txt({required this.controller, required this.onChanged});
+  @override Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+    child: TextField(controller: controller, decoration: const InputDecoration(isDense: true, border: InputBorder.none, hintText: '—'), onChanged: onChanged),
+  );
+}
+
+class _Num extends StatelessWidget {
+  final TextEditingController controller; final ValueChanged<String> onChanged;
+  const _Num({required this.controller, required this.onChanged});
+  @override Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+    child: TextField(controller: controller, keyboardType: TextInputType.number, decoration: const InputDecoration(isDense: true, border: InputBorder.none, hintText: '0'), onChanged: onChanged),
+  );
 }

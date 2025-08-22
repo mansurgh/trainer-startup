@@ -91,6 +91,27 @@ class UserNotifier extends StateNotifier<UserModel?> {
   }
 
   void setName(String name) => state = state?.copyWith(name: name);
+
+    /// Пакетное обновление параметров пользователя.
+  /// Передавай только то, что нужно изменить.
+  void setParams({
+    int? age,
+    int? height,
+    double? weight,
+    String? gender,
+    String? goal,
+  }) {
+    final s = state;
+    if (s == null) return;
+    state = s.copyWith(
+      age: age ?? s.age,
+      height: height ?? s.height,
+      weight: weight ?? s.weight,
+      gender: gender ?? s.gender,
+      goal: goal ?? s.goal,
+    );
+  }
+
 }
 
 final userProvider = StateNotifierProvider<UserNotifier, UserModel?>((ref) {

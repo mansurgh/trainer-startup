@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../state/user_state.dart';
 import '../body_scan_screen.dart';
+import '../edit_profile_data_screen.dart';
 
 class ProfileTab extends ConsumerWidget {
   const ProfileTab({super.key});
@@ -14,13 +15,14 @@ class ProfileTab extends ConsumerWidget {
     final user = ref.watch(userProvider);
 
     ImageProvider avatarProvider() {
-      if (user?.bodyImagePath != null && File(user!.bodyImagePath!).existsSync()) {
-        return FileImage(File(user.bodyImagePath!));
+      if (user?.bodyImagePath != null && user!.bodyImagePath!.isNotEmpty) {
+        final f = File(user.bodyImagePath!);
+        if (f.existsSync()) return FileImage(f);
       }
       return const AssetImage('assets/placeholder/profile.jpg');
     }
 
-    final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Профиль';
+    final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Гость';
 
     return GradientScaffold(
       child: Scaffold(
@@ -29,11 +31,9 @@ class ProfileTab extends ConsumerWidget {
           title: const Text('Профиль'),
           actions: [
             IconButton(
-              tooltip: 'Настройки',
-              icon: const Icon(Icons.settings_rounded),
-              onPressed: () {
-                // TODO: открыть экран настроек
-              },
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BodyScanScreen())),
+              icon: const Icon(Icons.camera_alt_outlined),
+              tooltip: 'Фото тела',
             ),
           ],
         ),
@@ -64,40 +64,26 @@ class ProfileTab extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
-            Card(
-              color: Colors.white.withOpacity(0.05),
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Wrap(
-                  runSpacing: 10,
-                  spacing: 16,
-                  children: [
-                    _infoChip('Пол', _genderRu(user?.gender)),
-                    _infoChip('Возраст', _maybe(user?.age, suffix: ' лет')),
-                    _infoChip('Рост', _maybe(user?.height, suffix: ' см')),
-                    _infoChip('Вес', _maybeDouble(user?.weight, suffix: ' кг')),
-                    _infoChip('Цель', _goalRu(user?.goal)),
-                  ],
-                ),
-              ),
+            // параметры
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _infoChip('Пол', _genderRu(user?.gender)),
+                _infoChip('Возраст', user?.age?.toString() ?? '—'),
+                _infoChip('Рост', user?.height?.toString() ?? '—'),
+                _infoChip('Вес', user?.weight?.toString() ?? '—'),
+                _infoChip('Цель', (user?.goal ?? '—')),
+              ],
             ),
             const SizedBox(height: 12),
 
             FilledButton.tonal(
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BodyScanScreen()));
-              },
-              child: const Text('Обновить фото тела'),
-            ),
-            const SizedBox(height: 8),
-            FilledButton.tonal(
-              onPressed: () {
-                // перейти на экран редактирования данных профиля (онбординг‑форма)
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BodyScanScreen()));
+                // перейти на экран редактирования данных профиля
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileDataScreen()));
               },
               child: const Text('Изменить данные профиля'),
             ),
@@ -116,22 +102,6 @@ class ProfileTab extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10),
       ),
     );
-  }
-
-  String _maybe(int? v, {String suffix = ''}) => v == null ? '—' : '$v$suffix';
-  String _maybeDouble(double? v, {String suffix = ''}) => v == null ? '—' : '${v.toStringAsFixed(1)}$suffix';
-
-  String _goalRu(String? g) {
-    switch (g) {
-      case 'fat_loss':
-        return 'Похудение';
-      case 'muscle_gain':
-        return 'Набор массы';
-      case 'fitness':
-        return 'Поддержание формы';
-      default:
-        return '—';
-    }
   }
 
   String _genderRu(String? g) {
