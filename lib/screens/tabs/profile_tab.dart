@@ -23,7 +23,6 @@ class ProfileTab extends ConsumerWidget {
       return const AssetImage('assets/placeholder/profile.jpg');
     }
 
-    // Правильное отображение имени пользователя
     final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Добро пожаловать!';
 
     return GradientScaffold(
@@ -31,34 +30,66 @@ class ProfileTab extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         body: CustomScrollView(
           slivers: [
-            _buildSliverAppBar(context, name, avatarProvider()),
+            SliverAppBar(
+              expandedHeight: 280,
+              pinned: true,
+              stretch: true,
+              backgroundColor: Colors.transparent,
+              actions: [
+                IconButton(
+                  onPressed: () => _showSettingsModal(context),
+                  icon: const Icon(Icons.settings_rounded),
+                  tooltip: 'Настройки',
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
+                  ),
+                ),
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image(
+                      image: avatarProvider(),
+                      fit: BoxFit.cover,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.4),
+                            Colors.black.withOpacity(0.8),
+                          ],
+                          stops: const [0.0, 0.6, 1.0],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const SizedBox(height: 12),
-                  
-                  // User Stats Overview
                   _buildStatsOverview(user, context),
                   const SizedBox(height: 20),
-                  
-                  // Body Composition Chart
                   _buildBodyComposition(user, context),
                   const SizedBox(height: 20),
-                  
-                  // Physical Parameters
                   _buildPhysicalParams(user, context),
                   const SizedBox(height: 20),
-                  
-                  // Achievements Section
                   _buildAchievements(context),
                   const SizedBox(height: 20),
-                  
-                  // Quick Actions
                   _buildQuickActions(context),
                   const SizedBox(height: 20),
-                  
-                  // Profile Management
                   _buildProfileManagement(context),
                 ]),
               ),
@@ -69,56 +100,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Sliver App Bar with parallax effect
-  Widget _buildSliverAppBar(BuildContext context, String name, ImageProvider avatarProvider) {
-    return SliverAppBar(
-      expandedHeight: 280,
-      pinned: true,
-      stretch: true,
-      backgroundColor: Colors.transparent,
-      actions: [
-        IconButton(
-          onPressed: () => _showSettingsModal(context),
-          icon: const Icon(Icons.settings_rounded),
-          tooltip: 'Настройки',
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
-          ),
-        ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image(
-              image: avatarProvider,
-              fit: BoxFit.cover,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.8),
-                  ],
-                  stops: const [0.0, 0.6, 1.0],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Stats Overview Cards
   Widget _buildStatsOverview(UserModel? user, BuildContext context) {
     final bmi = _calculateBMI(user);
     final fitnessLevel = _getFitnessLevel(user);
@@ -130,27 +111,11 @@ class ProfileTab extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Icon(
-                  Icons.favorite,
-                  color: Colors.redAccent,
-                  size: 32,
-                ),
+                const Icon(Icons.favorite, color: Colors.redAccent, size: 32),
                 const SizedBox(height: 8),
-                Text(
-                  'ИМТ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
+                Text('ИМТ', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                 const SizedBox(height: 4),
-                Text(
-                  bmi,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                Text(bmi, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -161,27 +126,11 @@ class ProfileTab extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Icon(
-                  Icons.trending_up,
-                  color: Colors.greenAccent,
-                  size: 32,
-                ),
+                const Icon(Icons.trending_up, color: Colors.greenAccent, size: 32),
                 const SizedBox(height: 8),
-                Text(
-                  'Уровень',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
+                Text('Уровень', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                 const SizedBox(height: 4),
-                Text(
-                  fitnessLevel,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                Text(fitnessLevel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -192,27 +141,11 @@ class ProfileTab extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Icon(
-                  Icons.timeline,
-                  color: Colors.blueAccent,
-                  size: 32,
-                ),
+                const Icon(Icons.timeline, color: Colors.blueAccent, size: 32),
                 const SizedBox(height: 8),
-                Text(
-                  'Прогресс',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
+                Text('Прогресс', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                 const SizedBox(height: 4),
-                Text(
-                  '85%',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                const Text('85%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -221,7 +154,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Body Composition Circular Progress
   Widget _buildBodyComposition(UserModel? user, BuildContext context) {
     final fatPct = user?.bodyFatPct ?? 20.0;
     final musclePct = user?.musclePct ?? 70.0;
@@ -232,43 +164,18 @@ class ProfileTab extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.donut_large,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24,
-              ),
+              Icon(Icons.donut_large, color: Theme.of(context).colorScheme.primary, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Состав тела',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const Text('Состав тела', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildCircularProgress(
-                'Жир',
-                fatPct,
-                Colors.orangeAccent,
-                100,
-              ),
-              _buildCircularProgress(
-                'Мышцы',
-                musclePct,
-                Colors.greenAccent,
-                100,
-              ),
-              _buildCircularProgress(
-                'Вода',
-                100 - fatPct - (musclePct * 0.4),
-                Colors.blueAccent,
-                100,
-              ),
+              _buildCircularProgress('Жир', fatPct, Colors.orangeAccent),
+              _buildCircularProgress('Мышцы', musclePct, Colors.greenAccent),
+              _buildCircularProgress('Вода', 100 - fatPct - (musclePct * 0.4), Colors.blueAccent),
             ],
           ),
         ],
@@ -276,8 +183,8 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildCircularProgress(String label, double value, Color color, double max) {
-    final percentage = (value / max).clamp(0.0, 1.0);
+  Widget _buildCircularProgress(String label, double value, Color color) {
+    final percentage = (value / 100).clamp(0.0, 1.0);
     
     return Column(
       children: [
@@ -301,28 +208,18 @@ class ProfileTab extends ConsumerWidget {
               Center(
                 child: Text(
                   '${value.toInt()}%',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withOpacity(0.7),
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
       ],
     );
   }
 
-  // Physical Parameters Grid
   Widget _buildPhysicalParams(UserModel? user, BuildContext context) {
     return GlassCard(
       child: Column(
@@ -330,19 +227,9 @@ class ProfileTab extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.monitor_weight,
-                color: Theme.of(context).colorScheme.tertiary,
-                size: 24,
-              ),
+              Icon(Icons.monitor_weight, color: Theme.of(context).colorScheme.tertiary, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Физические параметры',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const Text('Физические параметры', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 16),
@@ -373,38 +260,19 @@ class ProfileTab extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Colors.white.withOpacity(0.7),
-          ),
+          Icon(icon, size: 20, color: Colors.white.withOpacity(0.7)),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white.withOpacity(0.6),
-                  ),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.6))),
+                Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -413,7 +281,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Achievements Section
   Widget _buildAchievements(BuildContext context) {
     return GlassCard(
       child: Column(
@@ -421,53 +288,19 @@ class ProfileTab extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.emoji_events,
-                color: Colors.amberAccent,
-                size: 24,
-              ),
+              const Icon(Icons.emoji_events, color: Colors.amberAccent, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Достижения',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const Text('Достижения', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildAchievement(
-                Icons.local_fire_department,
-                'Огонь',
-                '7 дней',
-                Colors.redAccent,
-                true,
-              ),
-              _buildAchievement(
-                Icons.fitness_center,
-                'Силач',
-                '50 тренировок',
-                Colors.blueAccent,
-                true,
-              ),
-              _buildAchievement(
-                Icons.schedule,
-                'Постоянство',
-                '30 дней',
-                Colors.greenAccent,
-                false,
-              ),
-              _buildAchievement(
-                Icons.trending_up,
-                'Прогресс',
-                '10 кг',
-                Colors.purpleAccent,
-                false,
-              ),
+              _buildAchievement(Icons.local_fire_department, 'Огонь', '7 дней', Colors.redAccent, true),
+              _buildAchievement(Icons.fitness_center, 'Силач', '50 тренировок', Colors.blueAccent, true),
+              _buildAchievement(Icons.schedule, 'Постоянство', '30 дней', Colors.greenAccent, false),
+              _buildAchievement(Icons.trending_up, 'Прогресс', '10 кг', Colors.purpleAccent, false),
             ],
           ),
         ],
@@ -484,38 +317,17 @@ class ProfileTab extends ConsumerWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: achieved ? color.withOpacity(0.2) : Colors.white.withOpacity(0.05),
-            border: Border.all(
-              color: achieved ? color : Colors.white.withOpacity(0.2),
-              width: 2,
-            ),
+            border: Border.all(color: achieved ? color : Colors.white.withOpacity(0.2), width: 2),
           ),
-          child: Icon(
-            icon,
-            color: achieved ? color : Colors.white.withOpacity(0.4),
-            size: 24,
-          ),
+          child: Icon(icon, color: achieved ? color : Colors.white.withOpacity(0.4), size: 24),
         ),
         const SizedBox(height: 8),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: achieved ? Colors.white : Colors.white.withOpacity(0.6),
-          ),
-        ),
-        Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.white.withOpacity(0.5),
-          ),
-        ),
+        Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: achieved ? Colors.white : Colors.white.withOpacity(0.6))),
+        Text(subtitle, style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.5))),
       ],
     );
   }
 
-  // Quick Actions
   Widget _buildQuickActions(BuildContext context) {
     return GlassCard(
       child: Column(
@@ -523,42 +335,20 @@ class ProfileTab extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.flash_on,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24,
-              ),
+              Icon(Icons.flash_on, color: Theme.of(context).colorScheme.primary, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Быстрые действия',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const Text('Быстрые действия', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
-                  Icons.camera_alt,
-                  'Фото прогресса',
-                  Colors.purpleAccent,
-                  () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const BodyScanScreen()),
-                  ),
-                ),
+                child: _buildActionButton(Icons.camera_alt, 'Фото прогресса', Colors.purpleAccent, () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BodyScanScreen()))),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
-                  Icons.share,
-                  'Поделиться',
-                  Colors.greenAccent,
-                  () => _shareProgress(context),
-                ),
+                child: _buildActionButton(Icons.share, 'Поделиться', Colors.greenAccent, () => _shareProgress(context)),
               ),
             ],
           ),
@@ -566,21 +356,11 @@ class ProfileTab extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
-                  Icons.analytics,
-                  'Статистика',
-                  Colors.blueAccent,
-                  () => _showStatsModal(context),
-                ),
+                child: _buildActionButton(Icons.analytics, 'Статистика', Colors.blueAccent, () => _showStatsModal(context)),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
-                  Icons.backup,
-                  'Экспорт данных',
-                  Colors.orangeAccent,
-                  () => _exportData(context),
-                ),
+                child: _buildActionButton(Icons.backup, 'Экспорт данных', Colors.orangeAccent, () => _exportData(context)),
               ),
             ],
           ),
@@ -598,51 +378,31 @@ class ProfileTab extends ConsumerWidget {
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-          ),
+          border: Border.all(color: color.withOpacity(0.3)),
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
           ],
         ),
       ),
     );
   }
 
-  // Profile Management
   Widget _buildProfileManagement(BuildContext context) {
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const EditProfileDataScreen()),
-              );
-            },
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileDataScreen())),
             icon: const Icon(Icons.edit),
             label: const Text('Редактировать профиль'),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.all(16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
           ),
         ),
@@ -655,9 +415,7 @@ class ProfileTab extends ConsumerWidget {
             label: const Text('Сбросить данные'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.all(16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
           ),
         ),
@@ -665,7 +423,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Helper methods
   String _calculateBMI(UserModel? user) {
     if (user?.height == null || user?.weight == null) return '—';
     final heightM = user!.height! / 100.0;
@@ -676,7 +433,6 @@ class ProfileTab extends ConsumerWidget {
   String _getFitnessLevel(UserModel? user) {
     final bmi = double.tryParse(_calculateBMI(user));
     if (bmi == null) return 'Новичок';
-    
     if (bmi < 18.5) return 'Недовес';
     if (bmi < 25) return 'Норма';
     if (bmi < 30) return 'Избыток';
@@ -685,29 +441,21 @@ class ProfileTab extends ConsumerWidget {
 
   String _genderRu(String? g) {
     switch (g) {
-      case 'm':
-        return 'Мужской';
-      case 'f':
-        return 'Женский';
-      default:
-        return '—';
+      case 'm': return 'Мужской';
+      case 'f': return 'Женский';
+      default: return '—';
     }
   }
 
   String _getGoalRu(String? goal) {
     switch (goal) {
-      case 'fat_loss':
-        return 'Похудение';
-      case 'muscle_gain':
-        return 'Набор массы';
-      case 'fitness':
-        return 'Фитнес';
-      default:
-        return '—';
+      case 'fat_loss': return 'Похудение';
+      case 'muscle_gain': return 'Набор массы';
+      case 'fitness': return 'Фитнес';
+      default: return '—';
     }
   }
 
-  // Modal and action methods
   void _showSettingsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -721,9 +469,7 @@ class ProfileTab extends ConsumerWidget {
               title: const Text('Уведомления'),
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Настройки уведомлений скоро ✨')),
-                );
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Настройки уведомлений скоро ✨')));
               },
             ),
             ListTile(
@@ -731,9 +477,7 @@ class ProfileTab extends ConsumerWidget {
               title: const Text('Приватность'),
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Настройки приватности скоро ✨')),
-                );
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Настройки приватности скоро ✨')));
               },
             ),
             ListTile(
@@ -752,12 +496,7 @@ class ProfileTab extends ConsumerWidget {
 
   void _shareProgress(BuildContext context) {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Функция поделиться скоро будет доступна! 🔥'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Функция поделиться скоро будет доступна! 🔥'), backgroundColor: Colors.green));
   }
 
   void _showStatsModal(BuildContext context) {
@@ -769,20 +508,11 @@ class ProfileTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Подробная статистика',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const Text('Подробная статистика', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
               const Text('Детальная аналитика скоро будет доступна!'),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
-              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Закрыть')),
             ],
           ),
         ),
@@ -792,12 +522,7 @@ class ProfileTab extends ConsumerWidget {
 
   void _exportData(BuildContext context) {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Экспорт данных скоро будет доступен! 📊'),
-        backgroundColor: Colors.blue,
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Экспорт данных скоро будет доступен! 📊'), backgroundColor: Colors.blue));
   }
 
   void _showResetDialog(BuildContext context) {
@@ -809,47 +534,23 @@ class ProfileTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.warning,
-                color: Colors.orangeAccent,
-                size: 48,
-              ),
+              const Icon(Icons.warning, color: Colors.orangeAccent, size: 48),
               const SizedBox(height: 16),
-              const Text(
-                'Сбросить все данные?',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const Text('Сбросить все данные?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              const Text(
-                'Это действие нельзя отменить.',
-                style: TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
+              const Text('Это действие нельзя отменить.', style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Отмена'),
-                    ),
-                  ),
+                  Expanded(child: TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена'))),
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Функция сброса скоро! 🔄')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Функция сброса скоро! 🔄')));
                       },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
+                      style: FilledButton.styleFrom(backgroundColor: Colors.red),
                       child: const Text('Сбросить'),
                     ),
                   ),
@@ -871,36 +572,15 @@ class ProfileTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.fitness_center,
-                color: Colors.purpleAccent,
-                size: 48,
-              ),
+              const Icon(Icons.fitness_center, color: Colors.purpleAccent, size: 48),
               const SizedBox(height: 16),
-              const Text(
-                'Trainer App',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              const Text('Trainer App', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              const Text(
-                'Версия 1.0.0',
-                style: TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
+              const Text('Версия 1.0.0', style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 16),
-              const Text(
-                'Ваш персональный фитнес помощник с ИИ',
-                textAlign: TextAlign.center,
-              ),
+              const Text('Ваш персональный фитнес помощник с ИИ', textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
-              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Закрыть')),
             ],
           ),
         ),
