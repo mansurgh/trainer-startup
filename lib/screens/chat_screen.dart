@@ -29,12 +29,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // автоскролл
     await Future.delayed(const Duration(milliseconds: 100));
-    if (mounted) _listCtrl.animateTo(_listCtrl.position.maxScrollExtent + 120,
-        duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    if (mounted) {
+      _listCtrl.animateTo(
+        _listCtrl.position.maxScrollExtent + 120,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
 
     // заглушка ответа бота
     await Future.delayed(const Duration(milliseconds: 300));
-    setState(() => _msgs.add(_Msg.bot(text: 'Принято ✅\n• Могу посчитать ккал по фото\n• Подскажу рацион\n• Отвечу на вопросы по тренировкам')));
+    setState(() => _msgs.add(_Msg.bot(
+        text: imagePath != null ? '≈ 450 ккал' : 'Привет! Я твой тренер.')));
   }
 
   Future<void> _pickImage() async {
@@ -58,11 +64,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(
-                'В этом чате можно:\n'
-                '• Получать советы по питанию и тренировкам\n'
-                '• Считать калории по фото блюд\n'
-                '• Делать аудит рациона/добавок\n'
-                '• Связаться с оператором для помощи и отзывов',
+                'Отправь текст — отвечу: «Привет! Я твой тренер.»\n'
+                'Пришли фото блюда — отвечу примерной калорийностью.',
                 style: TextStyle(color: Colors.white70, height: 1.4),
               ),
             ),
@@ -74,14 +77,16 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (_, i) {
                 final m = _msgs[i];
                 final align = m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
-                final bg = m.fromUser ? const Color(0xFF6D5DF6) : Colors.white.withValues(alpha: 0.06);
+                final bg = m.fromUser
+                    ? const Color(0xFFB7A6FF).withOpacity(0.2)
+                    : Colors.white.withValues(alpha: 0.06);
                 final fg = m.fromUser ? Colors.white : Colors.white;
 
                 return Align(
                   alignment: align,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.all(10),
                     constraints: const BoxConstraints(maxWidth: 320),
                     decoration: BoxDecoration(
                       color: bg,
@@ -112,17 +117,17 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
               child: Row(
                 children: [
-                  IconButton(onPressed: _pickImage, icon: const Icon(Icons.image_rounded)),
+                  IconButton(
+                    onPressed: _pickImage,
+                    icon: const Icon(Icons.photo_outlined),
+                    tooltip: 'Фото блюда',
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _controller,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (v) => _send(text: v),
-                      decoration: const InputDecoration(
-                        hintText: 'Напишите сообщение...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
-                        isDense: true,
-                      ),
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: const InputDecoration(hintText: 'Сообщение…'),
                     ),
                   ),
                   const SizedBox(width: 8),

@@ -1,29 +1,35 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../core/theme.dart';
-import 'home_screen.dart';
+import '../state/user_state.dart';
+import 'home_screen.dart';  // <– импорт главного экрана
 
-class BodyScanScreen extends StatefulWidget {
+class BodyScanScreen extends ConsumerStatefulWidget {
   const BodyScanScreen({super.key});
 
   @override
-  State<BodyScanScreen> createState() => _BodyScanScreenState();
+  ConsumerState<BodyScanScreen> createState() => _BodyScanScreenState();
 }
 
-class _BodyScanScreenState extends State<BodyScanScreen> {
+class _BodyScanScreenState extends ConsumerState<BodyScanScreen> {
   String? _path;
 
   Future<void> _pick() async {
-    final x = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (x == null) return;
-    setState(() => _path = x.path);
-    // TODO: здесь сохранение в профиль, если используешь стейт/бэк
+    final picker = ImagePicker();
+    final img = await picker.pickImage(source: ImageSource.gallery);
+    if (img != null) {
+      setState(() => _path = img.path);
+      final n = ref.read(userProvider.notifier);
+      await n.setBodyImagePath(img.path);
+      n.setComposition(fatPct: 20, musclePct: 70);
+    }
   }
 
+  // Переход на экран создания программы тренировок (HomeScreen → вкладка "Тренировка")
   void _closeToTraining() {
-    // уходим на HomeScreen (по умолчанию открывается вкладка "Тренировка")
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
@@ -36,18 +42,18 @@ class _BodyScanScreenState extends State<BodyScanScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          automaticallyImplyLeading: false, // убираем стрелку
           title: const Text('Фото тела'),
+          automaticallyImplyLeading: false,
           actions: [
             IconButton(
               icon: const Icon(Icons.close_rounded),
               tooltip: 'Закрыть',
-              onPressed: _closeToTraining,
+              onPressed: _closeToTraining,  // <– используем новый метод
             ),
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: Column(
             children: [
               Expanded(

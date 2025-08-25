@@ -1,43 +1,47 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../state/user_state.dart';
 import 'body_scan_screen.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _name = TextEditingController();
   final _age = TextEditingController();
   final _height = TextEditingController();
   final _weight = TextEditingController();
 
-  String? _gender; // 'm'|'f'
-  String? _goal;   // 'fat_loss'|'muscle_gain'|'fitness'
+  String? _gender;
+  String? _goal;
 
   bool get _canContinue =>
       _name.text.trim().isNotEmpty &&
+      _gender != null &&
+      _goal != null &&
       _age.text.trim().isNotEmpty &&
       _height.text.trim().isNotEmpty &&
-      _weight.text.trim().isNotEmpty &&
-      _gender != null &&
-      _goal != null;
+      _weight.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    for (final c in [_name, _age, _height, _weight]) {
-      c.addListener(() => setState(() {}));
-    }
+    _name.addListener(() => setState(() {}));
+    _age.addListener(() => setState(() {}));
+    _height.addListener(() => setState(() {}));
+    _weight.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    for (final c in [_name, _age, _height, _weight]) {
-      c.dispose();
-    }
+    _name.dispose();
+    _age.dispose();
+    _height.dispose();
+    _weight.dispose();
     super.dispose();
   }
 
@@ -46,7 +50,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(title: const Text('Профиль')),
+        appBar: AppBar(title: const Text('Добро пожаловать')),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
@@ -57,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Пол — выпадающий список
+            // Пол
             DropdownButtonFormField<String>(
               value: _gender,
               decoration: const InputDecoration(labelText: 'Пол'),
@@ -88,7 +92,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     decoration: const InputDecoration(labelText: 'Рост (см)'),
                   ),
                 ),
-                const SizedBox(width: 12),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
                 Expanded(
                   child: TextField(
                     controller: _weight,
@@ -101,7 +109,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Цель — выпадающий список
+            // Цель
             DropdownButtonFormField<String>(
               value: _goal,
               decoration: const InputDecoration(labelText: 'Цель'),
@@ -117,7 +125,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             FilledButton(
               onPressed: _canContinue
                   ? () async {
-                      // открываем загрузку фото тела; закрытие — крестиком
+                      // сохранить введённые данные в профиль
+                      final n = ref.read(userProvider.notifier);
+                      n.setName(_name.text.trim());
+                      n.setParams(
+                        age: int.tryParse(_age.text),
+                        height: int.tryParse(_height.text),
+                        weight: double.tryParse(_weight.text),
+                        gender: _gender,
+                        goal: _goal,
+                      );
+
+                      // открыть загрузку фото тела
                       await Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const BodyScanScreen()),
                       );

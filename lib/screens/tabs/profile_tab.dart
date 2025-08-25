@@ -24,6 +24,11 @@ class ProfileTab extends ConsumerWidget {
 
     final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Гость';
 
+    String pctOr(String? label, double? v, String fallback) {
+      if (v == null) return fallback;
+      return '${v.toStringAsFixed(0)}%';
+    }
+
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -31,23 +36,35 @@ class ProfileTab extends ConsumerWidget {
           title: const Text('Профиль'),
           actions: [
             IconButton(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BodyScanScreen())),
-              icon: const Icon(Icons.camera_alt_outlined),
-              tooltip: 'Фото тела',
+              onPressed: () => ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('Настройки скоро ✨'))),
+              icon: const Icon(Icons.settings_rounded),
+              tooltip: 'Настройки',
             ),
           ],
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
-            // Шапка с именем в левом-нижнем углу
+            // Шапка с «растворением» фото по краям и подписью имени
             ClipRRect(
               borderRadius: BorderRadius.circular(22),
               child: Stack(
                 children: [
                   AspectRatio(
                     aspectRatio: 16 / 9,
-                    child: Image(image: avatarProvider(), fit: BoxFit.cover),
+                    child: ShaderMask(
+                      shaderCallback: (Rect bounds) {
+                        return const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.white, Colors.white, Colors.transparent],
+                          stops: [0.0, 0.15, 0.85, 1.0],
+                        ).createShader(bounds);
+                      },
+                      blendMode: BlendMode.dstIn,
+                      child: Image(image: avatarProvider(), fit: BoxFit.cover),
+                    ),
                   ),
                   Positioned(
                     left: 12,
@@ -76,16 +93,34 @@ class ProfileTab extends ConsumerWidget {
                 _infoChip('Рост', user?.height?.toString() ?? '—'),
                 _infoChip('Вес', user?.weight?.toString() ?? '—'),
                 _infoChip('Цель', (user?.goal ?? '—')),
+                _infoChip('Жир', pctOr('Жир', user?.bodyFatPct, '20%')),
+                _infoChip('Мышцы', pctOr('Мышцы', user?.musclePct, '70%')),
               ],
             ),
             const SizedBox(height: 12),
 
-            FilledButton.tonal(
-              onPressed: () {
-                // перейти на экран редактирования данных профиля
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileDataScreen()));
-              },
-              child: const Text('Изменить данные профиля'),
+            // две кнопки: обновить данные + обновить фото тела
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FilledButton.tonal(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const EditProfileDataScreen()),
+                    );
+                  },
+                  child: const Text('Обновить данные профиля'),
+                ),
+                const SizedBox(height: 8),
+                FilledButton.tonal(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const BodyScanScreen()),
+                    );
+                  },
+                  child: const Text('Обновить фото тела'),
+                ),
+              ],
             ),
           ],
         ),
