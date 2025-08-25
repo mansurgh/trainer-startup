@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme.dart';
 import '../../state/user_state.dart';
@@ -39,27 +40,32 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   
                   // User Stats Overview
-                  _buildStatsOverview(user, context),
+                  _buildStatsOverview(user, context).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
+                  
                   const SizedBox(height: 20),
                   
                   // Body Composition Chart
-                  _buildBodyComposition(user, context),
+                  _buildBodyComposition(user, context).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
+                  
                   const SizedBox(height: 20),
                   
                   // Physical Parameters
-                  _buildPhysicalParams(user, context),
+                  _buildPhysicalParams(user, context).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3),
+                  
                   const SizedBox(height: 20),
                   
                   // Achievements Section
-                  _buildAchievements(context),
+                  _buildAchievements(context).animate().fadeIn(duration: 800.ms, delay: 600.ms).slideY(begin: 0.3),
+                  
                   const SizedBox(height: 20),
                   
                   // Quick Actions
-                  _buildQuickActions(context),
+                  _buildQuickActions(context).animate().fadeIn(duration: 800.ms, delay: 800.ms).slideY(begin: 0.3),
+                  
                   const SizedBox(height: 20),
                   
                   // Profile Management
-                  _buildProfileManagement(context),
+                  _buildProfileManagement(context).animate().fadeIn(duration: 800.ms, delay: 1000.ms).slideY(begin: 0.3),
                 ]),
               ),
             ),
@@ -855,7 +861,7 @@ class ProfileTab extends ConsumerWidget {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
