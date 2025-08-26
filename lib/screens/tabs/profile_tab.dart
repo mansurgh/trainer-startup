@@ -861,7 +861,7 @@ class ProfileTab extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
       ),
