@@ -45,12 +45,12 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 20),
                   
                   // Body Composition Chart
-                  _buildBodyComposition(user).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
+                  _buildBodyComposition(context, user).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
                   // Physical Parameters
-                  _buildPhysicalParams(user).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3),
+                  _buildPhysicalParams(context, user).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
@@ -228,7 +228,7 @@ class ProfileTab extends ConsumerWidget {
   }
 
   // Body Composition Circular Progress
-  Widget _buildBodyComposition(UserModel? user) {
+  Widget _buildBodyComposition(BuildContext context, UserModel? user) {
     final fatPct = user?.bodyFatPct ?? 20.0;
     final musclePct = user?.musclePct ?? 70.0;
     
@@ -329,7 +329,7 @@ class ProfileTab extends ConsumerWidget {
   }
 
   // Physical Parameters Grid
-  Widget _buildPhysicalParams(UserModel? user) {
+  Widget _buildPhysicalParams(BuildContext context, UserModel? user) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
