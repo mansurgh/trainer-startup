@@ -45,12 +45,12 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 20),
                   
                   // Body Composition Chart
-                  _buildBodyComposition(user).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
+                  _buildBodyComposition(context, user).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
                   // Physical Parameters
-                  _buildPhysicalParams(user).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3),
+                  _buildPhysicalParams(context, user).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
@@ -75,7 +75,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Sliver App Bar with parallax effect
   Widget _buildSliverAppBar(BuildContext context, String name, ImageProvider avatarProvider) {
     return SliverAppBar(
       expandedHeight: 280,
@@ -124,7 +123,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Stats Overview Cards
   Widget _buildStatsOverview(UserModel? user) {
     final bmi = _calculateBMI(user);
     final fitnessLevel = _getFitnessLevel(user);
@@ -227,8 +225,7 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Body Composition Circular Progress
-  Widget _buildBodyComposition(UserModel? user) {
+  Widget _buildBodyComposition(BuildContext context, UserModel? user) {
     final fatPct = user?.bodyFatPct ?? 20.0;
     final musclePct = user?.musclePct ?? 70.0;
     
@@ -328,8 +325,7 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Physical Parameters Grid
-  Widget _buildPhysicalParams(UserModel? user) {
+  Widget _buildPhysicalParams(BuildContext context, UserModel? user) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,7 +415,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Achievements Section
   Widget _buildAchievements(BuildContext context) {
     return GlassCard(
       child: Column(
@@ -521,7 +516,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Quick Actions
   Widget _buildQuickActions(BuildContext context) {
     return GlassCard(
       child: Column(
@@ -630,7 +624,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Profile Management
   Widget _buildProfileManagement(BuildContext context) {
     return Column(
       children: [
@@ -671,7 +664,6 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  // Helper methods
   String _calculateBMI(UserModel? user) {
     if (user?.height == null || user?.weight == null) return '—';
     final heightM = user!.height! / 100.0;
@@ -713,7 +705,6 @@ class ProfileTab extends ConsumerWidget {
     }
   }
 
-  // Modal and action methods
   void _showSettingsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -861,7 +852,7 @@ class ProfileTab extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
       ),
