@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,7 +24,8 @@ class ProfileTab extends ConsumerWidget {
       return const AssetImage('assets/placeholder/profile.jpg');
     }
 
-    final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Гость';
+    // Правильное отображение имени пользователя
+    final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Добро пожаловать!';
 
     return GradientScaffold(
       child: Scaffold(
@@ -40,17 +40,17 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   
                   // User Stats Overview
-                  _buildStatsOverview(user).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
+                  _buildStatsOverview(user, context).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
                   // Body Composition Chart
-                  _buildBodyComposition(user).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
+                  _buildBodyComposition(context, user).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
                   // Physical Parameters
-                  _buildPhysicalParams(user).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3),
+                  _buildPhysicalParams(context, user).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
@@ -125,7 +125,7 @@ class ProfileTab extends ConsumerWidget {
   }
 
   // Stats Overview Cards
-  Widget _buildStatsOverview(UserModel? user) {
+  Widget _buildStatsOverview(UserModel? user, BuildContext context) {
     final bmi = _calculateBMI(user);
     final fitnessLevel = _getFitnessLevel(user);
     
@@ -136,7 +136,7 @@ class ProfileTab extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Icon(
+                const Icon(
                   Icons.favorite,
                   color: Colors.redAccent,
                   size: 32,
@@ -167,7 +167,7 @@ class ProfileTab extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Icon(
+                const Icon(
                   Icons.trending_up,
                   color: Colors.greenAccent,
                   size: 32,
@@ -198,7 +198,7 @@ class ProfileTab extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Icon(
+                const Icon(
                   Icons.timeline,
                   color: Colors.blueAccent,
                   size: 32,
@@ -228,7 +228,7 @@ class ProfileTab extends ConsumerWidget {
   }
 
   // Body Composition Circular Progress
-  Widget _buildBodyComposition(UserModel? user) {
+  Widget _buildBodyComposition(BuildContext context, UserModel? user) {
     final fatPct = user?.bodyFatPct ?? 20.0;
     final musclePct = user?.musclePct ?? 70.0;
     
@@ -329,7 +329,7 @@ class ProfileTab extends ConsumerWidget {
   }
 
   // Physical Parameters Grid
-  Widget _buildPhysicalParams(UserModel? user) {
+  Widget _buildPhysicalParams(BuildContext context, UserModel? user) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,9 +361,9 @@ class ProfileTab extends ConsumerWidget {
             childAspectRatio: 2.5,
             children: [
               _buildParamCard('Пол', _genderRu(user?.gender), Icons.person),
-              _buildParamCard('Возраст', '${user?.age ?? '—'} лет', Icons.cake),
-              _buildParamCard('Рост', '${user?.height ?? '—'} см', Icons.height),
-              _buildParamCard('Вес', '${user?.weight ?? '—'} кг', Icons.monitor_weight),
+              _buildParamCard('Возраст', user?.age != null ? '${user!.age} лет' : '—', Icons.cake),
+              _buildParamCard('Рост', user?.height != null ? '${user!.height} см' : '—', Icons.height),
+              _buildParamCard('Вес', user?.weight != null ? '${user!.weight} кг' : '—', Icons.monitor_weight),
               _buildParamCard('Цель', _getGoalRu(user?.goal), Icons.flag),
               _buildParamCard('ИМТ', _calculateBMI(user), Icons.analytics),
             ],
@@ -427,7 +427,7 @@ class ProfileTab extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.emoji_events,
                 color: Colors.amberAccent,
                 size: 24,
@@ -861,12 +861,13 @@ class ProfileTab extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
+
 
   void _showAboutDialog(BuildContext context) {
     showDialog(
