@@ -1,0 +1,35 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6C5CE7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A29BFE;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="512" cy="512" r="512" fill="url(#gradient)"/>
+  
+  <!-- Fitness icon (dumbbell) -->
+  <g fill="white">
+    <!-- Left weight -->
+    <circle cx="300" cy="512" r="60"/>
+    
+    <!-- Right weight -->
+    <circle cx="724" cy="512" r="60"/>
+    
+    <!-- Bar -->
+    <rect x="360" y="500" width="304" height="24" rx="12"/>
+    
+    <!-- Left handle -->
+    <rect x="250" y="490" width="40" height="44" rx="8"/>
+    
+    <!-- Right handle -->
+    <rect x="734" y="490" width="40" height="44" rx="8"/>
+  </g>
+  
+  <!-- Pulse lines -->
+  <g stroke="white" stroke-width="8" fill="none" opacity="0.6">
+    <path d="M200,300 Q250,250 300,300 T400,300"/>
+    <path d="M624,300 Q674,250 724,300 T824,300"/>
+  </g>
+</svg>

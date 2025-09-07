@@ -6,8 +6,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme.dart';
 import '../../state/user_state.dart';
+import '../../models/user_model.dart';
 import '../body_scan_screen.dart';
 import '../edit_profile_data_screen.dart';
+import '../settings_screen.dart';
+import '../about_screen.dart';
 
 class ProfileTab extends ConsumerWidget {
   const ProfileTab({super.key});
@@ -715,44 +718,8 @@ class ProfileTab extends ConsumerWidget {
 
   // Modal and action methods
   void _showSettingsModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.notifications),
-              title: const Text('Уведомления'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Настройки уведомлений скоро ✨')),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip),
-              title: const Text('Приватность'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Настройки приватности скоро ✨')),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('О приложении'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutDialog(context);
-              },
-            ),
-          ],
-        ),
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
     );
   }
 
@@ -870,48 +837,8 @@ class ProfileTab extends ConsumerWidget {
 
 
   void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        content: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.fitness_center,
-                color: Colors.purpleAccent,
-                size: 48,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Trainer App',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Версия 1.0.0',
-                style: TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Ваш персональный фитнес помощник с ИИ',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
-              ),
-            ],
-          ),
-        ),
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AboutScreen()),
     );
   }
 }

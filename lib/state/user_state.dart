@@ -1,65 +1,23 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-class UserModel {
-  final String id;
-  final String? name;
-  final String? gender; // m / f
-  final int? age;
-  final int? height;
-  final double? weight;
-  final String? goal; // fat_loss / muscle_gain / fitness
-  final String? bodyImagePath;
-
-  // Состав тела
-  final double? bodyFatPct;
-  final double? musclePct;
-
-  const UserModel({
-    required this.id,
-    this.name,
-    this.gender,
-    this.age,
-    this.height,
-    this.weight,
-    this.goal,
-    this.bodyImagePath,
-    this.bodyFatPct,
-    this.musclePct,
-  });
-
-  UserModel copyWith({
-    String? id,
-    String? name,
-    String? gender,
-    int? age,
-    int? height,
-    double? weight,
-    String? goal,
-    String? bodyImagePath,
-    double? bodyFatPct,
-    double? musclePct,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      gender: gender ?? this.gender,
-      age: age ?? this.age,
-      height: height ?? this.height,
-      weight: weight ?? this.weight,
-      goal: goal ?? this.goal,
-      bodyImagePath: bodyImagePath ?? this.bodyImagePath,
-      bodyFatPct: bodyFatPct ?? this.bodyFatPct,
-      musclePct: musclePct ?? this.musclePct,
-    );
-  }
-}
+import '../models/user_model.dart';
+import '../services/storage_service.dart';
 
 class UserNotifier extends StateNotifier<UserModel?> {
-  UserNotifier() : super(null);
+  UserNotifier() : super(null) {
+    _loadUser();
+  }
+
+  /// Загрузить пользователя из хранилища
+  Future<void> _loadUser() async {
+    final user = await StorageService.getUser();
+    if (user != null) {
+      state = user;
+    }
+  }
 
   /// Создать или обновить профиль из онбординга
-  void createOrUpdateProfile({
+  Future<void> createOrUpdateProfile({
     required String id,
     String? name,
     String? gender,
@@ -67,51 +25,93 @@ class UserNotifier extends StateNotifier<UserModel?> {
     int? height,
     double? weight,
     String? goal,
-  }) {
-    final base = state ?? UserModel(id: id);
-    state = base.copyWith(
+  }) async {
+    final base = state ?? UserModel(
+      id: id,
+      createdAt: DateTime.now(),
+      lastActive: DateTime.now(),
+    );
+    final updatedUser = base.copyWith(
       name: name ?? base.name,
       gender: gender ?? base.gender,
       age: age ?? base.age,
       height: height ?? base.height,
       weight: weight ?? base.weight,
       goal: goal ?? base.goal,
+      lastActive: DateTime.now(),
     );
+    state = updatedUser;
+    await StorageService.saveUser(updatedUser);
   }
 
-  void create(UserModel user) => state = user;
+  void create(UserModel user) {
+    state = user;
+    StorageService.saveUser(user);
+  }
 
   Future<void> setBodyImagePath(String path) async {
     if (!File(path).existsSync()) return;
-    state = state?.copyWith(bodyImagePath: path);
+    final updatedUser = state?.copyWith(
+      bodyImagePath: path,
+      lastActive: DateTime.now(),
+    );
+    if (updatedUser != null) {
+      state = updatedUser;
+      await StorageService.saveUser(updatedUser);
+    }
   }
 
-  void setComposition({double? fatPct, double? musclePct}) {
-    state = state?.copyWith(bodyFatPct: fatPct, musclePct: musclePct);
+  Future<void> setComposition({double? fatPct, double? musclePct}) async {
+    final updatedUser = state?.copyWith(
+      bodyFatPct: fatPct,
+      musclePct: musclePct,
+      lastActive: DateTime.now(),
+    );
+    if (updatedUser != null) {
+      state = updatedUser;
+      await StorageService.saveUser(updatedUser);
+    }
   }
 
-  void setName(String name) => state = state?.copyWith(name: name);
+  Future<void> setName(String name) async {
+    final updatedUser = state?.copyWith(
+      name: name,
+      lastActive: DateTime.now(),
+    );
+    if (updatedUser != null) {
+      state = updatedUser;
+      await StorageService.saveUser(updatedUser);
+    }
+  }
 
-    /// Пакетное обновление параметров пользователя.
+  /// Пакетное обновление параметров пользователя.
   /// Передавай только то, что нужно изменить.
-  void setParams({
+  Future<void> setParams({
     int? age,
     int? height,
     double? weight,
     String? gender,
     String? goal,
-  }) {
+  }) async {
     final s = state;
     if (s == null) return;
-    state = s.copyWith(
+    final updatedUser = s.copyWith(
       age: age ?? s.age,
       height: height ?? s.height,
       weight: weight ?? s.weight,
       gender: gender ?? s.gender,
       goal: goal ?? s.goal,
+      lastActive: DateTime.now(),
     );
+    state = updatedUser;
+    await StorageService.saveUser(updatedUser);
   }
 
+  /// Очистить все данные пользователя
+  Future<void> clearUser() async {
+    state = null;
+    await StorageService.clearAllData();
+  }
 }
 
 final userProvider = StateNotifierProvider<UserNotifier, UserModel?>((ref) {
