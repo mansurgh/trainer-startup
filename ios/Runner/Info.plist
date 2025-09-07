@@ -5,7 +5,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Pulsefit Pro</string>
+		<string>PulseFit Pro</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>pulsefit_pro</string>
+		<string>PulseFit Pro</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -47,5 +47,11 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSCameraUsageDescription</key>
+		<string>PulseFit Pro needs camera access to take photos of your body for progress tracking and fridge contents for nutrition analysis.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>PulseFit Pro needs photo library access to select images for body progress tracking and nutrition analysis.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>PulseFit Pro may need microphone access for video recording during workouts.</string>
 	</dict>
 </plist>

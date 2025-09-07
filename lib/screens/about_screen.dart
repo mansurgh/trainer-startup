@@ -1,0 +1,495 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../core/theme.dart';
+
+class AboutScreen extends StatelessWidget {
+  const AboutScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientScaffold(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('О приложении'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Логотип и основная информация
+            GlassCard(
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.secondary,
+                        ],
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.fitness_center,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'PulseFit Pro',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Версия 1.0.0',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Ваш персональный AI-тренер для достижения фитнес-целей',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Основные функции
+            _buildSection(
+              context: context,
+              title: 'Основные функции',
+              icon: Icons.star_outline,
+              children: [
+                _buildFeatureItem(
+                  icon: Icons.camera_alt,
+                  title: 'Анализ техники упражнений',
+                  description: 'AI следит за правильностью выполнения движений',
+                ),
+                _buildFeatureItem(
+                  icon: Icons.restaurant,
+                  title: 'Рацион по фото холодильника',
+                  description: 'AI анализирует продукты и предлагает питание',
+                ),
+                _buildFeatureItem(
+                  icon: Icons.chat,
+                  title: 'Чат с тренером',
+                  description: 'Мгновенные советы и поддержка 24/7',
+                ),
+                _buildFeatureItem(
+                  icon: Icons.trending_up,
+                  title: 'Адаптивные программы',
+                  description: 'Тренировки подстраиваются под ваш прогресс',
+                ),
+                _buildFeatureItem(
+                  icon: Icons.all_inclusive,
+                  title: 'Все в одном приложении',
+                  description: 'Тренировки, питание и поддержка в одном месте',
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Контакты и поддержка
+            _buildSection(
+              context: context,
+              title: 'Поддержка',
+              icon: Icons.support_agent,
+              children: [
+                _buildContactItem(
+                  icon: Icons.email,
+                  title: 'Email поддержка',
+                  subtitle: 'support@pulsefit.pro',
+                  onTap: () => _launchEmail('support@pulsefit.pro'),
+                ),
+                _buildContactItem(
+                  icon: Icons.telegram,
+                  title: 'Telegram',
+                  subtitle: '@pulsefit_support',
+                  onTap: () => _launchTelegram('@pulsefit_support'),
+                ),
+                _buildContactItem(
+                  icon: Icons.bug_report,
+                  title: 'Сообщить об ошибке',
+                  subtitle: 'Помогите нам улучшить приложение',
+                  onTap: () => _launchEmail('bugs@pulsefit.pro'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Правовая информация
+            _buildSection(
+              context: context,
+              title: 'Правовая информация',
+              icon: Icons.gavel,
+              children: [
+                _buildListTile(
+                  title: 'Политика конфиденциальности',
+                  onTap: () => _showPrivacyPolicy(context),
+                ),
+                _buildListTile(
+                  title: 'Условия использования',
+                  onTap: () => _showTermsOfService(context),
+                ),
+                _buildListTile(
+                  title: 'Лицензии',
+                  onTap: () => _showLicenses(context),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Разработчики
+            _buildSection(
+              context: context,
+              title: 'Разработчики',
+              icon: Icons.code,
+              children: [
+                const ListTile(
+                  leading: Icon(Icons.person, size: 20),
+                  title: Text('Команда PulseFit Pro'),
+                  subtitle: Text('Создано с ❤️ для вашего здоровья'),
+                ),
+                _buildListTile(
+                  title: 'GitHub',
+                  subtitle: 'github.com/pulsefit-pro',
+                  onTap: () => _launchUrl('https://github.com/pulsefit-pro'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Копирайт
+            GlassCard(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Text(
+                      '© 2024 PulseFit Pro',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Все права защищены',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white54,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Сделано в России 🇷🇺',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, size: 20),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildListTile({
+    required String title,
+    String? subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      title: Text(title),
+      subtitle: subtitle != null ? Text(subtitle) : null,
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=PulseFit Pro Support',
+    );
+    
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      // Fallback: copy to clipboard
+      await Clipboard.setData(ClipboardData(text: email));
+    }
+  }
+
+  Future<void> _launchTelegram(String username) async {
+    final Uri telegramUri = Uri.parse('https://t.me/$username');
+    
+    if (await canLaunchUrl(telegramUri)) {
+      await launchUrl(telegramUri);
+    } else {
+      // Fallback: copy to clipboard
+      await Clipboard.setData(ClipboardData(text: username));
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.transparent,
+        content: GlassCard(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Политика конфиденциальности',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              const SingleChildScrollView(
+                child: Text(
+                  '''1. Сбор данных
+Мы собираем только необходимые данные для работы приложения: параметры тела, цели тренировок, фотографии прогресса.
+
+2. Хранение данных
+Все ваши данные хранятся локально на вашем устройстве. Мы не передаем их третьим лицам без вашего согласия.
+
+3. Использование AI
+Для анализа изображений мы используем OpenAI API. Изображения передаются в зашифрованном виде и не сохраняются.
+
+4. Ваши права
+Вы можете в любое время удалить все данные через настройки приложения.
+
+5. Контакты
+По вопросам конфиденциальности: privacy@pulsefit.pro''',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Закрыть'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTermsOfService(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.transparent,
+        content: GlassCard(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Условия использования',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              const SingleChildScrollView(
+                child: Text(
+                  '''1. Принятие условий
+Используя PulseFit Pro, вы соглашаетесь с данными условиями.
+
+2. Использование приложения
+Приложение предназначено для информационных целей и не заменяет консультацию с врачом или тренером.
+
+3. Ответственность
+Мы не несем ответственности за результаты использования приложения. Тренируйтесь с осторожностью.
+
+4. Изменения
+Мы можем изменять условия использования. Продолжение использования означает согласие с новыми условиями.
+
+5. Контакты
+По вопросам: legal@pulsefit.pro''',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Закрыть'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLicenses(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.transparent,
+        content: GlassCard(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Лицензии',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Приложение использует следующие библиотеки:\n\n'
+                '• Flutter SDK\n'
+                '• Riverpod\n'
+                '• OpenAI API\n'
+                '• Flutter Local Notifications\n'
+                '• Image Picker\n'
+                '• Shared Preferences\n'
+                '• SQLite\n\n'
+                'Полный список лицензий доступен в исходном коде.',
+                textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Закрыть'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
