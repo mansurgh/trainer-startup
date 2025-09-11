@@ -9,6 +9,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
 import 'state/user_state.dart';
 import 'services/notification_service.dart';
+import 'services/storage_service.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
@@ -19,14 +20,18 @@ Future<void> main() async {
 
   // Стабильные настройки окна (без прозрачности), «мобильный» размер
   await windowManager.ensureInitialized();
-  await windowManager.setTitle('PulseFit Pro');
+  await windowManager.setTitle('Trainer');
   await windowManager.setSize(const Size(410, 750)); // 19.5:9 близко к iPhone 15
   await windowManager.setMinimumSize(const Size(380, 680));
   await windowManager.center();
 
-  // Инициализация уведомлений
+  // Инициализация сервисов
+  await StorageService.initialize();
   await NotificationService.initialize();
   await NotificationService.requestPermissions();
+  
+  // Сбрасываем только фото при каждом запуске для разработки
+  await StorageService.clearPhotoHistory();
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -38,7 +43,7 @@ class MyApp extends ConsumerWidget {
     final user = ref.watch(userProvider);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'PulseFit Pro',
+        title: 'Trainer',
       theme: buildTheme(),
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -50,7 +55,7 @@ class MyApp extends ConsumerWidget {
         Locale('en', ''),
         Locale('ru', ''),
       ],
-      home: user == null ? const OnboardingScreen() : const HomeScreen(),
+      home: const OnboardingScreen(), // Временно для разработки - всегда показываем онбординг
     );
   }
 }

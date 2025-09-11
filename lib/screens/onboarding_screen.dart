@@ -25,7 +25,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       _goal != null &&
       _age.text.trim().isNotEmpty &&
       _height.text.trim().isNotEmpty &&
-      _weight.text.trim().isNotEmpty;
+      _weight.text.trim().isNotEmpty &&
+      _isValidAge(_age.text) &&
+      _isValidHeight(_height.text) &&
+      _isValidWeight(_weight.text);
+
+  bool _isValidAge(String value) {
+    final age = int.tryParse(value);
+    return age != null && age >= 10 && age <= 120;
+  }
+
+  bool _isValidHeight(String value) {
+    final height = int.tryParse(value);
+    return height != null && height >= 100 && height <= 250;
+  }
+
+  bool _isValidWeight(String value) {
+    final weight = double.tryParse(value);
+    return weight != null && weight >= 20 && weight <= 300;
+  }
 
   @override
   void initState() {
@@ -57,7 +75,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             TextField(
               controller: _name,
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(labelText: 'Имя'),
+              decoration: InputDecoration(
+                labelText: 'Имя',
+                errorText: _name.text.isNotEmpty && _name.text.trim().isEmpty 
+                    ? 'Введите имя' 
+                    : null,
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -80,7 +103,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     controller: _age,
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(labelText: 'Возраст'),
+                    decoration: InputDecoration(
+                      labelText: 'Возраст',
+                      errorText: _age.text.isNotEmpty && !_isValidAge(_age.text)
+                          ? 'Возраст от 10 до 120 лет'
+                          : null,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -89,7 +117,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     controller: _height,
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(labelText: 'Рост (см)'),
+                    decoration: InputDecoration(
+                      labelText: 'Рост (см)',
+                      errorText: _height.text.isNotEmpty && !_isValidHeight(_height.text)
+                          ? 'Рост от 100 до 250 см'
+                          : null,
+                    ),
                   ),
                 ),
               ],
@@ -102,7 +135,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     controller: _weight,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     textInputAction: TextInputAction.done,
-                    decoration: const InputDecoration(labelText: 'Вес (кг)'),
+                    decoration: InputDecoration(
+                      labelText: 'Вес (кг)',
+                      errorText: _weight.text.isNotEmpty && !_isValidWeight(_weight.text)
+                          ? 'Вес от 20 до 300 кг'
+                          : null,
+                    ),
                   ),
                 ),
               ],
@@ -125,10 +163,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             FilledButton(
               onPressed: _canContinue
                   ? () async {
-                      // сохранить введённые данные в профиль
+                      // создаем или обновляем профиль пользователя
                       final n = ref.read(userProvider.notifier);
-                      n.setName(_name.text.trim());
-                      n.setParams(
+                      await n.createOrUpdateProfile(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: _name.text.trim(),
                         age: int.tryParse(_age.text),
                         height: int.tryParse(_height.text),
                         weight: double.tryParse(_weight.text),
@@ -138,7 +177,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                       // открыть загрузку фото тела
                       await Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const BodyScanScreen()),
+                        MaterialPageRoute(builder: (_) => const BodyScanScreen(fromOnboarding: true)),
                       );
                     }
                   : null,

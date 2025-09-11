@@ -505,4 +505,79 @@ class AIService {
       gifUrls: const [],
     );
   }
+
+  // Generate training program
+  Future<AIResponse> generateTrainingProgram(String userInfo) async {
+    try {
+      if (_apiKey == null) {
+        return _getFallbackTrainingProgram();
+      }
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/chat/completions'),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'model': 'gpt-4',
+          'messages': [
+            {
+              'role': 'system',
+              'content': '''Ты персональный AI-тренер. Создай детальную программу тренировок на 28 дней.
+              Формат ответа: для каждого дня дай заголовок "День X" и подробное описание тренировки.
+              Включай разминку, основную часть с конкретными упражнениями, подходами и повторениями, заминку.
+              Адаптируй программу под данные пользователя.'''
+            },
+            {
+              'role': 'user',
+              'content': userInfo,
+            }
+          ],
+          'max_tokens': 2000,
+          'temperature': 0.7,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        
+        return AIResponse(
+          type: AIResponseType.program,
+          advice: content,
+          gifUrls: const [],
+        );
+      } else {
+        return _getFallbackTrainingProgram();
+      }
+    } catch (e, stackTrace) {
+      ErrorService.logError(ErrorService.handleException(e, stackTrace));
+      return _getFallbackTrainingProgram();
+    }
+  }
+
+  AIResponse _getFallbackTrainingProgram() {
+    return AIResponse(
+      type: AIResponseType.program,
+      advice: '''День 1 - Верх тела
+Разминка: 10 мин легкого кардио
+• Жим лежа - 3×8-10
+• Тяга штанги - 3×8-10
+• Жим гантелей - 3×10-12
+• Подтягивания - 3×6-8
+• Планка - 3×30 сек
+
+День 2 - Низ тела
+Разминка: 10 мин легкого кардио
+• Приседания - 4×8-10
+• Румынская тяга - 3×8-10
+• Выпады - 3×10 на ногу
+• Подъемы на носки - 3×15-20
+• Планка - 3×30 сек
+
+Продолжи программу на 28 дней...''',
+      gifUrls: const [],
+    );
+  }
 }

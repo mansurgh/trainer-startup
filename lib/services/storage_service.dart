@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/user_model.dart';
 import '../models/daily_plan_model.dart';
@@ -14,8 +16,20 @@ class StorageService {
   static const String _sessionsKey = 'workoutSessions';
   static const String _settingsKey = 'appSettings';
   static Database? _database;
+  static bool _initialized = false;
+
+  static Future<void> initialize() async {
+    if (_initialized) return;
+    
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+    _initialized = true;
+  }
 
   static Future<Database> get database async {
+    await initialize();
     if (_database != null) return _database!;
     _database = await _initDB();
     return _database!;
@@ -23,9 +37,16 @@ class StorageService {
 
   static Future<Database> _initDB() async {
     String path = join(await getDatabasesPath(), 'pulsefit_pro.db');
+    
+    // Удаляем старую базу данных если она существует
+    final file = File(path);
+    if (await file.exists()) {
+      await file.delete();
+    }
+    
     return await openDatabase(
       path,
-      version: 1,
+      version: 3, // Увеличиваем версию для добавления avatarPath
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE user_data(
@@ -37,12 +58,19 @@ class StorageService {
             weight REAL,
             goal TEXT,
             bodyImagePath TEXT,
+            avatarPath TEXT,
+            photoHistory TEXT,
             bodyFatPct REAL,
             musclePct REAL,
             createdAt TEXT,
             lastActive TEXT
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 3) {
+          await db.execute('ALTER TABLE user_data ADD COLUMN avatarPath TEXT');
+        }
       },
     );
   }
@@ -53,9 +81,16 @@ class StorageService {
     prefs.setString(_userKey, jsonEncode(user.toJson()));
 
     final db = await database;
+    
+    // Конвертируем photoHistory в JSON строку для SQLite
+    final userData = user.toJson();
+    if (userData['photoHistory'] != null) {
+      userData['photoHistory'] = jsonEncode(userData['photoHistory']);
+    }
+    
     await db.insert(
       'user_data',
-      user.toJson(),
+      userData,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -70,7 +105,18 @@ class StorageService {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('user_data');
     if (maps.isNotEmpty) {
-      return UserModel.fromJson(maps.first);
+      final userData = maps.first;
+      
+      // Конвертируем photoHistory из JSON строки обратно в List<String>
+      if (userData['photoHistory'] != null && userData['photoHistory'] is String) {
+        try {
+          userData['photoHistory'] = jsonDecode(userData['photoHistory']);
+        } catch (e) {
+          userData['photoHistory'] = null;
+        }
+      }
+      
+      return UserModel.fromJson(userData);
     }
     return null;
   }
@@ -226,5 +272,33 @@ class StorageService {
 
     final db = await database;
     await db.delete('user_data');
+  }
+
+  // Clear database completely (for development)
+  static Future<void> clearDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    
+    // Удаляем файл базы данных
+    String path = join(await getDatabasesPath(), 'pulsefit_pro.db');
+    final file = File(path);
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+
+  // Clear only photo history (for development)
+  static Future<void> clearPhotoHistory() async {
+    final db = await database;
+    await db.update(
+      'user_data',
+      {'photoHistory': null, 'bodyImagePath': null},
+      where: 'id IS NOT NULL',
+    );
   }
 }
