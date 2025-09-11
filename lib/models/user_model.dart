@@ -7,6 +7,8 @@ class UserModel {
   final double? weight;         // kg
   final String? goal;           // fat_loss | muscle_gain | fitness
   final String? bodyImagePath;  // локальный путь к фото
+  final String? avatarPath;     // путь к аватарке
+  final List<String>? photoHistory; // история фотографий для отслеживания прогресса
   final double? bodyFatPct;     // процент жира
   final double? musclePct;      // процент мышц
   final DateTime? createdAt;    // дата создания профиля
@@ -21,6 +23,8 @@ class UserModel {
     this.weight,
     this.goal,
     this.bodyImagePath,
+    this.avatarPath,
+    this.photoHistory,
     this.bodyFatPct,
     this.musclePct,
     this.createdAt,
@@ -36,6 +40,8 @@ class UserModel {
     double? weight,
     String? goal,
     String? bodyImagePath,
+    String? avatarPath,
+    List<String>? photoHistory,
     double? bodyFatPct,
     double? musclePct,
     DateTime? createdAt,
@@ -50,6 +56,8 @@ class UserModel {
       weight: weight ?? this.weight,
       goal: goal ?? this.goal,
       bodyImagePath: bodyImagePath ?? this.bodyImagePath,
+      avatarPath: avatarPath ?? this.avatarPath,
+      photoHistory: photoHistory ?? this.photoHistory,
       bodyFatPct: bodyFatPct ?? this.bodyFatPct,
       musclePct: musclePct ?? this.musclePct,
       createdAt: createdAt ?? this.createdAt,
@@ -67,6 +75,8 @@ class UserModel {
       'weight': weight,
       'goal': goal,
       'bodyImagePath': bodyImagePath,
+      'avatarPath': avatarPath,
+      'photoHistory': photoHistory,
       'bodyFatPct': bodyFatPct,
       'musclePct': musclePct,
       'createdAt': createdAt?.toIso8601String(),
@@ -84,6 +94,8 @@ class UserModel {
       weight: json['weight']?.toDouble(),
       goal: json['goal'],
       bodyImagePath: json['bodyImagePath'],
+      avatarPath: json['avatarPath'],
+      photoHistory: json['photoHistory'] != null ? List<String>.from(json['photoHistory']) : null,
       bodyFatPct: json['bodyFatPct']?.toDouble(),
       musclePct: json['musclePct']?.toDouble(),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme.dart';
 import '../../state/user_state.dart';
@@ -20,22 +21,23 @@ class ProfileTab extends ConsumerWidget {
     final user = ref.watch(userProvider);
 
     ImageProvider avatarProvider() {
-      if (user?.bodyImagePath != null && user!.bodyImagePath!.isNotEmpty) {
-        final f = File(user.bodyImagePath!);
+      // Показываем пользовательскую аватарку или аватарку по умолчанию
+      if (user?.avatarPath != null && user!.avatarPath!.isNotEmpty) {
+        final f = File(user.avatarPath!);
         if (f.existsSync()) return FileImage(f);
       }
       return const AssetImage('assets/placeholder/profile.jpg');
     }
 
     // Правильное отображение имени пользователя
-    final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Добро пожаловать!';
+    final name = (user?.name?.isNotEmpty == true) ? user!.name! : 'Пользователь';
 
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: CustomScrollView(
           slivers: [
-            _buildSliverAppBar(context, name, avatarProvider()),
+            _buildSliverAppBar(context, name, avatarProvider(), ref),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               sliver: SliverList(
@@ -57,18 +59,23 @@ class ProfileTab extends ConsumerWidget {
                   
                   const SizedBox(height: 20),
                   
+                  // Progress Tracking Section
+                  _buildProgressTracking(context, user).animate().fadeIn(duration: 800.ms, delay: 600.ms).slideY(begin: 0.3),
+                  
+                  const SizedBox(height: 20),
+                  
                   // Achievements Section
-                  _buildAchievements(context).animate().fadeIn(duration: 800.ms, delay: 600.ms).slideY(begin: 0.3),
+                  _buildAchievements(context).animate().fadeIn(duration: 800.ms, delay: 800.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
                   // Quick Actions
-                  _buildQuickActions(context).animate().fadeIn(duration: 800.ms, delay: 800.ms).slideY(begin: 0.3),
+                  _buildQuickActions(context).animate().fadeIn(duration: 800.ms, delay: 1000.ms).slideY(begin: 0.3),
                   
                   const SizedBox(height: 20),
                   
                   // Profile Management
-                  _buildProfileManagement(context).animate().fadeIn(duration: 800.ms, delay: 1000.ms).slideY(begin: 0.3),
+                  _buildProfileManagement(context).animate().fadeIn(duration: 800.ms, delay: 1200.ms).slideY(begin: 0.3),
                 ]),
               ),
             ),
@@ -79,25 +86,91 @@ class ProfileTab extends ConsumerWidget {
   }
 
   // Sliver App Bar with parallax effect
-  Widget _buildSliverAppBar(BuildContext context, String name, ImageProvider avatarProvider) {
+  Widget _buildSliverAppBar(BuildContext context, String name, ImageProvider avatarProvider, WidgetRef ref) {
     return SliverAppBar(
       expandedHeight: 280,
       pinned: true,
       stretch: true,
       backgroundColor: Colors.transparent,
       actions: [
-        IconButton(
-          onPressed: () => _showSettingsModal(context),
-          icon: const Icon(Icons.settings_rounded),
-          tooltip: 'Настройки',
+        Container(
+          margin: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            onPressed: () => _changeAvatar(context, ref),
+            icon: const Icon(
+              Icons.camera_alt_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            tooltip: 'Сменить аватарку',
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            onPressed: () => _showSettingsModal(context),
+            icon: const Icon(
+              Icons.settings_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            tooltip: 'Настройки',
+          ),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            name,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 1.0,
+              shadows: [
+                Shadow(
+                  color: Colors.black,
+                  blurRadius: 20,
+                  offset: Offset(0, 4),
+                ),
+                Shadow(
+                  color: Colors.black87,
+                  blurRadius: 12,
+                  offset: Offset(0, 2),
+                ),
+                Shadow(
+                  color: Colors.black54,
+                  blurRadius: 6,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
         background: Stack(
@@ -145,11 +218,25 @@ class ProfileTab extends ConsumerWidget {
                   size: 32,
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'ИМТ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
+                GestureDetector(
+                  onTap: () => _showBMIDialog(context),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'ИМТ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.info_outline,
+                        size: 14,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -182,6 +269,8 @@ class ProfileTab extends ConsumerWidget {
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.7),
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -190,6 +279,9 @@ class ProfileTab extends ConsumerWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -233,7 +325,7 @@ class ProfileTab extends ConsumerWidget {
   // Body Composition Circular Progress
   Widget _buildBodyComposition(BuildContext context, UserModel? user) {
     final fatPct = user?.bodyFatPct ?? 20.0;
-    final musclePct = user?.musclePct ?? 70.0;
+    final musclePct = user?.musclePct ?? 40.0;
     
     return GlassCard(
       child: Column(
@@ -260,23 +352,29 @@ class ProfileTab extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildCircularProgress(
-                'Жир',
-                fatPct,
-                Colors.orangeAccent,
-                100,
+              Flexible(
+                child: _buildCircularProgress(
+                  'Жир',
+                  fatPct,
+                  Colors.orangeAccent,
+                  100,
+                ),
               ),
-              _buildCircularProgress(
-                'Мышцы',
-                musclePct,
-                Colors.greenAccent,
-                100,
+              Flexible(
+                child: _buildCircularProgress(
+                  'Мышцы',
+                  musclePct,
+                  Colors.greenAccent,
+                  100,
+                ),
               ),
-              _buildCircularProgress(
-                'Вода',
-                100 - fatPct - (musclePct * 0.4),
-                Colors.blueAccent,
-                100,
+              Flexible(
+                child: _buildCircularProgress(
+                  'Вода',
+                  (100 - fatPct - (musclePct * 0.4)).clamp(0, 100),
+                  Colors.blueAccent,
+                  100,
+                ),
               ),
             ],
           ),
@@ -289,43 +387,58 @@ class ProfileTab extends ConsumerWidget {
     final percentage = (value / max).clamp(0.0, 1.0);
     
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: 80,
-          height: 80,
+          width: 120,
+          height: 120,
           child: Stack(
+            alignment: Alignment.center,
             children: [
-              CircularProgressIndicator(
-                value: 1.0,
-                strokeWidth: 8,
-                backgroundColor: Colors.white.withOpacity(0.1),
-                valueColor: AlwaysStoppedAnimation(Colors.white.withOpacity(0.1)),
-              ),
-              CircularProgressIndicator(
-                value: percentage,
-                strokeWidth: 8,
-                backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation(color),
-              ),
-              Center(
-                child: Text(
-                  '${value.toInt()}%',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
+              // Фоновое кольцо
+              SizedBox(
+                width: 100,
+                height: 100,
+                child: CircularProgressIndicator(
+                  value: 1.0,
+                  strokeWidth: 16,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  valueColor: AlwaysStoppedAnimation(Colors.white.withOpacity(0.1)),
                 ),
+              ),
+              // Основное кольцо
+              SizedBox(
+                width: 100,
+                height: 100,
+                child: CircularProgressIndicator(
+                  value: percentage,
+                  strokeWidth: 16,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation(color),
+                ),
+              ),
+              Text(
+                '${value.toInt()}%',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withOpacity(0.7),
+            fontSize: 16,
+            color: Colors.white.withOpacity(0.8),
+            fontWeight: FontWeight.w600,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -346,10 +459,19 @@ class ProfileTab extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               const Text(
-                'Физические параметры',
+                'Параметры',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => _navigateToEditProfile(context),
+                icon: const Icon(Icons.edit_rounded, size: 18),
+                label: const Text('Изменить'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.tertiary,
                 ),
               ),
             ],
@@ -556,7 +678,7 @@ class ProfileTab extends ConsumerWidget {
                   'Фото прогресса',
                   Colors.purpleAccent,
                   () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const BodyScanScreen()),
+                    MaterialPageRoute(builder: (_) => const BodyScanScreen(fromOnboarding: false)),
                   ),
                 ),
               ),
@@ -835,10 +957,499 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
+  // Progress Tracking Section
+  Widget _buildProgressTracking(BuildContext context, UserModel? user) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.trending_up_rounded,
+                  color: Colors.greenAccent,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Прогресс',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => _showProgressGallery(context, user),
+                  icon: const Icon(Icons.photo_library_rounded, size: 18),
+                  label: const Text('Галерея'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.greenAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (user?.photoHistory != null && user!.photoHistory!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(user.photoHistory!.last),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 16, color: Colors.white70),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Последнее фото: ${_formatDate(user.lastActive ?? DateTime.now())}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${user.photoHistory!.length} фото',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white24, style: BorderStyle.solid),
+                      color: Colors.white.withOpacity(0.05),
+                    ),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt_outlined,
+                          size: 48,
+                          color: Colors.white38,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Сделайте первое фото для отслеживания прогресса',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => _navigateToBodyScan(context),
+                      icon: const Icon(Icons.camera_alt_rounded),
+                      label: const Text('Сделать фото'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.greenAccent,
+                        foregroundColor: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-  void _showAboutDialog(BuildContext context) {
+  // Progress Gallery Dialog
+  void _showProgressGallery(BuildContext context, UserModel? user) {
+    final photoHistory = user?.photoHistory ?? <String>[];
+    
+    showDialog(
+      context: context,
+      builder: (context) => _ProgressGalleryDialog(photoHistory: photoHistory),
+    );
+  }
+
+  // Navigation methods
+  void _navigateToEditProfile(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AboutScreen()),
+      MaterialPageRoute(builder: (_) => const EditProfileDataScreen()),
+    );
+  }
+
+  void _navigateToBodyScan(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const BodyScanScreen(fromOnboarding: false)),
+    );
+  }
+
+  // BMI Dialog
+  void _showBMIDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.transparent,
+        content: GlassCard(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Индекс массы тела (ИМТ)',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'ИМТ = вес (кг) / рост² (м)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Интерпретация:\n'
+                '• < 18.5 - Недостаточный вес\n'
+                '• 18.5-24.9 - Нормальный вес\n'
+                '• 25.0-29.9 - Избыточный вес\n'
+                '• ≥ 30.0 - Ожирение',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Понятно'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper method for date formatting
+  String _formatDate(DateTime date) {
+    return '${date.day}.${date.month}.${date.year}';
+  }
+
+  // Change avatar method
+  Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final userNotifier = ref.read(userProvider.notifier);
+        await userNotifier.setAvatarPath(image.path);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Аватарка успешно изменена! 📸'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка при выборе аватарки: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}
+
+class _ProgressGalleryDialog extends StatefulWidget {
+  final List<String> photoHistory;
+  
+  const _ProgressGalleryDialog({required this.photoHistory});
+  
+  @override
+  State<_ProgressGalleryDialog> createState() => _ProgressGalleryDialogState();
+}
+
+class _ProgressGalleryDialogState extends State<_ProgressGalleryDialog> {
+  late PageController _pageController;
+  int _currentPage = 0;
+  
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+  
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+  
+  void _onPageChanged(int page) {
+    setState(() {
+      _currentPage = page;
+    });
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  const Icon(Icons.photo_library_rounded, color: Colors.greenAccent),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Галерея прогресса',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            if (widget.photoHistory.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 300,
+                      child: Stack(
+                        children: [
+                          PageView.builder(
+                            controller: _pageController,
+                            onPageChanged: _onPageChanged,
+                            itemCount: widget.photoHistory.length,
+                            itemBuilder: (context, index) {
+                              final photoPath = widget.photoHistory[index];
+                              return Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.white24),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(photoPath),
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          // Стрелка влево
+                          if (widget.photoHistory.length > 1)
+                            Positioned(
+                              left: 8,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (_currentPage > 0) {
+                                      _pageController.previousPage(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.6),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white24),
+                                    ),
+                                    child: Icon(
+                                      Icons.chevron_left,
+                                      color: _currentPage > 0 ? Colors.white : Colors.white38,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Стрелка вправо
+                          if (widget.photoHistory.length > 1)
+                            Positioned(
+                              right: 8,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (_currentPage < widget.photoHistory.length - 1) {
+                                      _pageController.nextPage(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.6),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white24),
+                                    ),
+                                    child: Icon(
+                                      Icons.chevron_right,
+                                      color: _currentPage < widget.photoHistory.length - 1 ? Colors.white : Colors.white38,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Индикаторы страниц
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        widget.photoHistory.length,
+                        (index) => GestureDetector(
+                          onTap: () {
+                            _pageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: index == _currentPage 
+                                  ? Colors.greenAccent 
+                                  : Colors.white.withOpacity(0.3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Фото ${_currentPage + 1} из ${widget.photoHistory.length}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white70,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            if (widget.photoHistory.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.photo_library_outlined,
+                      size: 64,
+                      color: Colors.white.withOpacity(0.3),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Нет фотографий',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Загрузите фото тела для отслеживания прогресса',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

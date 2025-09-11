@@ -10,9 +10,19 @@ class UserNotifier extends StateNotifier<UserModel?> {
 
   /// Загрузить пользователя из хранилища
   Future<void> _loadUser() async {
-    final user = await StorageService.getUser();
-    if (user != null) {
-      state = user;
+    try {
+      final user = await StorageService.getUser();
+      if (user != null) {
+        // Очищаем фото при загрузке для разработки
+        final userWithoutPhotos = user.copyWith(
+          bodyImagePath: null,
+          photoHistory: <String>[],
+        );
+        state = userWithoutPhotos;
+        await StorageService.saveUser(userWithoutPhotos);
+      }
+    } catch (e) {
+      // Игнорируем ошибки загрузки при старте
     }
   }
 
@@ -51,8 +61,39 @@ class UserNotifier extends StateNotifier<UserModel?> {
 
   Future<void> setBodyImagePath(String path) async {
     if (!File(path).existsSync()) return;
+    
+    // Добавляем фото в историю
+    final currentHistory = state?.photoHistory ?? <String>[];
+    final newHistory = [...currentHistory, path];
+    
     final updatedUser = state?.copyWith(
-      bodyImagePath: path,
+      bodyImagePath: path, // Последнее фото
+      photoHistory: newHistory, // Вся история
+      lastActive: DateTime.now(),
+    );
+    if (updatedUser != null) {
+      state = updatedUser;
+      await StorageService.saveUser(updatedUser);
+    }
+  }
+
+  Future<void> clearPhotoHistory() async {
+    final updatedUser = state?.copyWith(
+      bodyImagePath: null,
+      photoHistory: <String>[],
+      lastActive: DateTime.now(),
+    );
+    if (updatedUser != null) {
+      state = updatedUser;
+      await StorageService.saveUser(updatedUser);
+    }
+  }
+
+  Future<void> setAvatarPath(String path) async {
+    if (!File(path).existsSync()) return;
+    
+    final updatedUser = state?.copyWith(
+      avatarPath: path,
       lastActive: DateTime.now(),
     );
     if (updatedUser != null) {

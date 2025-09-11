@@ -8,7 +8,12 @@ import '../state/user_state.dart';
 import 'home_screen.dart';  // <– импорт главного экрана
 
 class BodyScanScreen extends ConsumerStatefulWidget {
-  const BodyScanScreen({super.key});
+  final bool fromOnboarding;
+  
+  const BodyScanScreen({
+    super.key,
+    this.fromOnboarding = false,
+  });
 
   @override
   ConsumerState<BodyScanScreen> createState() => _BodyScanScreenState();
@@ -24,16 +29,29 @@ class _BodyScanScreenState extends ConsumerState<BodyScanScreen> {
       setState(() => _path = img.path);
       final n = ref.read(userProvider.notifier);
       await n.setBodyImagePath(img.path);
-      n.setComposition(fatPct: 20, musclePct: 70);
+      n.setComposition(fatPct: 20, musclePct: 40);
     }
   }
 
-  // Переход на экран создания программы тренировок (HomeScreen → вкладка "Тренировка")
-  void _closeToTraining() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-      (route) => false,
-    );
+  // Переход на экран в зависимости от источника
+  void _closeToNext() {
+    if (widget.fromOnboarding) {
+      // Из онбординга - переходим на тренировки
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const HomeScreen(initialTab: 0), // 0 = вкладка тренировок
+        ),
+        (route) => false,
+      );
+    } else {
+      // Из профиля - возвращаемся в профиль
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const HomeScreen(initialTab: 2), // 2 = вкладка профиля
+        ),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -48,7 +66,7 @@ class _BodyScanScreenState extends ConsumerState<BodyScanScreen> {
             IconButton(
               icon: const Icon(Icons.close_rounded),
               tooltip: 'Закрыть',
-              onPressed: _closeToTraining,  // <– используем новый метод
+              onPressed: _closeToNext,  // <– используем новый метод
             ),
           ],
         ),
@@ -67,11 +85,51 @@ class _BodyScanScreenState extends ConsumerState<BodyScanScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              FilledButton.tonalIcon(
-                onPressed: _pick,
-                icon: const Icon(Icons.photo),
-                label: Text(_path == null ? 'Загрузить фото' : 'Заменить фото'),
-              ),
+              if (_path == null)
+                FilledButton.tonalIcon(
+                  onPressed: _pick,
+                  icon: const Icon(Icons.photo),
+                  label: const Text('Загрузить фото'),
+                )
+              else
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.tonalIcon(
+                            onPressed: _pick,
+                            icon: const Icon(Icons.photo),
+                            label: const Text('Заменить фото'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: _closeToNext,
+                            icon: const Icon(Icons.arrow_forward_rounded),
+                            label: const Text('Далее'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.greenAccent,
+                              foregroundColor: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.fromOnboarding 
+                        ? 'Фото загружено! Нажмите "Далее" для перехода к программе тренировок.'
+                        : 'Фото загружено! Нажмите "Далее" для перехода к профилю.',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

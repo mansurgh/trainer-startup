@@ -7,14 +7,21 @@ import 'tabs/profile_tab.dart';
 import '../core/theme.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final int initialTab;
+  const HomeScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _index = 0;
+  late int _index;
+
+  @override
+  void initState() {
+    super.initState();
+    _index = widget.initialTab;
+  }
 
   // Сделали const, чтобы убрать предупреждение анализатора (B)
   final pages = const [

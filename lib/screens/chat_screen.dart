@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/ai_service.dart';
+import '../models/ai_response.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -20,11 +22,16 @@ class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _listCtrl = ScrollController();
   final List<_Msg> _msgs = [];
+  final AIService _aiService = AIService();
+  bool _isLoading = false;
   bool get _empty => _msgs.isEmpty;
 
   Future<void> _send({String? text, String? imagePath}) async {
     if ((text == null || text.trim().isEmpty) && imagePath == null) return;
-    setState(() => _msgs.add(_Msg.user(text: text?.trim(), imagePath: imagePath)));
+    setState(() {
+      _msgs.add(_Msg.user(text: text?.trim(), imagePath: imagePath));
+      _isLoading = true;
+    });
     _controller.clear();
 
     // автоскролл
@@ -37,10 +44,35 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
 
-    // заглушка ответа бота
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() => _msgs.add(_Msg.bot(
-        text: imagePath != null ? '≈ 450 ккал' : 'Привет! Я твой тренер.')));
+    try {
+      // Получаем ответ от AI
+      final response = await _aiService.getResponse(
+        text ?? 'Проанализируй это фото',
+        imagePath: imagePath,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _msgs.add(_Msg.bot(text: response.message));
+          _isLoading = false;
+        });
+        
+        // автоскролл после ответа
+        await Future.delayed(const Duration(milliseconds: 100));
+        _listCtrl.animateTo(
+          _listCtrl.position.maxScrollExtent + 120,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _msgs.add(_Msg.bot(text: 'Извините, произошла ошибка. Попробуйте еще раз.'));
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _pickImage() async {
@@ -73,8 +105,40 @@ class _ChatScreenState extends State<ChatScreen> {
             child: ListView.builder(
               controller: _listCtrl,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _msgs.length,
+              itemCount: _msgs.length + (_isLoading ? 1 : 0),
               itemBuilder: (_, i) {
+                if (i == _msgs.length && _isLoading) {
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.all(10),
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'AI думает...',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
                 final m = _msgs[i];
                 final align = m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
                 final bg = m.fromUser
