@@ -6,6 +6,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme.dart';
+import '../../core/modern_components.dart';
+import '../../core/sexy_components.dart';
 import '../../state/user_state.dart';
 import '../../models/user_model.dart';
 import '../body_scan_screen.dart';
@@ -761,19 +763,20 @@ class ProfileTab extends ConsumerWidget {
       children: [
         SizedBox(
           width: double.infinity,
-          child: FilledButton.icon(
+          child: ModernComponents.glassButton(
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const EditProfileDataScreen()),
               );
             },
-            icon: const Icon(Icons.edit),
-            label: const Text('Редактировать профиль'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.all(16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.edit, size: 20),
+                const SizedBox(width: 8),
+                const Text('Редактировать профиль'),
+              ],
             ),
           ),
         ),
@@ -874,7 +877,7 @@ class ProfileTab extends ConsumerWidget {
               const SizedBox(height: 16),
               const Text('Детальная аналитика скоро будет доступна!'),
               const SizedBox(height: 16),
-              TextButton(
+              ModernComponents.glassButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Закрыть'),
               ),
@@ -928,23 +931,21 @@ class ProfileTab extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    child: TextButton(
+                    child: ModernComponents.glassButton(
                       onPressed: () => Navigator.pop(context),
                       child: const Text('Отмена'),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: FilledButton(
+                    child: ModernComponents.animatedButton(
                       onPressed: () {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Функция сброса скоро! 🔄')),
                         );
                       },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
+                      backgroundColor: Colors.red,
                       child: const Text('Сбросить'),
                     ),
                   ),
@@ -1072,13 +1073,16 @@ class ProfileTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    child: FilledButton.icon(
+                    child: ModernComponents.animatedButton(
                       onPressed: () => _navigateToBodyScan(context),
-                      icon: const Icon(Icons.camera_alt_rounded),
-                      label: const Text('Сделать фото'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.greenAccent,
-                        foregroundColor: Colors.black,
+                      backgroundColor: Colors.greenAccent,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.camera_alt_rounded, color: Colors.black),
+                          const SizedBox(width: 8),
+                          const Text('Сделать фото', style: TextStyle(color: Colors.black)),
+                        ],
                       ),
                     ),
                   ),

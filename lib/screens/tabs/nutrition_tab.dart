@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme.dart';
+import '../../core/modern_components.dart';
+import '../../l10n/app_localizations.dart';
 import '../../state/meal_schedule_state.dart';
 import '../../state/fridge_state.dart';
 import '../meal_schedule_screen.dart';
@@ -75,7 +77,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                 children: [
                   const Center(child: SizedBox(width: 40, child: Divider(thickness: 3))),
                   const SizedBox(height: 8),
-                  const Text('Рецепты по фото холодильника', style: TextStyle(fontWeight: FontWeight.w800)),
+                  Text(AppLocalizations.of(context)!.uploadFridgePhotoLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 10),
                   ...recipes.map((r) => ListTile(
                         dense: true,
@@ -85,17 +87,21 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                         ),
                         title: Text(r.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                         subtitle: Text('${r.grams} г • ${r.kcal} ккал', style: const TextStyle(color: Colors.white70)),
-                        trailing: FilledButton.tonal(onPressed: () => addToPlan(r), child: const Text('В рацион')),
+                        trailing: IconButton(
+                          onPressed: () => addToPlan(r),
+                          icon: const Icon(Icons.add_circle_outline, color: Color(0xFF00D4AA)),
+                          tooltip: AppLocalizations.of(context)!.addToMeal,
+                        ),
                       )),
                   if (recipes.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('Все добавлено ✔', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(AppLocalizations.of(context)!.allAdded, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
                     ),
                   const SizedBox(height: 8),
                   const Divider(),
                   const SizedBox(height: 8),
-                  const Text('Предложенные продукты', style: TextStyle(fontWeight: FontWeight.w800)),
+                  Text(AppLocalizations.of(context)!.suggestedProducts, style: const TextStyle(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
@@ -118,15 +124,16 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                     }).toList(),
                   ),
                   if (suggested.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
-                      child: Text('Отлично! Всё учтено.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(AppLocalizations.of(context)!.excellentAllAccounted, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
                     ),
                   const SizedBox(height: 10),
-                  FilledButton(
+                  ModernComponents.animatedButton(
                     onPressed: () => ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('Партнёрский магазин — скоро ✨'))),
-                    child: const Text('Купить всё выбранное'),
+                        .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.partnerStoreSoon))),
+                    color: Theme.of(context).colorScheme.primary,
+                    child: Text(AppLocalizations.of(context)!.buyAllSelected),
                   ),
                 ],
               ),
@@ -145,7 +152,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(title: const Text('Питание')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.nutrition)),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
@@ -155,8 +162,8 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
               child: ListTile(
                 leading: const Icon(Icons.chat_bubble_outline_rounded),
-                title: const Text('Чат с тренером'),
-                subtitle: const Text('КБЖУ по фото, контроль питания, вопросы'),
+                title: Text(AppLocalizations.of(context)!.chatWithTrainer),
+                subtitle: Text(AppLocalizations.of(context)!.nutritionByPhoto),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChatScreen())),
               ),
@@ -174,11 +181,14 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                   children: [
                     Row(
                       children: [
-                        const Text('Рацион на сегодня', style: TextStyle(fontWeight: FontWeight.w800)),
+                        Text(AppLocalizations.of(context)!.todayMealPlan, style: const TextStyle(fontWeight: FontWeight.w800)),
                         const Spacer(),
-                        FilledButton.tonal(
+                        ModernComponents.animatedButton(
                           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MealScheduleScreen())),
-                          child: const Text('Полный рацион'),
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 80,
+                          height: 36,
+                          child: const Text('Полный', style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     ),
@@ -229,9 +239,9 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
               color: Colors.white.withValues(alpha: 0.04),
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              child: const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Загружай фото холодильника — подскажем, что докупить и что приготовить.'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(AppLocalizations.of(context)!.uploadFridgePhotoDesc),
               ),
             ),
             const SizedBox(height: 12),
@@ -241,7 +251,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
               OutlinedButton.icon(
                 onPressed: _chooseFridgePhoto,
                 icon: const Icon(Icons.add_a_photo_rounded),
-                label: const Text('Загрузить фото холодильника'),
+                label: Text(AppLocalizations.of(context)!.uploadFridgePhotoLabel),
               )
             else
               Row(
@@ -263,14 +273,15 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        FilledButton(
+                        ModernComponents.animatedButton(
                           onPressed: _analyzeFridge,
-                          child: const Text('Предложить рецепты'),
+                          color: const Color(0xFF00D4AA),
+                          child: Text(AppLocalizations.of(context)!.suggestRecipes),
                         ),
                         const SizedBox(height: 8),
-                        FilledButton.tonal(
+                        ModernComponents.glassButton(
                           onPressed: _chooseFridgePhoto,
-                          child: const Text('Изменить фото'),
+                          child: Text(AppLocalizations.of(context)!.changePhoto),
                         ),
                       ],
                     ),

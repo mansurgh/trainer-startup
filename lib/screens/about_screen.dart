@@ -45,7 +45,7 @@ class AboutScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'PulseFit Pro',
+                    'Trainer',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -173,11 +173,6 @@ class AboutScreen extends StatelessWidget {
                   leading: Icon(Icons.person, size: 20),
                   title: Text('Команда PulseFit Pro'),
                   subtitle: Text('Создано с ❤️ для вашего здоровья'),
-                ),
-                _buildListTile(
-                  title: 'GitHub',
-                  subtitle: 'github.com/pulsefit-pro',
-                  onTap: () => _launchUrl('https://github.com/pulsefit-pro'),
                 ),
               ],
             ),

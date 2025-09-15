@@ -9,16 +9,19 @@ ThemeData buildTheme() {
 
   final base = ThemeData(brightness: Brightness.dark, useMaterial3: true);
   final scheme = ColorScheme.fromSeed(
-    seedColor: const Color(0xFF7C3AED),
+    seedColor: const Color(0xFF5B21B6), // Более темный фиолетовый
     brightness: Brightness.dark,
     // background (deprecated в 3.22+) не задаём
-    surface: const Color(0xFF121217),
-    tertiary: const Color(0xFF22D3EE),
+    surface: const Color(0xFF0F0F0F), // Более темный фон
+    tertiary: const Color(0xFF06B6D4), // Более насыщенный голубой
+    primary: const Color(0xFF5B21B6), // Темный фиолетовый
+    secondary: const Color(0xFF1E1B4B), // Темно-синий
+    error: const Color(0xFFFF6B6B), // Мягкий красный
   );
 
-  final display = GoogleFonts.bricolageGrotesqueTextTheme(base.textTheme)
+  final display = GoogleFonts.interTextTheme(base.textTheme)
       .apply(displayColor: on, bodyColor: on);
-  final body = GoogleFonts.manropeTextTheme(base.textTheme)
+  final body = GoogleFonts.interTextTheme(base.textTheme)
       .apply(displayColor: on, bodyColor: on);
 
   return base.copyWith(
@@ -31,20 +34,27 @@ ThemeData buildTheme() {
       headlineLarge: display.headlineLarge,
       headlineMedium: display.headlineMedium,
       headlineSmall: display.headlineSmall,
-      titleLarge: body.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+      titleLarge: body.titleLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
+      titleMedium: body.titleMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3),
+      titleSmall: body.titleSmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.2),
+      bodyLarge: body.bodyLarge?.copyWith(fontWeight: FontWeight.w500, letterSpacing: 0.1),
+      bodyMedium: body.bodyMedium?.copyWith(fontWeight: FontWeight.w400, letterSpacing: 0.1),
+      bodySmall: body.bodySmall?.copyWith(fontWeight: FontWeight.w400, letterSpacing: 0.2),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       centerTitle: true,
     ),
-    // <= основная причина твоей ошибки: теперь нужен CardThemeData
+    // Улучшенные карточки с Material 3
     cardTheme: CardThemeData(
       color: Colors.white.withValues(alpha: 0.04),
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shadowColor: Colors.black.withValues(alpha: 0.3),
     ),
+    // Улучшенные поля ввода
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white.withValues(alpha: 0.05),
@@ -52,6 +62,77 @@ ThemeData buildTheme() {
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: Color(0x33FFFFFF)),
       ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: scheme.primary.withValues(alpha: 0.8), width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: scheme.error.withValues(alpha: 0.8)),
+      ),
+      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+    ),
+    // Кнопки в стиле Apple
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, letterSpacing: 0.2),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white.withValues(alpha: 0.08),
+        foregroundColor: scheme.onSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+      ),
+    ),
+    // Навигация в стиле Apple
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: Colors.black.withValues(alpha: 0.9),
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: scheme.primary.withValues(alpha: 0.15),
+      elevation: 0,
+      height: 80,
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return TextStyle(
+            color: scheme.primary, 
+            fontWeight: FontWeight.w700, // Более жирный для выделения
+            fontSize: 13, // Чуть больше размер
+            letterSpacing: 0.3,
+          );
+        }
+        return TextStyle(
+          color: Colors.white.withValues(alpha: 0.4), // Более тусклый
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.2,
+        );
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return IconThemeData(color: scheme.primary, size: 26); // Больше размер для выделения
+        }
+        return IconThemeData(color: Colors.white.withValues(alpha: 0.4), size: 22); // Более тусклый и меньше
+      }),
+    ),
+    // Список
+    listTileTheme: ListTileThemeData(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
 }

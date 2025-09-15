@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/user_model.dart';
 import '../models/daily_plan_model.dart';
 import '../models/exercise.dart';
@@ -300,5 +301,60 @@ class StorageService {
       {'photoHistory': null, 'bodyImagePath': null},
       where: 'id IS NOT NULL',
     );
+  }
+
+  // Методы для работы с фотографиями прогресса
+  static Future<String> saveProgressPhoto(String imagePath) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final progressDir = Directory('${directory.path}/progress_photos');
+    if (!await progressDir.exists()) {
+      await progressDir.create(recursive: true);
+    }
+    
+    final fileName = 'progress_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final newPath = '${progressDir.path}/$fileName';
+    
+    await File(imagePath).copy(newPath);
+    
+    // Сохраняем путь в SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> photos = prefs.getStringList('progress_photos') ?? [];
+    photos.add(newPath);
+    await prefs.setStringList('progress_photos', photos);
+    
+    return newPath;
+  }
+
+  static Future<List<String>> getProgressPhotos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> photos = prefs.getStringList('progress_photos') ?? [];
+    
+    // Проверяем, что файлы существуют
+    final existingPhotos = <String>[];
+    for (final photo in photos) {
+      if (await File(photo).exists()) {
+        existingPhotos.add(photo);
+      }
+    }
+    
+    // Обновляем список, если некоторые файлы были удалены
+    if (existingPhotos.length != photos.length) {
+      await prefs.setStringList('progress_photos', existingPhotos);
+    }
+    
+    return existingPhotos;
+  }
+
+  static Future<void> deleteProgressPhoto(String photoPath) async {
+    try {
+      await File(photoPath).delete();
+      
+      final prefs = await SharedPreferences.getInstance();
+      final List<String> photos = prefs.getStringList('progress_photos') ?? [];
+      photos.remove(photoPath);
+      await prefs.setStringList('progress_photos', photos);
+    } catch (e) {
+      // Игнорируем ошибки удаления файла
+    }
   }
 }

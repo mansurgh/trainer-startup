@@ -9,11 +9,17 @@ import 'error_service.dart';
 
 class AIService {
   static const String _baseUrl = 'https://api.openai.com/v1';
-  String? get _apiKey => dotenv.env['OPENAI_API_KEY'];
+  String? get _apiKey {
+    try {
+      return dotenv.env['OPENAI_API_KEY'] ?? 'demo-key';
+    } catch (e) {
+      return 'demo-key';
+    }
+  }
 
   Future<AIResponse> getResponse(String text, {String? imagePath}) async {
     try {
-      if (_apiKey == null) {
+      if (_apiKey == null || _apiKey == 'demo-key') {
         return _getFallbackResponse(text, imagePath);
       }
 
@@ -75,7 +81,7 @@ class AIService {
 
   Future<AIResponse> analyzeFood(String imagePath) async {
     try {
-      if (_apiKey == null) {
+      if (_apiKey == null || _apiKey == 'demo-key') {
         return _getFallbackFoodAnalysis();
       }
 
@@ -150,7 +156,7 @@ class AIService {
 
   Future<AIResponse> suggestRecipe(String imagePath) async {
     try {
-      if (_apiKey == null) {
+      if (_apiKey == null || _apiKey == 'demo-key') {
         return _getFallbackRecipe();
       }
 
@@ -209,7 +215,7 @@ class AIService {
 
   Future<AIResponse> bodyCheck(String imagePath) async {
     try {
-      if (_apiKey == null) {
+      if (_apiKey == null || _apiKey == 'demo-key') {
         return _getFallbackBodyCheck();
       }
 
@@ -267,7 +273,7 @@ class AIService {
 
   Future<AIResponse> exerciseDetect(String imagePath) async {
     try {
-      if (_apiKey == null) {
+      if (_apiKey == null || _apiKey == 'demo-key') {
         return _getFallbackExerciseDetect();
       }
 
@@ -326,7 +332,7 @@ class AIService {
 
   Future<AIResponse> generateProgram(UserModel user, {String? bodyImagePath}) async {
     try {
-      if (_apiKey == null) {
+      if (_apiKey == null || _apiKey == 'demo-key') {
         return _getFallbackProgram(user);
       }
 
@@ -509,7 +515,7 @@ class AIService {
   // Generate training program
   Future<AIResponse> generateTrainingProgram(String userInfo) async {
     try {
-      if (_apiKey == null) {
+      if (_apiKey == null || _apiKey == 'demo-key') {
         return _getFallbackTrainingProgram();
       }
 
