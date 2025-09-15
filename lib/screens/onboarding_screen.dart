@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../core/modern_components.dart';
+import '../core/apple_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/user_state.dart';
 import 'body_scan_screen.dart';
@@ -68,7 +70,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(title: const Text('Добро пожаловать')),
+        appBar: AppBar(
+          title: AppleComponents.premiumText(
+            'Добро пожаловать',
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+            ),
+          ),
+        ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
@@ -159,30 +169,51 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               onChanged: (v) => setState(() => _goal = v),
             ),
 
-            const SizedBox(height: 20),
-            FilledButton(
+            const SizedBox(height: 24),
+            AppleComponents.premiumButton(
               onPressed: _canContinue
                   ? () async {
-                      // создаем или обновляем профиль пользователя
-                      final n = ref.read(userProvider.notifier);
-                      await n.createOrUpdateProfile(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        name: _name.text.trim(),
-                        age: int.tryParse(_age.text),
-                        height: int.tryParse(_height.text),
-                        weight: double.tryParse(_weight.text),
-                        gender: _gender,
-                        goal: _goal,
-                      );
+                      try {
+                        // создаем или обновляем профиль пользователя
+                        final n = ref.read(userProvider.notifier);
+                        await n.createOrUpdateProfile(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _name.text.trim(),
+                          age: int.tryParse(_age.text),
+                          height: int.tryParse(_height.text),
+                          weight: double.tryParse(_weight.text),
+                          gender: _gender,
+                          goal: _goal,
+                        );
 
-                      // открыть загрузку фото тела
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const BodyScanScreen(fromOnboarding: true)),
-                      );
+                        // открыть загрузку фото тела
+                        if (mounted) {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const BodyScanScreen(fromOnboarding: true)),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Ошибка: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
                     }
-                  : null,
-              child: const Text('Продолжить'),
-            ),
+                  : () {
+                      // Показываем что нужно заполнить
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Заполните все поля'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    },
+              child: Text(_canContinue ? 'Продолжить' : 'Заполните все поля'),
+            ).withAppleFadeIn(delay: const Duration(milliseconds: 800)),
           ],
         ),
       ),

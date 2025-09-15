@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'tabs/training_tab.dart';
 import 'tabs/nutrition_tab.dart';
-import 'tabs/profile_tab.dart';
+import 'tabs/modern_profile_tab.dart';
+import 'modern_workout_screen.dart';
 import '../core/theme.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   final int initialTab;
-  const HomeScreen({super.key, this.initialTab = 0});
+  const HomeScreen({super.key, this.initialTab = 0}); // Тренировка - первая страница
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -25,9 +25,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // Сделали const, чтобы убрать предупреждение анализатора (B)
   final pages = const [
-    TrainingTab(),
+    ModernWorkoutScreen(), // Тренировка - главная страница
     NutritionTab(),
-    ProfileTab(),
+    ModernProfileTab(),
   ];
 
   @override

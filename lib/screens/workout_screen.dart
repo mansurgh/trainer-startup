@@ -8,7 +8,9 @@ import '../state/exercisedb_providers.dart';
 import '../widgets/workout_media.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
-  const WorkoutScreen({super.key});
+  final String? selectedExercise;
+  final List<String>? dayPlan;
+  const WorkoutScreen({super.key, this.selectedExercise, this.dayPlan});
   @override
   ConsumerState<WorkoutScreen> createState() => _WorkoutScreenState();
 }
@@ -20,17 +22,34 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   bool _running = false;
   bool _workPhase = true;
 
-  final List<String> _plan = const [
-    'barbell squat',
-    'push up',
-    'barbell bench press',
-    'seated cable row',
-  ];
+  late List<String> _plan;
   int _currentIdx = 0;
 
   String? _gifUrl;
   String? _imageUrl;
   String? _videoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    // Если выбрано конкретное упражнение, используем его, иначе план дня
+    if (widget.selectedExercise != null) {
+      _plan = [widget.selectedExercise!];
+      _currentIdx = 0;
+    } else if (widget.dayPlan != null && widget.dayPlan!.isNotEmpty) {
+      _plan = widget.dayPlan!;
+      _currentIdx = 0;
+    } else {
+      _plan = const [
+        'barbell squat',
+        'push up',
+        'barbell bench press',
+        'seated cable row',
+      ];
+      _currentIdx = 0;
+    }
+    _loadMediaForCurrent();
+  }
 
   @override
   void dispose() {

@@ -1,5 +1,5 @@
-name: pulsefit_pro
-description: PulseFit Pro - Your personal AI fitness trainer. Track progress, get personalized workouts, and nutrition advice powered by AI.
+name: Trainer
+description: Trainer - Your personal AI fitness trainer. Track progress, get personalized workouts, and nutrition advice powered by AI.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -43,6 +43,7 @@ flutter:
   assets:
     #- assets/placeholder/profile.png
     - assets/placeholder/profile.jpg
+    - assets/images/champ_avatar.jpg
     - assets/gifs/motivation/m1.gif
     - assets/gifs/motivation/m2.gif
     - assets/logo/trainer_mark.png

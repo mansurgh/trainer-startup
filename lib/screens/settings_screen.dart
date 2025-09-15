@@ -54,6 +54,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: const Text('Настройки'),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          actions: [
+            IconButton(
+              onPressed: () {
+                // Действие для шестеренки
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Настройки сохранены')),
+                );
+              },
+              icon: const Icon(Icons.settings, color: Colors.white),
+            ),
+          ],
         ),
         body: ListView(
           padding: const EdgeInsets.all(16),
