@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../core/sexy_components.dart';
 import 'workout_screen.dart';
+import 'workout_schedule/widgets/customize_workout_sheet.dart';
+import '../models/workout_day.dart';
+import '../models/muscle_group.dart';
 
 /// Сексуальный экран тренировок с анатомией мышц
 class SexyWorkoutScreen extends StatefulWidget {
@@ -621,9 +624,30 @@ class _SexyWorkoutScreenState extends State<SexyWorkoutScreen> {
                   
                   const SizedBox(height: 20),
                   
+                  // Кнопка кастомизации тренировки
+                  SexyComponents.sexyButton(
+                    onPressed: _showCustomizeWorkout,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.tune, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Настроить тренировку',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
                   // Группы мышц
                   SexyComponents.sexyText(
-                    'Muscle Groups',
+                    'Группы мышц',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -658,9 +682,14 @@ class _SexyWorkoutScreenState extends State<SexyWorkoutScreen> {
                   
                   const SizedBox(height: 32),
                   
+                  // Анатомическая карта
+                  _buildAnatomySection(),
+                  
+                  const SizedBox(height: 32),
+                  
                   // Список упражнений
                   SexyComponents.sexyText(
-                    'Exercises',
+                    'Упражнения',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -802,5 +831,196 @@ class _SexyWorkoutScreenState extends State<SexyWorkoutScreen> {
         ),
       ),
     );
+  }
+
+  // Секция с анатомической картой
+  Widget _buildAnatomySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SexyComponents.sexyText(
+          'Анатомия',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        SexyComponents.sexyCard(
+          child: Column(
+            children: [
+              // Переключатель Front/Back
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildViewToggle('Front', true),
+                  const SizedBox(width: 16),
+                  _buildViewToggle('Back', false),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Изображение анатомии
+              Container(
+                height: 300,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: _buildAnatomyImage(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Переключатель вида (Front/Back)
+  Widget _buildViewToggle(String label, bool isFront) {
+    final isSelected = isFront; // Пока что всегда показываем Front
+    return GestureDetector(
+      onTap: () {
+        // TODO: Переключение между Front/Back
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? const Color(0xFF007AFF).withOpacity(0.3)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected 
+                ? const Color(0xFF007AFF)
+                : Colors.white.withOpacity(0.3),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected 
+                ? const Color(0xFF007AFF)
+                : Colors.white.withOpacity(0.7),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Изображение анатомии с выделенными мышцами
+  Widget _buildAnatomyImage() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Базовое изображение тела (можно заменить на настоящее изображение)
+        Container(
+          width: 150,
+          height: 250,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(80),
+          ),
+          child: const Icon(
+            Icons.accessibility_new,
+            size: 120,
+            color: Colors.white30,
+          ),
+        ),
+        
+        // Выделенные группы мышц для текущего дня
+        ...muscleGroups.map((muscle) {
+          return Positioned(
+            top: _getMusclePosition(muscle['muscleGroup'])['top'],
+            left: _getMusclePosition(muscle['muscleGroup'])['left'],
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: muscle['accentColor'].withOpacity(0.8),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: muscle['accentColor'],
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Icon(
+                _getMuscleIcon(muscle['muscleGroup']),
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  // Позиции мышц на анатомической карте (примерные)
+  Map<String, double> _getMusclePosition(String muscleGroup) {
+    switch (muscleGroup.toLowerCase()) {
+      case 'chest':
+        return {'top': 80.0, 'left': 105.0};
+      case 'front delts':
+        return {'top': 70.0, 'left': 80.0};
+      case 'side delts':
+        return {'top': 70.0, 'left': 130.0};
+      case 'back':
+        return {'top': 90.0, 'left': 105.0};
+      case 'biceps':
+        return {'top': 120.0, 'left': 70.0};
+      case 'triceps':
+        return {'top': 120.0, 'left': 140.0};
+      case 'legs':
+        return {'top': 180.0, 'left': 105.0};
+      default:
+        return {'top': 100.0, 'left': 105.0};
+    }
+  }
+
+  // Показать окно кастомизации тренировки
+  void _showCustomizeWorkout() {
+    // Создаем фиктивный WorkoutDay для демонстрации
+    final currentDay = WorkoutDay(
+      date: DateTime.now(),
+      targetGroups: muscleGroups.map((muscle) {
+        switch (muscle['muscleGroup'].toString().toLowerCase()) {
+          case 'chest':
+            return MuscleGroup.chest;
+          case 'back':
+            return MuscleGroup.back;
+          case 'legs':
+            return MuscleGroup.legs;
+          case 'arms':
+          case 'biceps':
+          case 'triceps':
+            return MuscleGroup.arms;
+          default:
+            return MuscleGroup.chest;
+        }
+      }).toList(),
+      exercises: [], // Пустой список упражнений
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CustomizeWorkoutSheet(
+        currentDay: currentDay,
+      ),
+    ).then((updatedDay) {
+      if (updatedDay != null) {
+        // TODO: Обновить тренировку с новыми настройками
+        print('Workout updated: $updatedDay');
+      }
+    });
   }
 }

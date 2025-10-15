@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../core/design_tokens.dart';
 import '../core/modern_components.dart';
 import '../core/apple_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -197,7 +198,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Ошибка: $e'),
-                              backgroundColor: Colors.red,
+                              backgroundColor: DesignTokens.error,
                             ),
                           );
                         }
@@ -206,9 +207,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   : () {
                       // Показываем что нужно заполнить
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Заполните все поля'),
-                          backgroundColor: Colors.orange,
+                        SnackBar(
+                          content: const Text('Заполните все поля'),
+                          backgroundColor: DesignTokens.cardSurface,
                         ),
                       );
                     },

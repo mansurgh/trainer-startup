@@ -3,17 +3,22 @@ import 'dart:io';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_response.dart';
 import '../models/user_model.dart';
 import 'error_service.dart';
 
+/// Enhanced AI Service для интеграции с OpenAI
+/// Поддерживает генерацию планов, анализ техники и питания
 class AIService {
   static const String _baseUrl = 'https://api.openai.com/v1';
+  static const String _model = 'gpt-4o';
+  
   String? get _apiKey {
     try {
-      return dotenv.env['OPENAI_API_KEY'] ?? 'demo-key';
+      return dotenv.env['OPENAI_API_KEY'] ?? const String.fromEnvironment('OPENAI_API_KEY');
     } catch (e) {
-      return 'demo-key';
+      return const String.fromEnvironment('OPENAI_API_KEY');
     }
   }
 
@@ -585,5 +590,45 @@ class AIService {
 Продолжи программу на 28 дней...''',
       gifUrls: const [],
     );
+  }
+
+  /// Генерирует персональный план тренировок
+  Future<AIResponse> generateWorkoutPlan({
+    required String fitnessLevel,
+    required String goals,
+    required int daysPerWeek,
+    List<String>? preferences,
+  }) async {
+    final prompt = '''
+Создай персональный план тренировок на основе следующих данных:
+- Уровень подготовки: $fitnessLevel
+- Цели: $goals
+- Количество дней в неделю: $daysPerWeek
+${preferences != null ? '- Предпочтения: ${preferences.join(", ")}' : ''}
+
+Создай детальный план тренировок с упражнениями, подходами и повторениями.
+''';
+
+    return await getResponse(prompt);
+  }
+
+  /// Анализирует питание пользователя
+  Future<AIResponse> analyzeNutrition({
+    required String currentDiet,
+    required String goals,
+    String? restrictions,
+    String? preferences,
+  }) async {
+    final prompt = '''
+Проанализируй мое питание и дай рекомендации:
+- Текущий рацион: $currentDiet
+- Цели: $goals
+${restrictions != null ? '- Ограничения: $restrictions' : ''}
+${preferences != null ? '- Предпочтения: $preferences' : ''}
+
+Дай конкретные рекомендации по улучшению питания, включая примеры блюд и продуктов.
+''';
+
+    return await getResponse(prompt);
   }
 }

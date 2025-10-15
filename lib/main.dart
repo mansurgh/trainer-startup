@@ -30,8 +30,8 @@ Future<void> main() async {
   await NotificationService.initialize();
   await NotificationService.requestPermissions();
   
-  // Сбрасываем только фото при каждом запуске для разработки
-  await StorageService.clearPhotoHistory();
+  // Очищаем все данные пользователя для демо-режима (каждый запуск как новый пользователь)
+  await StorageService.clearAllData();
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -55,7 +55,7 @@ class MyApp extends ConsumerWidget {
         Locale('en', ''),
         Locale('ru', ''),
       ],
-      home: const OnboardingScreen(), // Временно для разработки - всегда показываем онбординг
+      home: const OnboardingScreen(), // Всегда показываем онбординг для демо-режима
     );
   }
 }

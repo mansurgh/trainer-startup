@@ -47,7 +47,7 @@ class StorageService {
     
     return await openDatabase(
       path,
-      version: 3, // Увеличиваем версию для добавления avatarPath
+      version: 4, // Увеличиваем версию для новых полей
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE user_data(
@@ -57,7 +57,10 @@ class StorageService {
             age INTEGER,
             height INTEGER,
             weight REAL,
+            targetWeight REAL,
+            initialWeight REAL,
             goal TEXT,
+            activityLevel TEXT,
             bodyImagePath TEXT,
             avatarPath TEXT,
             photoHistory TEXT,
@@ -71,6 +74,11 @@ class StorageService {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 3) {
           await db.execute('ALTER TABLE user_data ADD COLUMN avatarPath TEXT');
+        }
+        if (oldVersion < 4) {
+          await db.execute('ALTER TABLE user_data ADD COLUMN targetWeight REAL');
+          await db.execute('ALTER TABLE user_data ADD COLUMN initialWeight REAL');
+          await db.execute('ALTER TABLE user_data ADD COLUMN activityLevel TEXT');
         }
       },
     );

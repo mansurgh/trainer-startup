@@ -54,29 +54,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: const Text('Настройки'),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          actions: [
-            IconButton(
-              onPressed: () {
-                // Действие для шестеренки
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Настройки сохранены')),
-                );
-              },
-              icon: const Icon(Icons.settings, color: Colors.white),
-            ),
-          ],
         ),
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Уведомления
+            // Основные настройки
             _buildSection(
               title: 'Уведомления',
               icon: Icons.notifications_outlined,
               children: [
                 _buildSwitchTile(
                   title: 'Push-уведомления',
-                  subtitle: 'Напоминания о тренировках и питании',
+                  subtitle: 'Напоминания о тренировках',
                   value: _notificationsEnabled,
                   onChanged: (value) async {
                     setState(() => _notificationsEnabled = value);
@@ -89,40 +78,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     }
                   },
                 ),
-                _buildListTile(
-                  title: 'Управление уведомлениями',
-                  subtitle: 'Настроить время и типы уведомлений',
-                  icon: Icons.schedule,
-                  onTap: () => _showNotificationSettings(),
-                ),
               ],
             ),
 
             const SizedBox(height: 24),
 
-            // Приватность и данные
+            // Данные
             _buildSection(
-              title: 'Приватность и данные',
-              icon: Icons.privacy_tip_outlined,
+              title: 'Данные',
+              icon: Icons.storage_outlined,
               children: [
-                _buildSwitchTile(
-                  title: 'Аналитика использования',
-                  subtitle: 'Помочь улучшить приложение',
-                  value: _analyticsEnabled,
-                  onChanged: (value) async {
-                    setState(() => _analyticsEnabled = value);
-                    await _saveSettings();
-                  },
-                ),
-                _buildSwitchTile(
-                  title: 'Обмен данными',
-                  subtitle: 'Анонимная статистика для исследований',
-                  value: _dataSharingEnabled,
-                  onChanged: (value) async {
-                    setState(() => _dataSharingEnabled = value);
-                    await _saveSettings();
-                  },
-                ),
                 _buildListTile(
                   title: 'Экспорт данных',
                   subtitle: 'Скачать все ваши данные',
@@ -130,26 +95,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () => _exportData(),
                 ),
                 _buildListTile(
-                  title: 'Удалить все данные',
-                  subtitle: 'Очистить все данные приложения',
+                  title: 'Очистить данные',
+                  subtitle: 'Удалить все данные приложения',
                   icon: Icons.delete_forever,
                   onTap: () => _showDeleteDataDialog(),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Язык и регион
-            _buildSection(
-              title: 'Язык и регион',
-              icon: Icons.language_outlined,
-              children: [
-                _buildListTile(
-                  title: 'Язык',
-                  subtitle: _selectedLanguage == 'ru' ? 'Русский' : 'English',
-                  icon: Icons.translate,
-                  onTap: () => _showLanguageDialog(),
                 ),
               ],
             ),
@@ -588,6 +537,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               : 'Разрешение отклонено',
         ),
         backgroundColor: status.isGranted ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  void _showFeedbackDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Обратная связь'),
+        content: const Text(
+          'Для обратной связи напишите нам на:\nsupport@pulsefit.pro'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }

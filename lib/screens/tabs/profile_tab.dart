@@ -51,6 +51,11 @@ class ProfileTab extends ConsumerWidget {
                   
                   const SizedBox(height: 20),
                   
+                  // Activity Section
+                  _buildActivitySection(context).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
+                  
+                  const SizedBox(height: 20),
+                  
                   // Body Composition Chart
                   _buildBodyComposition(context, user).animate().fadeIn(duration: 800.ms, delay: 200.ms).slideY(begin: 0.3),
                   
@@ -207,121 +212,322 @@ class ProfileTab extends ConsumerWidget {
     final bmi = _calculateBMI(user);
     final fitnessLevel = _getFitnessLevel(user);
     
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: GlassCard(
-            padding: const EdgeInsets.all(16),
+        Row(
+          children: [
+            Expanded(
+              child: GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.monitor_weight,
+                      color: Colors.orangeAccent,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Вес',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${user?.weight?.toStringAsFixed(1) ?? '0'} кг',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.favorite,
+                      color: Colors.redAccent,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => _showBMIDialog(context),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'ИМТ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.info_outline,
+                            size: 14,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      bmi,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.fitness_center,
+                      color: Colors.purpleAccent,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Тренировки',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '12',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.timeline,
+                      color: Colors.blueAccent,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Прогресс',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '85%',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Activity Section
+  Widget _buildActivitySection(BuildContext context) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.analytics_outlined,
+                color: Colors.greenAccent,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Активность',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Activity summary
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'На этой неделе: 5 тренировок',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+              Text(
+                'Стрик: 7 дней',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Activity grid (GitHub style)
+          Container(
+            height: 120,
             child: Column(
               children: [
-                const Icon(
-                  Icons.favorite,
-                  color: Colors.redAccent,
-                  size: 32,
+                // Days of week labels
+                Row(
+                  children: [
+                    const SizedBox(width: 20), // Space for month labels
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: ['Пн', 'Ср', 'Пт']
+                            .map((day) => Text(
+                                  day,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => _showBMIDialog(context),
+                
+                // Activity grid
+                Expanded(
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'ИМТ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.7),
-                        ),
+                      // Month labels column
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: ['Янв', 'Фев', 'Мар']
+                            .map((month) => Text(
+                                  month,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
+                                ))
+                            .toList(),
                       ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.info_outline,
-                        size: 14,
-                        color: Colors.white.withOpacity(0.5),
+                      const SizedBox(width: 8),
+                      
+                      // Grid itself
+                      Expanded(
+                        child: GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 12,
+                            crossAxisSpacing: 3,
+                            mainAxisSpacing: 3,
+                          ),
+                          itemCount: 84, // 7 days * 12 weeks
+                          itemBuilder: (context, index) {
+                            // Simulate activity intensity (0-4)
+                            final intensity = _getActivityIntensity(index);
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: _getActivityColor(intensity),
+                                borderRadius: BorderRadius.circular(3),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.1),
+                                  width: 0.5,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  bmi,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
               ],
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: GlassCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.trending_up,
-                  color: Colors.greenAccent,
-                  size: 32,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Уровень',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  fitnessLevel,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: GlassCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.timeline,
-                  color: Colors.blueAccent,
-                  size: 32,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Прогресс',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '85%',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  // Helper methods for activity grid
+  int _getActivityIntensity(int index) {
+    // Simulate activity data - in real app would come from user data
+    if (index % 7 == 0 || index % 7 == 1) return 0; // Weekend rest
+    if (index % 14 < 5) return (index % 4) + 1; // Weekday activity
+    return (index % 3); // Varying activity
+  }
+
+  Color _getActivityColor(int intensity) {
+    switch (intensity) {
+      case 0:
+        return const Color(0xFF1a1a1a); // Dark gray for no activity
+      case 1:
+        return const Color(0xFF0d4429); // Dark green
+      case 2:
+        return const Color(0xFF006d32); // Medium green
+      case 3:
+        return const Color(0xFF26a641); // Bright green
+      case 4:
+        return const Color(0xFF39d353); // Very bright green
+      default:
+        return const Color(0xFF1a1a1a);
+    }
   }
 
   // Body Composition Circular Progress
@@ -610,6 +816,7 @@ class ProfileTab extends ConsumerWidget {
 
   Widget _buildAchievement(IconData icon, String title, String subtitle, Color color, bool achieved) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: 60,
@@ -631,6 +838,7 @@ class ProfileTab extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           title,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -639,6 +847,7 @@ class ProfileTab extends ConsumerWidget {
         ),
         Text(
           subtitle,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 10,
             color: Colors.white.withOpacity(0.5),

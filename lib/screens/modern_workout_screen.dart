@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
-import '../core/modern_components.dart';
-import '../l10n/app_localizations.dart';
+import '../core/design_tokens.dart';
+import '../core/premium_components.dart';
 import 'workout_screen.dart';
+import 'ai_chat_screen.dart';
+import 'weekly_schedule_screen.dart';
+import 'workout_schedule/workout_schedule_screen.dart';
 
-/// Современный экран тренировок с анатомией мышц
+/// Современный экран тренировок с премиум дизайном
 class ModernWorkoutScreen extends StatefulWidget {
   const ModernWorkoutScreen({super.key});
 
@@ -32,6 +36,261 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
     selectedDay = _getTodayDay();
     isToday = true;
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.all(DesignTokens.space16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Простой заголовок вместо SliverAppBar
+              Row(
+                children: [
+                  Text(
+                    'Тренировки',
+                    style: DesignTokens.h1.copyWith(
+                      color: DesignTokens.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  PremiumComponents.glassButton(
+                    onPressed: () => _showAICoach(),
+                    child: Icon(
+                      Icons.psychology_rounded,
+                      color: DesignTokens.primaryAccent,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: DesignTokens.space24),
+              _buildTodayWorkoutCard(),
+              SizedBox(height: DesignTokens.space24),
+              _buildMuscleMapSection(),
+              SizedBox(height: DesignTokens.space24),
+              _buildTodayExercisesList(),
+              SizedBox(height: DesignTokens.space24),
+              _buildQuickStats(),
+              SizedBox(height: DesignTokens.space24),
+              _buildWorkoutScheduleButton(),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getTodayDay() {
+    final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final today = DateTime.now().weekday - 1; // 0-6
+    return weekdays[today];
+  }
+
+  Widget _buildTodayWorkoutCard() {
+    return PremiumComponents.glassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(DesignTokens.space8),
+                decoration: BoxDecoration(
+                  color: DesignTokens.primaryAccent.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+                ),
+                child: Icon(
+                  Icons.fitness_center_rounded,
+                  color: DesignTokens.primaryAccent,
+                  size: 24,
+                ),
+              ),
+              SizedBox(width: DesignTokens.space16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Сегодня: Грудь и трицепс',
+                      style: DesignTokens.h3.copyWith(
+                        color: DesignTokens.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: DesignTokens.space4),
+                    Text(
+                      '4 упражнения • 45 мин',
+                      style: DesignTokens.bodyMedium.copyWith(
+                        color: DesignTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: DesignTokens.space24),
+          Row(
+            children: [
+              Expanded(
+                child: PremiumComponents.glassButton(
+                  onPressed: () => _startWorkout(),
+                  isPrimary: true,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.play_arrow_rounded),
+                      SizedBox(width: DesignTokens.space8),
+                      Text('Начать тренировку'),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: DesignTokens.space16),
+              PremiumComponents.glassButton(
+                onPressed: () => _showWorkoutDetails(),
+                child: Icon(Icons.info_outline_rounded),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMuscleMapSection() {
+    return PremiumComponents.glassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Карта мышц',
+            style: DesignTokens.h3.copyWith(
+              color: DesignTokens.textPrimary,
+            ),
+          ),
+          SizedBox(height: DesignTokens.space16),
+          Center(
+            child: PremiumComponents.muscleMap(
+              activeMuscleGroups: {'Грудь', 'Трицепс'},
+              showFront: true,
+              onToggleView: () {
+                setState(() {
+                  // Toggle between front and back view
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats() {
+    return Row(
+      children: [
+        Expanded(
+          child: PremiumComponents.kpiCard(
+            title: 'Текущий стрик',
+            value: '7',
+            icon: Icons.local_fire_department_rounded,
+            accentColor: DesignTokens.warning,
+            trend: '+2 дня',
+          ),
+        ),
+        SizedBox(width: DesignTokens.space16),
+        Expanded(
+          child: PremiumComponents.kpiCard(
+            title: 'Эта неделя',
+            value: '4/5',
+            icon: Icons.calendar_today_rounded,
+            accentColor: DesignTokens.success,
+            trend: '80%',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWorkoutPlans() {
+  // Блок программ скрыт по требованиям (чипы программ убрать)
+    // Этот метод скрыт и возвращает пустой виджет, чтобы удовлетворить сигнатуру
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildWorkoutPlanCard(
+    String title,
+    String description,
+    IconData icon,
+    Color accentColor,
+  ) {
+    return Container(
+      width: 180,
+      margin: EdgeInsets.only(right: DesignTokens.space16),
+      child: PremiumComponents.glassCard(
+        onTap: () => _selectWorkoutPlan(title),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(DesignTokens.space16),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+              ),
+              child: Icon(
+                icon,
+                color: accentColor,
+                size: 32,
+              ),
+            ),
+            SizedBox(height: DesignTokens.space16),
+            Text(
+              title,
+              style: DesignTokens.h3.copyWith(
+                color: DesignTokens.textPrimary,
+              ),
+            ),
+            SizedBox(height: DesignTokens.space8),
+            Text(
+              description,
+              style: DesignTokens.bodySmall.copyWith(
+                color: DesignTokens.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate()
+     .fadeIn(delay: 100.ms)
+    .slideX(begin: 0.2);
+  }
+
+  // Helper methods
+  void _startWorkout() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WorkoutScreen(dayPlan: dayExercises),
+      ),
+    );
+  }
+
+  void _showAICoach() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AIChatScreen(chatType: 'workout'),
+      ),
+    );
+  }
+
+  void _showWorkoutDetails() {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const WeeklyScheduleScreen()));
+  }
+  void _showAllPrograms() {}
+  void _selectWorkoutPlan(String plan) {}
+
   // Получить все упражнения дня в правильном порядке
   List<String> get dayExercises {
     switch (selectedDay) {
@@ -50,10 +309,105 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
       case 'Sunday':
         return ['rest day'];
       default:
-        return ['barbell military press', 'dumbbell lateral raise', 'dumbbell rear delt flye', 'dumbbell tricep extension'];
+        return [];
     }
   }
 
+  Widget _buildTodayExercisesList() {
+    final items = dayExercises;
+    if (items.isEmpty || (items.length == 1 && items.first == 'rest day')) {
+      return PremiumComponents.glassCard(
+        child: Center(
+          child: Text('Сегодня отдых', style: DesignTokens.bodyMedium),
+        ),
+      );
+    }
+    return PremiumComponents.glassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Упражнения на сегодня', style: DesignTokens.h3),
+          const SizedBox(height: 12),
+          ...items.map((e) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.primaryAccent.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.fitness_center_rounded, size: 18, color: DesignTokens.primaryAccent),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text(_localizeExercise(e), style: DesignTokens.bodyLarge)),
+                const SizedBox(width: 8),
+                Text(_exerciseShortDesc(e), style: DesignTokens.caption),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  String _localizeExercise(String key) {
+    // Простая локализация названий
+    switch (key) {
+      case 'barbell bench press': return 'Жим штанги лёжа';
+      case 'dumbbell incline press': return 'Жим гантелей на наклонной';
+      case 'dumbbell flyes': return 'Разводка гантелей';
+      case 'push up': return 'Отжимания';
+      case 'barbell squat': return 'Приседания со штангой';
+      case 'romanian deadlift': return 'Румынская тяга';
+      case 'bulgarian split squat': return 'Болгарские выпады';
+      case 'calf raise': return 'Подъёмы на носки';
+      case 'barbell military press': return 'Армейский жим';
+      case 'dumbbell lateral raise': return 'Махи в стороны';
+      case 'dumbbell rear delt flye': return 'Разводка на заднюю дельту';
+      case 'dumbbell tricep extension': return 'Французский жим';
+      case 'pull up': return 'Подтягивания';
+      case 'barbell row': return 'Тяга штанги в наклоне';
+      case 'lat pulldown': return 'Тяга верхнего блока';
+      case 'bicep curl': return 'Сгибания на бицепс';
+      case 'deadlift': return 'Становая тяга';
+      case 'face pull': return 'Тяга каната к лицу';
+      case 'hammer curl': return 'Молотковые сгибания';
+      case 'overhead press': return 'Жим над головой';
+      case 'dumbbell press': return 'Жим гантелей';
+      case 'tricep dip': return 'Отжимания на брусьях';
+      default: return key;
+    }
+  }
+
+  String _exerciseShortDesc(String key) {
+    switch (key) {
+      case 'barbell bench press': return '3×8–10';
+      case 'dumbbell incline press': return '3×10–12';
+      case 'dumbbell flyes': return '3×12–15';
+      case 'push up': return '3×макс';
+      case 'barbell squat': return '4×6–8';
+      case 'romanian deadlift': return '3×8–10';
+      case 'bulgarian split squat': return '3×8–10/нога';
+      case 'calf raise': return '3×12–15';
+      case 'barbell military press': return '4×6–8';
+      case 'dumbbell lateral raise': return '3×12–15';
+      case 'dumbbell rear delt flye': return '3×12–15';
+      case 'dumbbell tricep extension': return '3×10–12';
+      case 'pull up': return '4×макс';
+      case 'barbell row': return '4×8–10';
+      case 'lat pulldown': return '3×10–12';
+      case 'bicep curl': return '3×10–12';
+      case 'deadlift': return '3×5';
+      case 'face pull': return '3×12–15';
+      case 'hammer curl': return '3×10–12';
+      case 'overhead press': return '4×6–8';
+      case 'dumbbell press': return '3×8–10';
+      case 'tricep dip': return '3×макс';
+      default: return '';
+    }
+  }
   List<Map<String, dynamic>> get muscleGroups {
     // Разные программы для разных дней
     switch (selectedDay) {
@@ -185,20 +539,7 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
     }
   }
 
-  String _getTodayDay() {
-    final now = DateTime.now();
-    final weekday = now.weekday;
-    switch (weekday) {
-      case 1: return 'Monday';
-      case 2: return 'Tuesday';
-      case 3: return 'Wednesday';
-      case 4: return 'Thursday';
-      case 5: return 'Friday';
-      case 6: return 'Saturday';
-      case 7: return 'Sunday';
-      default: return 'Monday';
-    }
-  }
+  
 
   void _showDaySelector(BuildContext context) {
     showModalBottomSheet(
@@ -224,7 +565,7 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: Colors.white.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -234,8 +575,8 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.selectDay,
+                      Text(
+                      'Select Day',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -268,14 +609,14 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isSelected 
-                              ? const Color(0xFF007AFF).withValues(alpha: 0.15)
-                              : Colors.white.withValues(alpha: 0.05),
+              color: isSelected 
+                ? const Color(0xFF007AFF).withOpacity(0.15)
+                : Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected 
-                                ? const Color(0xFF007AFF).withValues(alpha: 0.3)
-                                : Colors.white.withValues(alpha: 0.1),
+              color: isSelected 
+                ? const Color(0xFF007AFF).withOpacity(0.3)
+                : Colors.white.withOpacity(0.1),
                             width: 1,
                           ),
                         ),
@@ -297,14 +638,14 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: isSelected 
-                                          ? const Color(0xFF007AFF).withValues(alpha: 0.2)
-                                          : Colors.white.withValues(alpha: 0.1),
+                    color: isSelected 
+                      ? const Color(0xFF007AFF).withOpacity(0.2)
+                      : Colors.white.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
                                       isTodayDay ? Icons.today : Icons.calendar_today,
-                                      color: isSelected ? const Color(0xFF007AFF) : Colors.white.withValues(alpha: 0.7),
+                                      color: isSelected ? const Color(0xFF007AFF) : Colors.white.withOpacity(0.7),
                                       size: 20,
                                     ),
                                   ),
@@ -323,7 +664,7 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
                                         ),
                                         if (isTodayDay)
                                           Text(
-                                            AppLocalizations.of(context)!.today,
+                                            'Today',
                                             style: const TextStyle(
                                               color: Color(0xFF00D4AA),
                                               fontSize: 12,
@@ -363,588 +704,60 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
     );
   }
 
-  void _showMuscleDetails(BuildContext context, Map<String, dynamic> muscle) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.6,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Заголовок
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: muscle['accentColor'].withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      _getMuscleIcon(muscle['muscleGroup']),
-                      color: muscle['accentColor'],
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          muscle['title'],
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          '${muscle['exercises'].length} упражнений',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Упражнения
-              Text(
-                'Упражнения',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: muscle['exercises'].length,
-                  itemBuilder: (context, index) {
-                    final exercise = muscle['exercises'][index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ModernComponents.sexyCard(
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: muscle['accentColor'].withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.fitness_center,
-                                color: muscle['accentColor'],
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                exercise,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              color: Colors.white.withValues(alpha: 0.5),
-                              size: 16,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+  Widget _buildWorkoutScheduleButton() {
+    return PremiumComponents.glassCard(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WorkoutScheduleScreen(),
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showExerciseDetails(BuildContext context, Map<String, dynamic> exercise) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Заголовок
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF007AFF).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      exercise['icon'],
-                      color: const Color(0xFF007AFF),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          exercise['name'],
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          exercise['sets'],
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Детали упражнения
-              Text(
-                'Детали упражнения',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildDetailCard('Подходы', exercise['sets'], Icons.repeat),
-                      const SizedBox(height: 12),
-                      if (exercise['weight'].isNotEmpty)
-                        _buildDetailCard('Вес', exercise['weight'], Icons.fitness_center),
-                      const SizedBox(height: 12),
-                      _buildDetailCard('Техника', _getExerciseTechnique(exercise['name']), Icons.info),
-                      const SizedBox(height: 12),
-                      _buildDetailCard('Советы', _getExerciseTips(exercise['name']), Icons.lightbulb),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Кнопка начать упражнение
-              ModernComponents.sexyButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // Переходим на экран тренировки с выбранным упражнением
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => WorkoutScreen(
-                        selectedExercise: exercise['name'],
-                      ),
-                    ),
-                  );
-                },
-                child: Text(AppLocalizations.of(context)!.startExercise),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailCard(String title, String value, IconData icon) {
-    return ModernComponents.sexyCard(
+        );
+      },
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            padding: EdgeInsets.all(DesignTokens.space12),
             decoration: BoxDecoration(
-              color: const Color(0xFF007AFF).withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
+              color: DesignTokens.primaryAccent.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
             ),
             child: Icon(
-              icon,
-              color: const Color(0xFF007AFF),
-              size: 20,
+              Icons.calendar_view_week_rounded,
+              color: DesignTokens.primaryAccent,
+              size: 24,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: DesignTokens.space16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
+                  'Workout Schedule',
+                  style: DesignTokens.h3.copyWith(
+                    color: DesignTokens.textPrimary,
                   ),
                 ),
+                SizedBox(height: DesignTokens.space4),
                 Text(
-                  value,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 14,
+                  'View weekly plan with muscle targeting',
+                  style: DesignTokens.caption.copyWith(
+                    color: DesignTokens.textSecondary,
                   ),
                 ),
               ],
             ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: DesignTokens.textSecondary,
+            size: 16,
           ),
         ],
       ),
     );
   }
 
-  String _getExerciseTechnique(String exerciseName) {
-    switch (exerciseName) {
-      case 'Barbell Bench Press':
-        return 'Лягте на скамью, возьмите штангу хватом шире плеч. Опустите штангу к груди, затем выжмите вверх, полностью выпрямляя руки. Держите лопатки сведенными, ноги устойчиво на полу.';
-      case 'Barbell Military Press':
-        return 'Встаньте прямо, ноги на ширине плеч. Возьмите штангу на уровне плеч. Выжмите штангу вверх над головой, полностью выпрямляя руки. Опустите контролируемо обратно.';
-      case 'Dumbbell Incline Press':
-        return 'Установите скамью под углом 30-45 градусов. Лягте, возьмите гантели. Опустите гантели к груди, затем выжмите вверх по дуге, сводя руки в верхней точке.';
-      case 'Dumbbell Lateral Raises':
-        return 'Встаньте прямо, держите гантели по бокам. Поднимите гантели в стороны до уровня плеч, слегка согнув локти. Опустите контролируемо в исходное положение.';
-      case 'Dumbbell Tricep Extensions':
-        return 'Сядьте или встаньте, держите гантель обеими руками за головой. Разгибайте руки в локтях, поднимая гантель вверх. Опустите контролируемо за голову.';
-      default:
-        return 'Правильная техника выполнения упражнения. Следите за дыханием и контролируйте движения.';
-    }
-  }
-
-  String _getExerciseTips(String exerciseName) {
-    switch (exerciseName) {
-      case 'Barbell Bench Press':
-        return '• Держите лопатки сведенными\n• Не отрывайте ноги от пола\n• Дышите: вдох при опускании, выдох при подъеме\n• Не отбивайте штангу от груди';
-      case 'Barbell Military Press':
-        return '• Держите корпус напряженным\n• Не прогибайтесь в пояснице\n• Дышите: вдох при опускании, выдох при подъеме\n• Смотрите вперед, не запрокидывайте голову';
-      case 'Dumbbell Incline Press':
-        return '• Контролируйте движение в обеих фазах\n• Не сводите гантели слишком близко\n• Дышите: вдох при опускании, выдох при подъеме\n• Держите лопатки сведенными';
-      case 'Dumbbell Lateral Raises':
-        return '• Не используйте инерцию\n• Поднимайте до уровня плеч\n• Дышите: вдох при опускании, выдох при подъеме\n• Не раскачивайтесь корпусом';
-      case 'Dumbbell Tricep Extensions':
-        return '• Держите локти неподвижными\n• Не разводите локти в стороны\n• Дышите: вдох при опускании, выдох при подъеме\n• Контролируйте движение в обеих фазах';
-      default:
-        return '• Следите за правильной техникой\n• Дышите ритмично\n• Контролируйте движение\n• Не торопитесь';
-    }
-  }
-
-  IconData _getMuscleIcon(String muscleGroup) {
-    switch (muscleGroup.toLowerCase()) {
-      case 'chest':
-        return Icons.favorite; // Сердце для груди
-      case 'front delts':
-        return Icons.trending_up; // Стрелка вверх для передних дельт
-      case 'side delts':
-        return Icons.trending_flat; // Горизонтальная стрелка для боковых дельт
-      case 'back':
-        return Icons.trending_down; // Стрелка вниз для спины
-      case 'legs':
-        return Icons.directions_run; // Бег для ног
-      case 'arms':
-        return Icons.fitness_center; // Гантели для рук
-      default:
-        return Icons.fitness_center;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GradientScaffold(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: CustomScrollView(
-          slivers: [
-            // Сексуальный AppBar
-            SliverAppBar(
-              expandedHeight: 100,
-              floating: false,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              flexibleSpace: FlexibleSpaceBar(
-                title: ModernComponents.sexyText(
-                  'Today\'s workout',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
-                  ),
-                ),
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.8),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            
-            // Контент
-            SliverPadding(
-              padding: const EdgeInsets.all(24),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Заголовок дня
-                  ModernComponents.sexyHeader(
-                    selectedDay,
-                    subtitle: _getDaySubtitle(selectedDay),
-                    trailing: GestureDetector(
-                      onTap: () => _showDaySelector(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Colors.white.withValues(alpha: 0.7),
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Группы мышц
-                  ModernComponents.sexyText(
-                    'Muscle Groups',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Горизонтальный список групп мышц
-                  SizedBox(
-                    height: 180,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: muscleGroups.length,
-                      itemBuilder: (context, index) {
-                        final muscle = muscleGroups[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                        child: ModernComponents.muscleAnatomyCard(
-                          muscleGroup: muscle['muscleGroup'],
-                          title: muscle['title'],
-                          progress: muscle['progress'],
-                          status: muscle['status'],
-                          accentColor: muscle['accentColor'],
-                          exercises: muscle['exercises'],
-                          // Убираем onTap - группы мышц больше не кликабельны
-                        ),
-                        );
-                      },
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Список упражнений
-                  ModernComponents.sexyText(
-                    'Exercises',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Список упражнений
-                  ModernComponents.sexyList(
-                    children: exercises.map((exercise) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ModernComponents.sexyCard(
-                          onTap: () {
-                            // Показываем детали упражнения
-                            _showExerciseDetails(context, exercise);
-                          },
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF007AFF).withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  exercise['icon'],
-                                  color: const Color(0xFF007AFF),
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      exercise['name'],
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      exercise['sets'],
-                                      style: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.6),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (exercise['weight'].isNotEmpty) ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF00D4AA).withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.trending_up,
-                                        color: const Color(0xFF00D4AA),
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        exercise['weight'],
-                                        style: const TextStyle(
-                                          color: Color(0xFF00D4AA),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Кнопка начала тренировки
-                  ModernComponents.sexyButton(
-                    onPressed: isToday ? () {
-                      // Переходим на экран тренировки с планом дня
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => WorkoutScreen(
-                            dayPlan: dayExercises,
-                          ),
-                        ),
-                      );
-                    } : null,
-                    backgroundColor: isToday 
-                        ? const Color(0xFF007AFF)
-                        : Colors.white.withValues(alpha: 0.1),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          isToday ? Icons.play_arrow : Icons.lock,
-                          color: isToday ? Colors.white : Colors.white.withValues(alpha: 0.5),
-                          size: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          isToday ? 'Start workout' : 'Available on training day',
-                          style: TextStyle(
-                            color: isToday ? Colors.white : Colors.white.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                ]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Old duplicated UI removed: kept only the new PremiumComponents-based screen above.
 }

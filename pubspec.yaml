@@ -30,6 +30,8 @@ dependencies:
   sqflite_common_ffi: ^2.3.0
   path: ^1.9.0
   url_launcher: ^6.2.2
+  # Barcode scanner для сканирования продуктов (работает без Firebase)
+  mobile_scanner: ^5.2.3
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +46,7 @@ flutter:
     #- assets/placeholder/profile.png
     - assets/placeholder/profile.jpg
     - assets/images/champ_avatar.jpg
+    - assets/images/muscles/
     - assets/gifs/motivation/m1.gif
     - assets/gifs/motivation/m2.gif
     - assets/logo/trainer_mark.png

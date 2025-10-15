@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart';
+import '../core/design_tokens.dart';
 import '../state/user_state.dart';
 
 class EditProfileDataScreen extends ConsumerStatefulWidget {
@@ -79,9 +80,9 @@ class _EditProfileDataScreenState extends ConsumerState<EditProfileDataScreen> {
     
     // Показываем уведомление об успешном сохранении
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Данные профиля сохранены!'),
-        backgroundColor: Colors.green,
+      SnackBar(
+        content: const Text('Данные профиля сохранены!'),
+        backgroundColor: DesignTokens.primaryAccent,
       ),
     );
     

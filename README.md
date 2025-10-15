@@ -1,52 +1,111 @@
-# PulseFit Pro - Flutter Fitness App
+# 🏋️ Trainer - AI Fitness Coach
 
-A Flutter fitness application with AI features, Riverpod state management, and modern UI design.
+**Профессиональный фитнес-тренер с искусственным интеллектом**
 
-## 🚀 Quick Start Guide
+Современное приложение для фитнеса с ИИ-тренером, интерактивной картой мышц, анализом техники упражнений и персональными программами тренировок.
 
-### ⚡ Super Quick Start (5 minutes)
-See [QUICK_START.md](QUICK_START.md) for the fastest way to get running.
+![Flutter](https://img.shields.io/badge/Flutter-3.16+-blue.svg)
+![Dart](https://img.shields.io/badge/Dart-3.0+-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android%20%7C%20Web-lightgrey.svg)
 
-### 📋 System Requirements
-Check [REQUIREMENTS.md](REQUIREMENTS.md) for detailed system requirements and troubleshooting.
+---
 
-### 🪟 Windows Setup
-Follow [SETUP_WINDOWS.md](SETUP_WINDOWS.md) for step-by-step Windows installation.
+## ✨ **Ключевые особенности**
 
-### Prerequisites
+### 🤖 **AI Персональный тренер**
+- **OpenAI GPT-4o** интеграция для персональных консультаций
+- Генерация тренировочных планов на основе целей
+- Анализ техники выполнения упражнений по фото
+- Рекомендации по питанию и восстановлению
 
-Before running this application, make sure you have the following installed:
+### � **Интерактивная карта мышц**
+- Визуализация активных мышечных групп в реальном времени
+- 3D модель тела с детализацией нагрузки
+- Переключение вид спереди/сзади
+- Анимированные переходы и подсветка
 
-#### 1. Flutter SDK
-- **Download**: [Flutter SDK](https://docs.flutter.dev/get-started/install)
-- **Version**: Flutter 3.4.0 or higher
-- **Platform**: Windows, macOS, or Linux
+### 📊 **Activity Heatmap**
+- Тепловая карта активности по GitHub стилю
+- Визуализация прогресса за год
+- Tracking частоты тренировок
+- Мотивационные streak счётчики
 
-#### 2. Development Environment
-- **Android Studio** (for Android development)
-- **Xcode** (for iOS development, macOS only)
-- **Visual Studio Code** with Flutter extension (recommended)
+### 🎨 **Premium Glassmorphism UI**
+- Современный дизайн в стиле **фиолет-неон на тёмном**
+- Эффекты размытого стекла и градиенты
+- Анимации с использованием flutter_animate
+- Адаптивная вёрстка для всех устройств
 
-#### 3. Platform-specific Requirements
+### 🥗 **AI Анализ питания**
+- Распознавание еды по фотографии
+- Автоматический подсчёт калорий и макронутриентов
+- Персональные рекомендации по питанию
+- Tracking водного баланса
 
-**For Windows:**
-- Visual Studio 2022 with C++ development tools
-- Windows 10 version 1903 or higher
+---
 
-**For Android:**
-- Android SDK
-- Android device or emulator
+## 🛠 **Технологический стек**
 
-**For iOS (macOS only):**
-- Xcode 14.0 or higher
-- iOS Simulator or physical device
+### **Frontend**
+- **Flutter 3.16+** - кроссплатформенная разработка
+- **Riverpod** - state management и dependency injection
+- **flutter_animate** - богатые анимации
+- **google_fonts** - типографика Inter
 
-### 📦 Installation Steps
+### **Backend & Database**
+- **Supabase** - PostgreSQL с Row Level Security
+- **Real-time subscriptions** для синхронизации данных
+- **Authentication** с социальными провайдерами
+- **Storage** для фотографий и медиа
 
-#### 1. Clone the Repository
+### **AI & Machine Learning**
+- **OpenAI API** (GPT-4o) для AI тренера
+- **Computer Vision** анализ техники упражнений
+- **Natural Language Processing** для чат-бота
+- **Recommendation Engine** персональных планов
+
+### **Design System**
+- **Design Tokens** система для консистентности
+- **Premium Components** библиотека переиспользуемых UI
+- **Accessibility** поддержка VoiceOver/TalkBack
+- **Responsive Design** адаптивная вёрстка
+
+---
+
+## 🚀 **Quick Start**
+
+### **Установка**
 ```bash
-git clone https://github.com/mansurgh/trainer-startup.git
-cd trainer-startup
+# Клонируем репозиторий
+git clone [your-repo-url]
+cd trainer-app
+
+# Устанавливаем зависимости
+flutter pub get
+
+# Настраиваем environment
+cp env.example .env
+# Редактируем .env с вашими API ключами
+
+# Запускаем приложение
+flutter run
+```
+
+### **Environment Configuration**
+```env
+# OpenAI API
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Supabase
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### **Supabase Setup**
+```sql
+-- Выполните schema в Supabase SQL Editor
+-- Файл: supabase_schema.sql
 ```
 
 #### 2. Install Flutter Dependencies

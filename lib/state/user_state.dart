@@ -13,13 +13,7 @@ class UserNotifier extends StateNotifier<UserModel?> {
     try {
       final user = await StorageService.getUser();
       if (user != null) {
-        // Очищаем фото при загрузке для разработки
-        final userWithoutPhotos = user.copyWith(
-          bodyImagePath: null,
-          photoHistory: <String>[],
-        );
-        state = userWithoutPhotos;
-        await StorageService.saveUser(userWithoutPhotos);
+        state = user;
       }
     } catch (e) {
       // Игнорируем ошибки загрузки при старте
@@ -142,6 +136,18 @@ class UserNotifier extends StateNotifier<UserModel?> {
       weight: weight ?? s.weight,
       gender: gender ?? s.gender,
       goal: goal ?? s.goal,
+      lastActive: DateTime.now(),
+    );
+    state = updatedUser;
+    await StorageService.saveUser(updatedUser);
+  }
+
+  /// Обновить аватар пользователя
+  Future<void> updateAvatar(String avatarPath) async {
+    final s = state;
+    if (s == null) return;
+    final updatedUser = s.copyWith(
+      avatarPath: avatarPath,
       lastActive: DateTime.now(),
     );
     state = updatedUser;

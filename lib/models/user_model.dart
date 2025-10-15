@@ -5,7 +5,10 @@ class UserModel {
   final int? age;
   final int? height;            // cm
   final double? weight;         // kg
+  final double? targetWeight;   // целевой вес
+  final double? initialWeight;  // начальный вес
   final String? goal;           // fat_loss | muscle_gain | fitness
+  final String? activityLevel;  // low | medium | high
   final String? bodyImagePath;  // локальный путь к фото
   final String? avatarPath;     // путь к аватарке
   final List<String>? photoHistory; // история фотографий для отслеживания прогресса
@@ -21,7 +24,10 @@ class UserModel {
     this.age,
     this.height,
     this.weight,
+    this.targetWeight,
+    this.initialWeight,
     this.goal,
+    this.activityLevel,
     this.bodyImagePath,
     this.avatarPath,
     this.photoHistory,
@@ -38,7 +44,10 @@ class UserModel {
     int? age,
     int? height,
     double? weight,
+    double? targetWeight,
+    double? initialWeight,
     String? goal,
+    String? activityLevel,
     String? bodyImagePath,
     String? avatarPath,
     List<String>? photoHistory,
@@ -54,7 +63,10 @@ class UserModel {
       age: age ?? this.age,
       height: height ?? this.height,
       weight: weight ?? this.weight,
+      targetWeight: targetWeight ?? this.targetWeight,
+      initialWeight: initialWeight ?? this.initialWeight,
       goal: goal ?? this.goal,
+      activityLevel: activityLevel ?? this.activityLevel,
       bodyImagePath: bodyImagePath ?? this.bodyImagePath,
       avatarPath: avatarPath ?? this.avatarPath,
       photoHistory: photoHistory ?? this.photoHistory,
@@ -73,7 +85,10 @@ class UserModel {
       'age': age,
       'height': height,
       'weight': weight,
+      'targetWeight': targetWeight,
+      'initialWeight': initialWeight,
       'goal': goal,
+      'activityLevel': activityLevel,
       'bodyImagePath': bodyImagePath,
       'avatarPath': avatarPath,
       'photoHistory': photoHistory,
@@ -92,7 +107,10 @@ class UserModel {
       age: json['age'],
       height: json['height'],
       weight: json['weight']?.toDouble(),
+      targetWeight: json['targetWeight']?.toDouble(),
+      initialWeight: json['initialWeight']?.toDouble(),
       goal: json['goal'],
+      activityLevel: json['activityLevel'],
       bodyImagePath: json['bodyImagePath'],
       avatarPath: json['avatarPath'],
       photoHistory: json['photoHistory'] != null ? List<String>.from(json['photoHistory']) : null,

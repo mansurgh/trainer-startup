@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../core/theme.dart';
+import '../core/design_tokens.dart';
 import '../state/user_state.dart';
 import 'home_screen.dart';  // <– импорт главного экрана
 
@@ -110,7 +111,7 @@ class _BodyScanScreenState extends ConsumerState<BodyScanScreen> {
                             icon: const Icon(Icons.arrow_forward_rounded),
                             label: const Text('Далее'),
                             style: FilledButton.styleFrom(
-                              backgroundColor: Colors.greenAccent,
+                              backgroundColor: DesignTokens.primaryAccent,
                               foregroundColor: Colors.black,
                             ),
                           ),

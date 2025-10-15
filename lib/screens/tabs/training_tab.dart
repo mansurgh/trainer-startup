@@ -8,7 +8,7 @@ import '../../core/sexy_components.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/plan_state.dart';
 import '../workout_screen.dart';
-import '../modern_workout_screen.dart';
+import '../workout_schedule/workout_schedule_screen.dart';
 
 class TrainingTab extends ConsumerStatefulWidget {
   const TrainingTab({super.key});
@@ -62,9 +62,9 @@ class _TrainingTabState extends ConsumerState<TrainingTab> {
                         onPressed: () async {
                           await ref.read(planProvider.notifier).generateProgram();
                           setState(() {});
-                          // Сразу переходим на красивый экран тренировки
+                          // Сразу переходим на экран с анатомией мышц
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ModernWorkoutScreen()),
+                            MaterialPageRoute(builder: (_) => const WorkoutScheduleScreen()),
                           );
                         },
                         child: Text(AppLocalizations.of(context)!.createProgram),
@@ -175,7 +175,7 @@ class _TrainingTabState extends ConsumerState<TrainingTab> {
                                 SexyComponents.sexyButton(
                                   onPressed: () {
                                     Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => const ModernWorkoutScreen()),
+                                      MaterialPageRoute(builder: (_) => const WorkoutScheduleScreen()),
                                     );
                                   },
                                   child: Text(AppLocalizations.of(context)!.startWorkout),

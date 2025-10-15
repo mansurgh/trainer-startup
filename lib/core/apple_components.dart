@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:ui';
+import 'design_tokens.dart';
 
 /// Премиум компоненты в стиле Apple
 class AppleComponents {
-  // Премиум кнопка в стиле Apple
+  // Премиум кнопка в стиле Apple (темно-серая с изумрудным текстом)
   static Widget premiumButton({
     required VoidCallback? onPressed,
     required Widget child,
@@ -15,8 +16,8 @@ class AppleComponents {
     bool isLoading = false,
     bool isDestructive = false,
   }) {
-    final bgColor = backgroundColor ?? (isDestructive ? const Color(0xFFFF3B30) : const Color(0xFF007AFF));
-    final fgColor = foregroundColor ?? (isDestructive ? Colors.white : Colors.white);
+    final bgColor = backgroundColor ?? (isDestructive ? DesignTokens.error : DesignTokens.cardSurface);
+    final fgColor = foregroundColor ?? (isDestructive ? Colors.white : DesignTokens.primaryAccent);
     
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),

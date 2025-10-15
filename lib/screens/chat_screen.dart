@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../core/design_tokens.dart';
 import '../services/ai_service.dart';
 import '../models/ai_response.dart';
 
@@ -142,8 +143,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 final m = _msgs[i];
                 final align = m.fromUser ? Alignment.centerRight : Alignment.centerLeft;
                 final bg = m.fromUser
-                    ? const Color(0xFFB7A6FF).withOpacity(0.2)
-                    : Colors.white.withValues(alpha: 0.06);
+                    ? DesignTokens.primaryAccent.withOpacity(0.15)
+                    : DesignTokens.surface;
                 final fg = m.fromUser ? Colors.white : Colors.white;
 
                 return Align(

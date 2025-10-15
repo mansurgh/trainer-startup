@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:ui';
 import 'dart:math' as math;
+import 'design_tokens.dart';
 
 /// Современные компоненты с анатомией мышц
 class ModernComponents {
@@ -56,17 +57,22 @@ class ModernComponents {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Иконка мышцы
                 _buildMuscleIcon(muscleGroup, accentColor),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 // Название
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                Flexible(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -76,15 +82,19 @@ class ModernComponents {
                     Icon(
                       Icons.trending_up,
                       color: accentColor,
-                      size: 16,
+                      size: 14,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      status,
-                      style: TextStyle(
-                        color: accentColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
+                    Flexible(
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          color: accentColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -113,8 +123,9 @@ class ModernComponents {
     );
   }
 
-  // Иконка мышцы
+  // Изображение мышцы
   static Widget _buildMuscleIcon(String muscleGroup, Color color) {
+    // Попробуем загрузить изображение мышцы, если не найдено - используем иконку
     return Container(
       width: 40,
       height: 40,
@@ -122,12 +133,62 @@ class ModernComponents {
         color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(
+      child: _buildMuscleImage(muscleGroup, color) ?? Icon(
         _getMuscleIcon(muscleGroup),
         color: color,
         size: 24,
       ),
     );
+  }
+
+  // Попытка загрузить изображение мышцы
+  static Widget? _buildMuscleImage(String muscleGroup, Color color) {
+    final imagePath = _getMuscleImagePath(muscleGroup);
+    if (imagePath == null) return null;
+    
+    try {
+      return Image.asset(
+        imagePath,
+        width: 24,
+        height: 24,
+        fit: BoxFit.contain,
+        color: color,
+        errorBuilder: (context, error, stackTrace) {
+          // Если изображение не найдено, возвращаем null
+          return Icon(
+            _getMuscleIcon(muscleGroup),
+            color: color,
+            size: 24,
+          );
+        },
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Получить путь к изображению мышцы
+  static String? _getMuscleImagePath(String muscleGroup) {
+    switch (muscleGroup.toLowerCase()) {
+      case 'chest':
+        return 'assets/images/muscles/chest.png';
+      case 'front delts':
+        return 'assets/images/muscles/front_delts.png';
+      case 'side delts':
+        return 'assets/images/muscles/side_delts.png';
+      case 'back':
+        return 'assets/images/muscles/back.png';
+      case 'biceps':
+        return 'assets/images/muscles/biceps.png';
+      case 'triceps':
+        return 'assets/images/muscles/triceps.png';
+      case 'legs':
+        return 'assets/images/muscles/quadriceps.png';
+      case 'arms':
+        return 'assets/images/muscles/biceps.png';
+      default:
+        return null;
+    }
   }
 
   // Получить иконку для группы мышц
@@ -187,7 +248,7 @@ class ModernComponents {
     );
   }
 
-  // Сексуальная кнопка
+  // Сексуальная кнопка (темно-серая с изумрудным текстом)
   static Widget sexyButton({
     required VoidCallback? onPressed,
     required Widget child,
@@ -198,8 +259,8 @@ class ModernComponents {
     bool isLoading = false,
     bool isDestructive = false,
   }) {
-    final bgColor = backgroundColor ?? const Color(0xFF007AFF);
-    final fgColor = foregroundColor ?? Colors.white;
+    final bgColor = backgroundColor ?? DesignTokens.cardSurface;
+    final fgColor = foregroundColor ?? DesignTokens.primaryAccent;
     
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -378,8 +439,8 @@ class ModernComponents {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  valueColor ?? const Color(0xFF007AFF),
-                  (valueColor ?? const Color(0xFF007AFF)).withValues(alpha: 0.8),
+                  valueColor ?? DesignTokens.primaryAccent,
+                  (valueColor ?? DesignTokens.primaryAccent).withValues(alpha: 0.8),
                 ],
               ),
               borderRadius: borderRadius ?? BorderRadius.circular(height / 2),
@@ -513,6 +574,8 @@ class ModernComponents {
     Color? color,
     double? width,
     double? height,
+    EdgeInsetsGeometry? padding,
+    Color? backgroundColor,
   }) {
     return Container(
       width: width,
@@ -521,10 +584,12 @@ class ModernComponents {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.15),
-            Colors.white.withValues(alpha: 0.05),
-          ],
+          colors: backgroundColor != null
+              ? [backgroundColor.withValues(alpha: 0.9), backgroundColor.withValues(alpha: 0.7)]
+              : [
+                  Colors.white.withValues(alpha: 0.15),
+                  Colors.white.withValues(alpha: 0.05),
+                ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -537,7 +602,10 @@ class ModernComponents {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(12),
-          child: Center(child: child),
+          child: Padding(
+            padding: padding ?? EdgeInsets.zero,
+            child: Center(child: child),
+          ),
         ),
       ),
     );
@@ -547,9 +615,11 @@ class ModernComponents {
     required VoidCallback onPressed,
     required Widget child,
     Color? color,
+    Color? backgroundColor,
     double? width,
     double? height,
   }) {
+    final baseColor = backgroundColor ?? color;
     return Container(
       width: width,
       height: height,
@@ -557,14 +627,14 @@ class ModernComponents {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: color != null 
-            ? [color, color.withValues(alpha: 0.8)]
-            : [const Color(0xFF007AFF), const Color(0xFF5B21B6)],
+          colors: baseColor != null 
+            ? [baseColor, baseColor.withValues(alpha: 0.8)]
+            : [DesignTokens.cardSurface, DesignTokens.surface],
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: (color ?? const Color(0xFF007AFF)).withValues(alpha: 0.3),
+            color: (baseColor ?? DesignTokens.cardSurface).withValues(alpha: 0.3),
             blurRadius: 8,
             spreadRadius: -2,
             offset: const Offset(0, 4),

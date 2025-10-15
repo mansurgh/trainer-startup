@@ -2,101 +2,103 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'design_tokens.dart';
 
 ThemeData buildTheme() {
-  const bg = Color(0xFF0B0B0F);
-  const on = Color(0xFFE7E7EA);
-
   final base = ThemeData(brightness: Brightness.dark, useMaterial3: true);
   final scheme = ColorScheme.fromSeed(
-    seedColor: const Color(0xFF5B21B6), // Более темный фиолетовый
+    seedColor: DesignTokens.primaryAccent,
     brightness: Brightness.dark,
-    // background (deprecated в 3.22+) не задаём
-    surface: const Color(0xFF0F0F0F), // Более темный фон
-    tertiary: const Color(0xFF06B6D4), // Более насыщенный голубой
-    primary: const Color(0xFF5B21B6), // Темный фиолетовый
-    secondary: const Color(0xFF1E1B4B), // Темно-синий
-    error: const Color(0xFFFF6B6B), // Мягкий красный
+    surface: DesignTokens.surface,
+    tertiary: DesignTokens.secondaryAccent,
+    primary: DesignTokens.primaryAccent,
+    secondary: DesignTokens.surface,
+    error: DesignTokens.error,
+    onSurface: DesignTokens.textPrimary,
+    onPrimary: Colors.white,
   );
 
-  final display = GoogleFonts.interTextTheme(base.textTheme)
-      .apply(displayColor: on, bodyColor: on);
-  final body = GoogleFonts.interTextTheme(base.textTheme)
-      .apply(displayColor: on, bodyColor: on);
+  // Глобальная типографика: Manrope — современный геометрический гротеск с кириллицей
+  final display = GoogleFonts.manropeTextTheme(base.textTheme)
+    .apply(displayColor: DesignTokens.textPrimary, bodyColor: DesignTokens.textPrimary);
+  final body = GoogleFonts.manropeTextTheme(base.textTheme)
+    .apply(displayColor: DesignTokens.textPrimary, bodyColor: DesignTokens.textSecondary);
 
   return base.copyWith(
     colorScheme: scheme,
-    scaffoldBackgroundColor: bg,
+    scaffoldBackgroundColor: DesignTokens.bgBase,
     textTheme: body.copyWith(
-      displayLarge: display.displayLarge,
-      displayMedium: display.displayMedium,
-      displaySmall: display.displaySmall,
-      headlineLarge: display.headlineLarge,
-      headlineMedium: display.headlineMedium,
-      headlineSmall: display.headlineSmall,
-      titleLarge: body.titleLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
-      titleMedium: body.titleMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3),
-      titleSmall: body.titleSmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.2),
-      bodyLarge: body.bodyLarge?.copyWith(fontWeight: FontWeight.w500, letterSpacing: 0.1),
-      bodyMedium: body.bodyMedium?.copyWith(fontWeight: FontWeight.w400, letterSpacing: 0.1),
-      bodySmall: body.bodySmall?.copyWith(fontWeight: FontWeight.w400, letterSpacing: 0.2),
+      displayLarge: DesignTokens.h1.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      displayMedium: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      displaySmall: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      headlineLarge: DesignTokens.h1.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      headlineMedium: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      headlineSmall: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      titleLarge: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      titleMedium: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      titleSmall: DesignTokens.bodyLarge.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      bodyLarge: DesignTokens.bodyLarge.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      bodyMedium: DesignTokens.bodyMedium.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      bodySmall: DesignTokens.bodySmall.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       centerTitle: true,
     ),
-    // Улучшенные карточки с Material 3
+    // Premium карточки с новыми токенами
     cardTheme: CardThemeData(
-      color: Colors.white.withValues(alpha: 0.04),
+      color: DesignTokens.cardSurface,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      shadowColor: Colors.black.withValues(alpha: 0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusLarge)),
+      shadowColor: Colors.black.withOpacity(0.3),
     ),
-    // Улучшенные поля ввода
+    // Улучшенные поля ввода (темно-серые)
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.05),
+      fillColor: DesignTokens.surface, // Темно-серый вместо прозрачного
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0x33FFFFFF)),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+        borderSide: BorderSide(color: DesignTokens.cardSurface), // Серая рамка
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+        borderSide: BorderSide(color: DesignTokens.cardSurface), // Серая рамка
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: scheme.primary.withValues(alpha: 0.8), width: 2),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+        borderSide: const BorderSide(color: DesignTokens.primaryAccent, width: 2), // Изумрудная при фокусе
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: scheme.error.withValues(alpha: 0.8)),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+        borderSide: const BorderSide(color: DesignTokens.error),
       ),
-      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+      labelStyle: const TextStyle(color: DesignTokens.textSecondary),
+      hintStyle: const TextStyle(color: DesignTokens.textTertiary),
     ),
-    // Кнопки в стиле Apple
+    // Premium кнопки (темно-серые с изумрудным текстом)
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: scheme.primary,
-        foregroundColor: scheme.onPrimary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, letterSpacing: 0.2),
+        backgroundColor: DesignTokens.cardSurface, // Темно-серый фон
+        foregroundColor: DesignTokens.primaryAccent, // Изумрудный текст
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusMedium)),
+        padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space24, vertical: DesignTokens.space16),
+        textStyle: DesignTokens.bodyLarge.copyWith(fontWeight: FontWeight.w600),
         elevation: 0,
         shadowColor: Colors.transparent,
+        minimumSize: const Size(0, DesignTokens.buttonHeightLarge),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white.withValues(alpha: 0.08),
-        foregroundColor: scheme.onSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        backgroundColor: DesignTokens.surface, // Темно-серый фон
+        foregroundColor: DesignTokens.textPrimary, // Белый текст
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusMedium)),
+        padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space24, vertical: DesignTokens.space16),
         elevation: 0,
         shadowColor: Colors.transparent,
+        minimumSize: const Size(0, DesignTokens.buttonHeightLarge),
       ),
     ),
     // Навигация в стиле Apple
@@ -134,10 +136,33 @@ ThemeData buildTheme() {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
+    // Dropdown меню (темно-серое)
+    dropdownMenuTheme: DropdownMenuThemeData(
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: DesignTokens.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+          borderSide: BorderSide(color: DesignTokens.cardSurface),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+          borderSide: BorderSide(color: DesignTokens.cardSurface),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusMedium),
+          borderSide: const BorderSide(color: DesignTokens.primaryAccent, width: 2),
+        ),
+      ),
+      menuStyle: MenuStyle(
+        backgroundColor: WidgetStateProperty.all(DesignTokens.surface),
+        surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+    ),
   );
 }
 
-/// Космический фон + зерно
+/// Premium фон с градиентами
 class GradientScaffold extends StatelessWidget {
   const GradientScaffold({super.key, required this.child});
   final Widget child;
@@ -146,8 +171,13 @@ class GradientScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        Container(
+          decoration: const BoxDecoration(
+            gradient: DesignTokens.backgroundGradient,
+          ),
+        ),
         const CosmicBackground(),
-        Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.10))),
+        Positioned.fill(child: Container(color: Colors.black.withOpacity(0.1))),
         child,
       ],
     );

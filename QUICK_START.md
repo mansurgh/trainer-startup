@@ -1,33 +1,70 @@
-# ⚡ Quick Start Guide
+# 🚀 Trainer App - Quick Start Guide
 
-## Быстрый запуск PulseFit Pro
+## Быстрый запуск производственного приложения
 
-### 🚀 За 5 минут
+Этот гайд поможет вам запустить полностью готовое к продакшену приложение **Trainer** - AI-powered фитнес тренер.
 
-#### 1. Клонируйте репозиторий
+---
+
+## 📋 **Что уже готово**
+
+### ✅ Архитектура приложения
+- **Flutter 3.16+** с Riverpod state management
+- **Supabase** backend с полной схемой базы данных
+- **OpenAI API** интеграция для AI тренера
+- **Premium UI** с glassmorphism дизайном
+- **Design System** с полным набором токенов
+
+### ✅ Ключевые функции
+- 🤖 **AI Персональный тренер** (GPT-4o)
+- 🏋️ **Workout планирование** с анализом техники
+- 📊 **Activity Heatmap** и прогресс трекинг
+- 🥗 **Nutrition AI** анализ питания по фото
+- 💪 **Muscle Map** интерактивная визуализация
+- 🎯 **Achievement System** с мотивационными badges
+
+---
+
+## ⚡ **Setup за 5 минут**
+
+### 1. Clone & Install
 ```bash
-git clone https://github.com/mansurgh/trainer-startup.git
-cd trainer-startup
-```
+# Клонируем репозиторий
+git clone [your-repo-url]
+cd pulsefit_pro
 
-#### 2. Установите зависимости
-```bash
+# Устанавливаем зависимости
 flutter pub get
 ```
 
-#### 3. Запустите приложение
+### 2. Environment Configuration
+Создайте `.env` файл в корне проекта:
+```env
+# OpenAI API
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Supabase Configuration  
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 3. Supabase Setup
+```sql
+-- Выполните SQL схему в Supabase SQL Editor
+-- Файл: supabase_schema.sql (уже готов)
+
+-- Настройте RLS политики (уже включены в схему)
+-- Создайте indexes для производительности (уже готовы)
+```
+
+### 4. Run App
 ```bash
-# Windows
-flutter run -d windows
+# Запуск в debug режиме
+flutter run
 
-# Android
-flutter run -d android
-
-# iOS (macOS)
-flutter run -d ios
-
-# Web
-flutter run -d chrome
+# Или для specific device
+flutter run -d chrome  # Web
+flutter run -d [device-id]  # Mobile
 ```
 
 ### ✅ Готово!
