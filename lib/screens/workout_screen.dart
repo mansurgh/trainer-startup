@@ -187,7 +187,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
               // таймер
               Expanded(
                 child: Center(
-                  child: _Ring(
+                  child: _RectangularTimer(
                     seconds: _seconds,
                     total: _total,
                     label: phaseLabel,
@@ -233,96 +233,107 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   }
 }
 
-class _Ring extends StatelessWidget {
+// Прямоугольный строгий таймер
+class _RectangularTimer extends StatelessWidget {
   final int seconds;
   final int total;
   final String label;
-  const _Ring({required this.seconds, required this.total, required this.label});
+  const _RectangularTimer({required this.seconds, required this.total, required this.label});
 
   @override
   Widget build(BuildContext context) {
     final mm = (seconds ~/ 60).toString().padLeft(2, '0');
     final ss = (seconds % 60).toString().padLeft(2, '0');
-    final progress = seconds / total.clamp(1, 600);
+    final progress = (total - seconds) / total.clamp(1, 600);
 
-    return SizedBox(
-      width: 260,
-      height: 260,
-      child: Stack(
-        alignment: Alignment.center,
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          CustomPaint(size: const Size.square(260), painter: _RingPainter(progress)),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$mm:$ss',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1,
+          // Лейбл
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.08),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              label.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Время
+          Text(
+            '$mm:$ss',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 72,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -3,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Прогресс бар
+          Container(
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Stack(
+              children: [
+                FractionallySizedBox(
+                  widthFactor: progress.clamp(0.0, 1.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.3),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.withOpacity(0.12)),
+                  ),
                 ),
-                child: Text(
-                  label,
-                  style: const TextStyle(color: Colors.white70, letterSpacing: 0.2),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
-}
-
-class _RingPainter extends CustomPainter {
-  final double progress; // 1.0..0.0
-  _RingPainter(this.progress);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final rOuter = size.width / 2;
-    final rInner = rOuter - 18;
-
-    final bg = Paint()..color = const Color(0xFF2B2E38);
-    final fgColor = const Color(0xFFB7A6FF);
-
-    final rectOuter = Rect.fromCircle(center: center, radius: rOuter);
-    final rectInner = Rect.fromCircle(center: center, radius: rInner);
-
-    final sweep = 3.14159 * progress;
-    final pathBottom = Path()
-      ..addArc(rectOuter, 0.0, sweep)
-      ..arcTo(rectInner, sweep, -sweep, false)
-      ..close();
-    final fgFront = Paint()..color = fgColor.withOpacity(0.70);
-    canvas.drawPath(pathBottom, fgFront);
-
-    canvas.drawCircle(center, rInner, bg);
-
-    final sweepTop = 3.14159 * progress;
-    final pathTop = Path()
-      ..addArc(rectOuter, -3.14159, sweepTop)
-      ..arcTo(rectInner, -3.14159 + sweepTop, -sweepTop, false)
-      ..close();
-    final fgBack = Paint()..color = fgColor.withOpacity(0.25);
-
-    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
-    canvas.drawPath(pathTop, fgBack);
-    final eraser = Paint()..blendMode = BlendMode.clear;
-    canvas.drawCircle(center, rInner, eraser);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _RingPainter old) => old.progress != progress;
 }

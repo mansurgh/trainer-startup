@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import '../../core/design_tokens.dart';
+import '../../models/activity_day.dart';
+import '../../widgets/activity_tracker.dart';
 import '../settings_screen.dart';
+
+// Provider для хранения пути к аватарке
+final avatarPathProvider = StateProvider<String?>((ref) => null);
 
 /// Modern Profile Screen (based on screenshot 2)
 /// Features: Avatar, Today's win, BMI, Weight graph, Activity heatmap
@@ -28,7 +35,19 @@ class ModernProfileScreen extends ConsumerWidget {
                       'Profile',
                       style: DesignTokens.h1.copyWith(fontSize: 36),
                     ),
-                    // Settings button will be at bottom
+                    // Settings icon button
+                    IconButton(
+                      icon: const Icon(Icons.settings_outlined),
+                      color: DesignTokens.textPrimary,
+                      iconSize: 28,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -62,13 +81,6 @@ class ModernProfileScreen extends ConsumerWidget {
               child: _buildActivityHeatmap(),
             ),
             
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            
-            // Bottom buttons
-            SliverToBoxAdapter(
-              child: _buildBottomButtons(context),
-            ),
-            
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
         ),
@@ -77,36 +89,53 @@ class ModernProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildUserInfo() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: DesignTokens.surface,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: DesignTokens.primaryAccent.withOpacity(0.3),
-                width: 2,
+    return Consumer(
+      builder: (context, ref, child) {
+        final avatarPath = ref.watch(avatarPathProvider);
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            children: [
+              // Avatar - clickable for fullscreen view
+              GestureDetector(
+                onTap: () {
+                  _showAvatarDialog(context, ref);
+                },
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: DesignTokens.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: DesignTokens.primaryAccent.withOpacity(0.3),
+                      width: 2,
+                    ),
+                    image: avatarPath != null
+                        ? DecorationImage(
+                            image: FileImage(File(avatarPath)),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: avatarPath == null
+                      ? Icon(
+                          Icons.person,
+                          size: 40,
+                          color: DesignTokens.textSecondary,
+                        )
+                      : null,
+                ),
               ),
-            ),
-            child: Icon(
-              Icons.person,
-              size: 40,
-              color: DesignTokens.textSecondary,
-            ),
-          ),
-          
-          const SizedBox(width: 20),
-          
-          // User info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              
+              const SizedBox(width: 20),
+              
+              // User info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 Text(
                   'Mansur',
                   style: DesignTokens.h2.copyWith(
@@ -126,6 +155,8 @@ class ModernProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+      },
     );
   }
 
@@ -207,62 +238,34 @@ class ModernProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildActivityHeatmap() {
+    // Генерируем демо-данные (последние 30 дней)
+    final activityDays = _generateDemoActivityData();
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Activity',
-            style: DesignTokens.h3.copyWith(
-              color: DesignTokens.primaryAccent,
-              fontSize: 20,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // GitHub-style activity grid
-          _buildActivityGrid(),
-        ],
-      ),
+      child: ActivityTracker(activityDays: activityDays),
     );
   }
 
-  Widget _buildActivityGrid() {
-    return Container(
-      height: 110,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: DesignTokens.surface.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: DesignTokens.primaryAccent.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 6, // 6 columns for monthly view (GitHub-style)
-          crossAxisSpacing: 6,
-          mainAxisSpacing: 6,
-        ),
-        itemCount: 30, // 5 rows x 6 columns = 30 days (monthly view)
-        itemBuilder: (context, index) {
-          // Simulate activity intensity (0-4)
-          final intensity = (index % 5);
-          final isActive = index > 9; // Last 3 weeks active
-          
-          return Container(
-            decoration: BoxDecoration(
-              color: isActive 
-                  ? DesignTokens.primaryAccent.withOpacity(0.3 + (intensity * 0.15))
-                  : DesignTokens.cardSurface.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(6),
-            ),
-          );
-        },
-      ),
-    );
+  List<ActivityDay> _generateDemoActivityData() {
+    final today = DateTime.now();
+    final List<ActivityDay> days = [];
+    
+    for (int i = 29; i >= 0; i--) {
+      final date = today.subtract(Duration(days: i));
+      
+      // Симулируем активность (чем ближе к сегодня, тем больше активности)
+      final workoutCompleted = i < 20 && (i % 3 == 0 || i % 5 == 0);
+      final nutritionGoalMet = i < 25 && (i % 2 == 0);
+      
+      days.add(ActivityDay(
+        date: date,
+        workoutCompleted: workoutCompleted,
+        nutritionGoalMet: nutritionGoalMet,
+      ));
+    }
+    
+    return days;
   }
 
   Widget _buildBottomButtons(BuildContext context) {
@@ -428,4 +431,113 @@ class _WaveGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Avatar Dialog Helper
+void _showAvatarDialog(BuildContext context, WidgetRef ref) {
+  final avatarPath = ref.read(avatarPathProvider);
+  
+  showDialog(
+    context: context,
+    barrierColor: Colors.black87,
+    builder: (context) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Large avatar preview
+          Container(
+            width: 250,
+            height: 250,
+            decoration: BoxDecoration(
+              color: DesignTokens.surface,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: DesignTokens.primaryAccent.withOpacity(0.5),
+                width: 3,
+              ),
+              image: avatarPath != null
+                  ? DecorationImage(
+                      image: FileImage(File(avatarPath)),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: avatarPath == null
+                ? Icon(
+                    Icons.person,
+                    size: 120,
+                    color: DesignTokens.textSecondary,
+                  )
+                : null,
+          ),
+          
+          const SizedBox(height: 32),
+          
+          // Change Avatar button
+          GestureDetector(
+            onTap: () async {
+              Navigator.pop(context);
+              
+              final ImagePicker picker = ImagePicker();
+              final XFile? image = await picker.pickImage(
+                source: ImageSource.gallery,
+                maxWidth: 1024,
+                maxHeight: 1024,
+                imageQuality: 85,
+              );
+              
+              if (image != null) {
+                ref.read(avatarPathProvider.notifier).state = image.path;
+                
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Avatar updated successfully'),
+                      backgroundColor: DesignTokens.primaryAccent,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                }
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.camera_alt, color: Colors.black, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Change avatar',
+                    style: DesignTokens.bodyLarge.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Close button
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white, size: 32),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    ),
+  );
 }

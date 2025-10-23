@@ -26,7 +26,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
+  // iPhone 15 resolution: 393x852
+  Win32Window::Size size(393, 852);
   if (!window.Create(L"pulsefit_pro", origin, size)) {
     return EXIT_FAILURE;
   }

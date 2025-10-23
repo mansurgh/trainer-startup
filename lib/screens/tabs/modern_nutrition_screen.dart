@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 
 import '../../core/design_tokens.dart';
+import '../ai_chat_screen.dart';
 
 /// Modern Nutrition Screen (based on screenshot 3)
 /// Features: Consumed/Remaining, circular progress, macro cards, Add meal button
@@ -232,7 +233,9 @@ class ModernNutritionScreen extends ConsumerWidget {
           Expanded(
             child: _MacroCard(
               label: 'Protein',
-              value: '85 g',
+              consumed: '85',
+              target: '120',
+              unit: 'g',
               color: DesignTokens.textPrimary, // White
             ),
           ),
@@ -240,7 +243,9 @@ class ModernNutritionScreen extends ConsumerWidget {
           Expanded(
             child: _MacroCard(
               label: 'Fat',
-              value: '65 g',
+              consumed: '65',
+              target: '80',
+              unit: 'g',
               color: DesignTokens.textPrimary, // White
             ),
           ),
@@ -248,7 +253,9 @@ class ModernNutritionScreen extends ConsumerWidget {
           Expanded(
             child: _MacroCard(
               label: 'Carbs',
-              value: '150 g',
+              consumed: '180',
+              target: '250',
+              unit: 'g',
               color: DesignTokens.textPrimary, // White
             ),
           ),
@@ -260,9 +267,10 @@ class ModernNutritionScreen extends ConsumerWidget {
   Widget _buildAINutritionistButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // TODO: Open AI Nutritionist chat screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('AI Nutritionist Chat - Coming Soon')),
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const AIChatScreen(chatType: 'nutrition'),
+          ),
         );
       },
       child: Container(
@@ -435,12 +443,16 @@ class _CalorieCard extends StatelessWidget {
 
 class _MacroCard extends StatelessWidget {
   final String label;
-  final String value;
+  final String consumed;
+  final String target;
+  final String unit;
   final Color color;
 
   const _MacroCard({
     required this.label,
-    required this.value,
+    required this.consumed,
+    required this.target,
+    required this.unit,
     required this.color,
   });
 
@@ -466,11 +478,38 @@ class _MacroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: DesignTokens.h2.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: 28,
+          RichText(
+            text: TextSpan(
+              style: DesignTokens.h2.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 24,
+              ),
+              children: [
+                TextSpan(text: consumed),
+                TextSpan(
+                  text: ' / ',
+                  style: DesignTokens.h2.copyWith(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 20,
+                    color: DesignTokens.textSecondary,
+                  ),
+                ),
+                TextSpan(
+                  text: target,
+                  style: DesignTokens.h2.copyWith(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 22,
+                    color: DesignTokens.textSecondary,
+                  ),
+                ),
+                TextSpan(
+                  text: unit,
+                  style: DesignTokens.bodySmall.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: DesignTokens.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

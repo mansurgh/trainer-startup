@@ -25,6 +25,8 @@ class WorkoutRepository {
   }
 
   WorkoutDay _getWorkoutForDay(DateTime date, int dayIndex) {
+    // Только понедельник (0), среда (2), пятница (4) - тренировки
+    // Остальные дни - rest day
     switch (dayIndex) {
       case 0: // Monday - Upper Body
         return WorkoutDay(
@@ -37,7 +39,7 @@ class WorkoutRepository {
               group: MuscleGroup.chest,
               sets: 4,
               reps: 12,
-              completedSets: 2,
+              completedSets: 0,
             ),
             Exercise(
               id: 'm1_2',
@@ -53,7 +55,7 @@ class WorkoutRepository {
               group: MuscleGroup.arms,
               sets: 3,
               reps: 15,
-              completedSets: 3,
+              completedSets: 0,
             ),
             Exercise(
               id: 'm1_4',
@@ -61,46 +63,6 @@ class WorkoutRepository {
               group: MuscleGroup.arms,
               sets: 3,
               reps: 12,
-              completedSets: 1,
-            ),
-          ],
-        );
-
-      case 1: // Tuesday - Back & Core
-        return WorkoutDay(
-          date: date,
-          targetGroups: [MuscleGroup.back, MuscleGroup.core],
-          exercises: [
-            Exercise(
-              id: 't1_1',
-              name: 'pull-up',
-              group: MuscleGroup.back,
-              sets: 4,
-              reps: 12,
-              completedSets: 1,
-            ),
-            Exercise(
-              id: 't1_2',
-              name: 'row',
-              group: MuscleGroup.back,
-              sets: 3,
-              reps: 10,
-              completedSets: 0,
-            ),
-            Exercise(
-              id: 't1_3',
-              name: 'plank',
-              group: MuscleGroup.core,
-              sets: 3,
-              reps: 60, // seconds
-              completedSets: 2,
-            ),
-            Exercise(
-              id: 't1_4',
-              name: 'crunch',
-              group: MuscleGroup.core,
-              sets: 3,
-              reps: 20,
               completedSets: 0,
             ),
           ],
@@ -146,42 +108,10 @@ class WorkoutRepository {
           ],
         );
 
-      case 3: // Thursday - Upper Body
+      case 4: // Friday - Back & Core
         return WorkoutDay(
           date: date,
-          targetGroups: [MuscleGroup.chest, MuscleGroup.arms, MuscleGroup.shoulders],
-          exercises: [
-            Exercise(
-              id: 'th1_1',
-              name: 'press',
-              group: MuscleGroup.chest,
-              sets: 3,
-              reps: 12,
-              completedSets: 0,
-            ),
-            Exercise(
-              id: 'th1_2',
-              name: 'raise',
-              group: MuscleGroup.shoulders,
-              sets: 3,
-              reps: 15,
-              completedSets: 0,
-            ),
-            Exercise(
-              id: 'th1_3',
-              name: 'curl',
-              group: MuscleGroup.arms,
-              sets: 3,
-              reps: 12,
-              completedSets: 0,
-            ),
-          ],
-        );
-
-      case 4: // Friday - Back
-        return WorkoutDay(
-          date: date,
-          targetGroups: [MuscleGroup.back],
+          targetGroups: [MuscleGroup.back, MuscleGroup.core],
           exercises: [
             Exercise(
               id: 'f1_1',
@@ -201,48 +131,24 @@ class WorkoutRepository {
             ),
             Exercise(
               id: 'f1_3',
-              name: 'pull',
-              group: MuscleGroup.back,
+              name: 'plank',
+              group: MuscleGroup.core,
               sets: 3,
-              reps: 15,
-              completedSets: 0,
-            ),
-          ],
-        );
-
-      case 5: // Saturday - Full Body (light)
-        return WorkoutDay(
-          date: date,
-          targetGroups: [MuscleGroup.chest, MuscleGroup.back, MuscleGroup.legs, MuscleGroup.core],
-          exercises: [
-            Exercise(
-              id: 's1_1',
-              name: 'push-up',
-              group: MuscleGroup.chest,
-              sets: 3,
-              reps: 15,
+              reps: 60,
               completedSets: 0,
             ),
             Exercise(
-              id: 's1_2',
-              name: 'squat',
-              group: MuscleGroup.legs,
+              id: 'f1_4',
+              name: 'crunch',
+              group: MuscleGroup.core,
               sets: 3,
               reps: 20,
               completedSets: 0,
             ),
-            Exercise(
-              id: 's1_3',
-              name: 'mountain climber',
-              group: MuscleGroup.core,
-              sets: 3,
-              reps: 30,
-              completedSets: 0,
-            ),
           ],
         );
 
-      case 6: // Sunday - Rest
+      // Все остальные дни - rest day
       default:
         return WorkoutDay(
           date: date,

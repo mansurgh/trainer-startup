@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:ui';
 
-import 'tabs/modern_nutrition_screen.dart';
+import 'tabs/nutrition_screen_v2.dart';
 import 'tabs/modern_profile_screen.dart';
 import 'workout_schedule/workout_schedule_screen.dart';
 import '../core/design_tokens.dart';
@@ -28,7 +28,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   final pages = const [
     WorkoutScheduleScreen(),        // Workout
-    ModernNutritionScreen(),        // Nutrition
+    NutritionScreenV2(),            // Nutrition
     ModernProfileScreen(),          // Profile
   ];
 

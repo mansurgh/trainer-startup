@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/workout_day.dart';
+import '../../models/exercise.dart';
 import '../../models/muscle_group.dart';
 import '../../services/workout_repository.dart';
 import '../../theme/tokens.dart';
 import '../workout_screen.dart';
+import '../ai_chat_screen.dart';
+import 'customize_workout_screen.dart';
 import 'widgets/day_selector.dart';
 import 'widgets/exercise_card.dart';
-import 'widgets/customize_workout_sheet.dart';
 
 class WorkoutScheduleScreen extends StatefulWidget {
   const WorkoutScheduleScreen({super.key});
@@ -192,9 +194,10 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> {
               width: double.infinity,
               child: GestureDetector(
                 onTap: () {
-                  // TODO: Open AI Trainer chat screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('AI Trainer Chat - Coming Soon')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AIChatScreen(chatType: 'workout'),
+                    ),
                   );
                 },
                 child: Container(
@@ -354,18 +357,64 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> {
   void _showCustomizeSheet() {
     HapticFeedback.lightImpact();
     
-    showModalBottomSheet<WorkoutDay>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => CustomizeWorkoutSheet(
-        currentDay: _currentDay,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CustomizeWorkoutScreen(
+          currentDay: _currentDay,
+        ),
       ),
-    ).then((updatedDay) {
-      if (updatedDay != null) {
+    ).then((selectedExercises) {
+      if (selectedExercises != null && selectedExercises is List<String>) {
+        print('Selected exercises: $selectedExercises');
+        
+        // Создаем новые упражнения из выбранных
+        final newExercises = selectedExercises.map<Exercise>((name) {
+          return Exercise(
+            id: '${DateTime.now().millisecondsSinceEpoch}_${name.hashCode}',
+            name: name,
+            group: _getMuscleGroupFromName(name),
+            sets: 3,
+            reps: 12,
+            completedSets: 0,
+          );
+        }).toList();
+        
+        // Обновляем день с новыми упражнениями
+        final updatedDay = WorkoutDay(
+          date: _currentDay.date,
+          targetGroups: _currentDay.targetGroups,
+          exercises: newExercises,
+        );
+        
         _updateWorkoutDay(updatedDay);
       }
     });
+  }
+  
+  MuscleGroup _getMuscleGroupFromName(String exerciseName) {
+    final lowerName = exerciseName.toLowerCase();
+    
+    if (lowerName.contains('bench') || lowerName.contains('press') && lowerName.contains('chest') || 
+        lowerName.contains('fly') || lowerName.contains('dip')) {
+      return MuscleGroup.chest;
+    } else if (lowerName.contains('pull') || lowerName.contains('row') || 
+               lowerName.contains('deadlift') || lowerName.contains('back')) {
+      return MuscleGroup.back;
+    } else if (lowerName.contains('squat') || lowerName.contains('lunge') || 
+               lowerName.contains('leg') || lowerName.contains('calf')) {
+      return MuscleGroup.legs;
+    } else if (lowerName.contains('shoulder') || lowerName.contains('lateral') || 
+               lowerName.contains('front raise')) {
+      return MuscleGroup.shoulders;
+    } else if (lowerName.contains('curl') || lowerName.contains('tricep') || 
+               lowerName.contains('bicep') || lowerName.contains('arm')) {
+      return MuscleGroup.arms;
+    } else if (lowerName.contains('plank') || lowerName.contains('crunch') || 
+               lowerName.contains('ab') || lowerName.contains('core')) {
+      return MuscleGroup.core;
+    }
+    
+    return MuscleGroup.chest; // Default
   }
 
   Future<void> _updateWorkoutDay(WorkoutDay updatedDay) async {

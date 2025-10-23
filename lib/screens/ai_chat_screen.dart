@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import '../core/design_tokens.dart';
 import '../core/premium_components.dart';
@@ -23,7 +25,9 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
+  final ImagePicker _imagePicker = ImagePicker();
   bool _isTyping = false;
+  String? _selectedImagePath;
 
   @override
   void initState() {
@@ -53,239 +57,328 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: DesignTokens.backgroundGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: _buildChatAppBar(),
-        body: Column(
-          children: [
-            Expanded(child: _buildMessagesList()),
-            _buildInputArea(),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: DesignTokens.bgBase,
+      appBar: _buildChatAppBar(),
+      body: Column(
+        children: [
+          Expanded(child: _buildMessagesList()),
+          _buildInputArea(),
+        ],
       ),
     );
   }
 
   PreferredSizeWidget _buildChatAppBar() {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: DesignTokens.surface,
       elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: DesignTokens.textPrimary),
+        onPressed: () => Navigator.pop(context),
+      ),
       title: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(DesignTokens.space8),
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: DesignTokens.primaryAccent.withOpacity(0.2),
+              color: DesignTokens.cardSurface,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.psychology_rounded,
-              color: DesignTokens.primaryAccent,
+              color: DesignTokens.textPrimary,
               size: 24,
             ),
           ),
-          SizedBox(width: DesignTokens.space16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _getChatTitle(),
-                style: DesignTokens.bodyLarge.copyWith(
-                  color: DesignTokens.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (_isTyping)
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'печатает...',
-                  style: DesignTokens.caption.copyWith(
-                    color: DesignTokens.primaryAccent,
+                  _getChatTitle(),
+                  style: const TextStyle(
+                    color: DesignTokens.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
-                ).animate(onPlay: (controller) => controller.repeat())
-                 .fadeIn(duration: 500.ms)
-                 .then()
-                 .fadeOut(duration: 500.ms),
-            ],
+                ),
+                if (_isTyping)
+                  Text(
+                    'печатает...',
+                    style: TextStyle(
+                      color: DesignTokens.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
-
     );
   }
 
   Widget _buildMessagesList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.all(DesignTokens.space16),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) {
-        final message = _messages[index];
-        return _buildMessageBubble(message, index);
-      },
+    return Container(
+      color: DesignTokens.bgBase,
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        itemCount: _messages.length,
+        itemBuilder: (context, index) {
+          final message = _messages[index];
+          return _buildMessageBubble(message, index);
+        },
+      ),
     );
   }
 
   Widget _buildMessageBubble(ChatMessage message, int index) {
     final isFromUser = message.isFromUser;
     
-    return Container(
-      margin: EdgeInsets.only(bottom: DesignTokens.space16),
-      alignment: isFromUser ? Alignment.centerRight : Alignment.centerLeft,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
-        mainAxisAlignment: isFromUser 
-            ? MainAxisAlignment.end 
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: isFromUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // Аватар для AI (слева)
           if (!isFromUser) ...[
             Container(
-              padding: EdgeInsets.all(DesignTokens.space8),
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: DesignTokens.primaryAccent.withOpacity(0.2),
+                color: DesignTokens.cardSurface,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.psychology_rounded,
-                color: DesignTokens.primaryAccent,
-                size: 16,
+                color: DesignTokens.textSecondary,
+                size: 18,
               ),
             ),
-            SizedBox(width: DesignTokens.space8),
           ],
+          
+          // Сообщение
           Flexible(
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
+                maxWidth: MediaQuery.of(context).size.width * 0.7,
               ),
-              padding: EdgeInsets.all(DesignTokens.space16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: isFromUser 
-                    ? DesignTokens.primaryAccent.withOpacity(0.8)
-                    : DesignTokens.glassOverlay,
-                borderRadius: BorderRadius.circular(DesignTokens.radiusLarge).copyWith(
-                  bottomRight: isFromUser 
-                      ? Radius.circular(DesignTokens.space8)
-                      : Radius.circular(DesignTokens.radiusLarge),
-                  bottomLeft: !isFromUser 
-                      ? Radius.circular(DesignTokens.space8)
-                      : Radius.circular(DesignTokens.radiusLarge),
-                ),
-                border: Border.all(
-                  color: isFromUser 
-                      ? DesignTokens.primaryAccent.withOpacity(0.3)
-                      : DesignTokens.glassBorder,
-                  width: 1,
+                    ? const Color(0xFF2B5278) // Telegram синий для исходящих
+                    : DesignTokens.surface,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: isFromUser ? const Radius.circular(18) : const Radius.circular(4),
+                  bottomRight: isFromUser ? const Radius.circular(4) : const Radius.circular(18),
                 ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    message.text,
-                    style: DesignTokens.bodyMedium.copyWith(
-                      color: isFromUser 
-                          ? DesignTokens.textPrimary
-                          : DesignTokens.textPrimary,
+                  // Изображение, если прикреплено
+                  if (message.imagePath != null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(message.imagePath!),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: DesignTokens.space8),
-                  Text(
-                    _formatTime(message.timestamp),
-                    style: DesignTokens.caption.copyWith(
-                      color: isFromUser 
-                          ? DesignTokens.textPrimary.withOpacity(0.7)
-                          : DesignTokens.textSecondary,
+                    const SizedBox(height: 6),
+                  ],
+                  
+                  // Текст сообщения
+                  if (message.text.isNotEmpty)
+                    Text(
+                      message.text,
+                      style: const TextStyle(
+                        color: DesignTokens.textPrimary,
+                        fontSize: 15,
+                        height: 1.3,
+                      ),
                     ),
+                  
+                  const SizedBox(height: 4),
+                  
+                  // Время
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        _formatTime(message.timestamp),
+                        style: TextStyle(
+                          color: isFromUser
+                              ? DesignTokens.textPrimary.withOpacity(0.6)
+                              : DesignTokens.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                      if (isFromUser) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.done_all,
+                          size: 14,
+                          color: DesignTokens.textPrimary.withOpacity(0.6),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
             ),
           ),
-          if (isFromUser) ...[
-            SizedBox(width: DesignTokens.space8),
-            Container(
-              padding: EdgeInsets.all(DesignTokens.space8),
-              decoration: BoxDecoration(
-                color: DesignTokens.primaryAccent.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.person_rounded,
-                color: DesignTokens.primaryAccent,
-                size: 16,
-              ),
-            ),
-          ],
+          
+          // Отступ справа для исходящих
+          if (isFromUser) const SizedBox(width: 8),
         ],
       ),
     ).animate()
-     .fadeIn(delay: Duration(milliseconds: index * 100))
-     .slideY(begin: 0.2, end: 0);
+     .fadeIn(duration: 200.ms, delay: Duration(milliseconds: index * 50))
+     .slideX(begin: isFromUser ? 0.2 : -0.2, end: 0);
   }
 
   Widget _buildInputArea() {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.space16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: DesignTokens.glassOverlay,
+        color: DesignTokens.surface,
         border: Border(
           top: BorderSide(
-            color: DesignTokens.glassBorder,
+            color: DesignTokens.cardSurface,
             width: 1,
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Container(
+          // Предпросмотр выбранного изображения
+          if (_selectedImagePath != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: DesignTokens.glassOverlay,
-                borderRadius: BorderRadius.circular(DesignTokens.radiusLarge),
-                border: Border.all(
-                  color: DesignTokens.glassBorder,
-                  width: 1,
-                ),
+                color: DesignTokens.cardSurface,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: TextField(
-                controller: _messageController,
-                style: DesignTokens.bodyMedium.copyWith(
-                  color: DesignTokens.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Напишите сообщение...',
-                  hintStyle: DesignTokens.bodyMedium.copyWith(
-                    color: DesignTokens.textSecondary,
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(_selectedImagePath!),
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(DesignTokens.space16),
-                ),
-                maxLines: null,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendMessage(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Изображение прикреплено',
+                      style: TextStyle(
+                        color: DesignTokens.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: DesignTokens.textSecondary, size: 20),
+                    onPressed: () {
+                      setState(() {
+                        _selectedImagePath = null;
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
-          ),
-          SizedBox(width: DesignTokens.space16),
-          PremiumComponents.glassButton(
-            onPressed: _sendMessage,
-            child: _isTyping 
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(DesignTokens.textPrimary),
-                    ),
-                  )
-                : Icon(
-                    Icons.send_rounded,
-                    color: DesignTokens.textPrimary,
+          
+          // Поле ввода и кнопки
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Кнопка прикрепления фото
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: DesignTokens.cardSurface,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.attach_file, color: DesignTokens.textSecondary),
+                  onPressed: _pickImage,
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              
+              // Поле ввода
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 120),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.cardSurface,
+                    borderRadius: BorderRadius.circular(20),
                   ),
+                  child: TextField(
+                    controller: _messageController,
+                    style: const TextStyle(
+                      color: DesignTokens.textPrimary,
+                      fontSize: 15,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Сообщение',
+                      hintStyle: TextStyle(
+                        color: DesignTokens.textSecondary,
+                        fontSize: 15,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    ),
+                    maxLines: null,
+                    textInputAction: TextInputAction.newline,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 8),
+              
+              // Кнопка отправки
+              Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFF2B5278), // Telegram синий
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: _isTyping
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.send, color: Colors.white, size: 20),
+                  onPressed: _isTyping ? null : _sendMessage,
+                  padding: const EdgeInsets.all(10),
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -309,16 +402,21 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty || _isTyping) return;
+    final imagePath = _selectedImagePath;
+    
+    if (text.isEmpty && imagePath == null) return;
+    if (_isTyping) return;
 
     // Добавляем сообщение пользователя
     setState(() {
       _messages.add(ChatMessage(
-        text: text,
+        text: text.isEmpty ? 'Изображение' : text,
         isFromUser: true,
         timestamp: DateTime.now(),
+        imagePath: imagePath,
       ));
       _isTyping = true;
+      _selectedImagePath = null; // Очищаем выбранное изображение
     });
 
     _messageController.clear();
@@ -398,6 +496,30 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       }
     });
   }
+  
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImagePath = image.path;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Не удалось выбрать изображение: $e'),
+          backgroundColor: DesignTokens.error,
+        ),
+      );
+    }
+  }
 
   void _clearChat() {
     setState(() {
@@ -418,10 +540,12 @@ class ChatMessage {
   final String text;
   final bool isFromUser;
   final DateTime timestamp;
+  final String? imagePath;
 
   ChatMessage({
     required this.text,
     required this.isFromUser,
     required this.timestamp,
+    this.imagePath,
   });
 }
