@@ -70,7 +70,7 @@ class ModernProfileScreen extends ConsumerWidget {
             
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
             
-            // Weight graph
+            // Progress graph
             SliverToBoxAdapter(
               child: _buildWeightGraph(),
             ),
@@ -196,14 +196,14 @@ class ModernProfileScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Weight',
+                'Progress',
                 style: DesignTokens.h3.copyWith(
                   color: DesignTokens.primaryAccent,
                   fontSize: 20,
                 ),
               ),
               Text(
-                '405 g',
+                '0 workouts',
                 style: DesignTokens.bodyMedium.copyWith(
                   color: DesignTokens.textSecondary,
                 ),

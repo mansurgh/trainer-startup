@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/design_tokens.dart';
 import '../services/auth_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/app_alert.dart';
 import 'trial_roulette_screen.dart';
 
@@ -54,6 +55,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
 
       if (response.user != null && mounted) {
+        // Clear all previous user data for fresh start
+        await StorageService.clearNewUserData();
+        
         // Navigate to roulette screen for trial
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const TrialRouletteScreen()),
@@ -110,11 +114,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo/Title
-                  Icon(
-                    Icons.fitness_center,
-                    size: 80,
-                    color: DesignTokens.textPrimary,
+                  // Logo
+                  Image.asset(
+                    'assets/logo/app_logo.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 16),
                   Text(

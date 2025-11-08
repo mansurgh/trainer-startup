@@ -292,6 +292,34 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
                         color: DesignTokens.textPrimary,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    // Buy Premium Button
+                    ElevatedButton(
+                      onPressed: () {
+                        // TODO: Navigate to payment screen
+                        AppAlert.show(
+                          context,
+                          title: 'Coming Soon',
+                          description: 'Premium subscription payment will be available soon!',
+                          type: AlertType.info,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: DesignTokens.textPrimary,
+                        foregroundColor: DesignTokens.bgBase,
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Buy Premium Now',
+                        style: DesignTokens.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: DesignTokens.bgBase,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

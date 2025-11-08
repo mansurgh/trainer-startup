@@ -283,6 +283,24 @@ class StorageService {
     await db.delete('user_data');
   }
 
+  /// Clear data for new user (keep settings, clear meals/workouts/progress)
+  static Future<void> clearNewUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Clear user profile data but keep settings
+    await prefs.remove(_userKey);
+    await prefs.remove(_planKey);
+    await prefs.remove(_exercisesKey);
+    await prefs.remove(_progressKey);
+    await prefs.remove(_sessionsKey);
+
+    final db = await database;
+    // Clear all tables for fresh start
+    await db.delete('user_data');
+    await db.delete('meals');
+    await db.delete('meal_plans');
+    await db.delete('workout_sessions');
+  }
+
   // Clear database completely (for development)
   static Future<void> clearDatabase() async {
     if (_database != null) {

@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme.dart';
 import 'screens/login_screen.dart';
@@ -70,9 +71,19 @@ class MyApp extends ConsumerWidget {
         Locale('en', ''),
         Locale('ru', ''),
       ],
-      home: SupabaseConfig.client.auth.currentUser != null
-          ? const HomeScreen()
-          : const LoginScreen(),
+      home: StreamBuilder<AuthState>(
+        stream: SupabaseConfig.client.auth.onAuthStateChange,
+        builder: (context, snapshot) {
+          // Check if we have a session
+          final session = snapshot.hasData ? snapshot.data!.session : null;
+          
+          if (session != null) {
+            return const HomeScreen();
+          }
+          
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }

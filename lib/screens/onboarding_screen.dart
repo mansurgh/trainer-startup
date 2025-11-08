@@ -6,7 +6,7 @@ import '../core/apple_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/user_state.dart';
 import '../widgets/app_alert.dart';
-import 'home_screen.dart';
+import 'generating_program_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -188,10 +188,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           goal: _goal,
                         );
 
-                        // Переход на главный экран (HomeScreen)
+                        // Переход на экран "Составляем программу..."
                         if (mounted) {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            MaterialPageRoute(builder: (_) => const GeneratingProgramScreen()),
                           );
                         }
                       } catch (e) {
