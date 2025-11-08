@@ -70,8 +70,8 @@ class MyApp extends ConsumerWidget {
         Locale('en', ''),
         Locale('ru', ''),
       ],
-      home: FutureBuilder(
-        future: SupabaseConfig.client.auth.currentSession,
+      home: FutureBuilder<Session?>(
+        future: SupabaseConfig.client.auth.currentSession.then((session) => session),
         builder: (context, snapshot) {
           // Loading
           if (snapshot.connectionState == ConnectionState.waiting) {
