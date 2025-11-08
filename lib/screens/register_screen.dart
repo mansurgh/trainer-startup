@@ -120,6 +120,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     width: 120,
                     height: 120,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to icon if image fails to load
+                      return const Icon(
+                        Icons.fitness_center,
+                        size: 80,
+                        color: DesignTokens.textPrimary,
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Text(

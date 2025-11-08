@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/design_tokens.dart';
+import '../core/design_tokens.dart';
 import 'home_screen.dart';
 
 /// Экран "Составляем персональную программу тренировок"
@@ -72,6 +72,15 @@ class _GeneratingProgramScreenState extends State<GeneratingProgramScreen>
                     width: 140,
                     height: 140,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to trainer_mark if app_logo fails
+                      return Image.asset(
+                        'assets/logo/trainer_mark.png',
+                        width: 140,
+                        height: 140,
+                        fit: BoxFit.contain,
+                      );
+                    },
                   ),
                   const SizedBox(height: 48),
                   

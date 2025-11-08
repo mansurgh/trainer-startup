@@ -66,8 +66,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String _getErrorMessage(String error) {
     if (error.contains('Invalid login credentials')) {
       return 'Invalid email or password';
-    } else if (error.contains('Email not confirmed')) {
-      return 'Please verify your email before logging in';
+    } else if (error.contains('Email not confirmed') || error.contains('email_not_confirmed')) {
+      return 'Please verify your email before logging in.\n\nCheck your inbox for verification email or disable "Confirm email" in Supabase Dashboard → Authentication → Providers → Email';
     } else if (error.contains('Too many requests')) {
       return 'Too many login attempts. Please try again later';
     }
