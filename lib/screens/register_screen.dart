@@ -114,22 +114,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo
-                  Image.asset(
-                    'assets/logo/app_logo.png',
+                  // Logo - circular with shadow
+                  Container(
                     width: 120,
                     height: 120,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      // Fallback to icon if image fails to load
-                      return const Icon(
-                        Icons.fitness_center,
-                        size: 80,
-                        color: DesignTokens.textPrimary,
-                      );
-                    },
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: DesignTokens.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: DesignTokens.primaryAccent.withOpacity(0.3),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Image.asset(
+                          'assets/logo/app_logo.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.fitness_center,
+                              size: 60,
+                              color: DesignTokens.textPrimary,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Text(
                     'Create Account',
                     style: DesignTokens.h1.copyWith(fontSize: 32),

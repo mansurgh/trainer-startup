@@ -66,21 +66,36 @@ class _GeneratingProgramScreenState extends State<GeneratingProgramScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo
-                  Image.asset(
-                    'assets/logo/app_logo.png',
+                  // Logo - circular with animated glow
+                  Container(
                     width: 140,
                     height: 140,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      // Fallback to trainer_mark if app_logo fails
-                      return Image.asset(
-                        'assets/logo/trainer_mark.png',
-                        width: 140,
-                        height: 140,
-                        fit: BoxFit.contain,
-                      );
-                    },
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: DesignTokens.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: DesignTokens.primaryAccent.withOpacity(0.4),
+                          blurRadius: 30,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Image.asset(
+                          'assets/logo/app_logo.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset(
+                              'assets/logo/trainer_mark.png',
+                              fit: BoxFit.contain,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 48),
                   
