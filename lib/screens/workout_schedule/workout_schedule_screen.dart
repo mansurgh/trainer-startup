@@ -5,7 +5,7 @@ import '../../models/exercise.dart';
 import '../../models/muscle_group.dart';
 import '../../services/workout_repository.dart';
 import '../../theme/tokens.dart';
-import '../workout_screen.dart';
+import '../workout_screen_improved.dart';
 import '../ai_chat_screen.dart';
 import 'customize_workout_screen.dart';
 import 'widgets/day_selector.dart';
@@ -232,11 +232,11 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> {
             SizedBox(
               width: double.infinity,
               child: GestureDetector(
-                onTap: () {
-                  // Navigate to workout screen with today's exercises
+                onTap: _currentDay.exercises.isEmpty ? null : () {
+                  // Navigate to improved workout screen with today's exercises
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => WorkoutScreen(
+                      builder: (context) => WorkoutScreenImproved(
                         dayPlan: _currentDay.exercises.map((e) => e.name).toList(),
                       ),
                     ),
@@ -245,23 +245,33 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: T.cardElevated,
+                    color: _currentDay.exercises.isEmpty 
+                        ? T.cardElevated.withOpacity(0.3)
+                        : T.cardElevated,
                     borderRadius: const BorderRadius.all(T.r16),
                     border: Border.all(
-                      color: T.text.withOpacity(0.3),
+                      color: T.text.withOpacity(_currentDay.exercises.isEmpty ? 0.1 : 0.3),
                       width: 1,
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.play_circle_outline, color: T.text, size: 24),
-                      SizedBox(width: 8),
+                      Icon(
+                        _currentDay.exercises.isEmpty 
+                            ? Icons.block 
+                            : Icons.play_circle_outline, 
+                        color: T.text.withOpacity(_currentDay.exercises.isEmpty ? 0.3 : 1.0), 
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        'Start Workout',
+                        _currentDay.exercises.isEmpty 
+                            ? 'Rest Day - No Workout' 
+                            : 'Start Workout',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: T.text,
+                          color: T.text.withOpacity(_currentDay.exercises.isEmpty ? 0.3 : 1.0),
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

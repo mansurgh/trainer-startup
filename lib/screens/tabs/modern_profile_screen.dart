@@ -6,6 +6,7 @@ import 'dart:io';
 import '../../core/design_tokens.dart';
 import '../../models/activity_day.dart';
 import '../../widgets/activity_tracker.dart';
+import '../../widgets/app_alert.dart';
 import '../settings_screen.dart';
 
 // Provider для хранения пути к аватарке
@@ -493,15 +494,11 @@ void _showAvatarDialog(BuildContext context, WidgetRef ref) {
                 ref.read(avatarPathProvider.notifier).state = image.path;
                 
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Avatar updated successfully'),
-                      backgroundColor: DesignTokens.primaryAccent,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                  AppAlert.show(
+                    context,
+                    title: 'Avatar updated',
+                    description: 'Your profile picture has been changed successfully',
+                    type: AlertType.success,
                   );
                 }
               }

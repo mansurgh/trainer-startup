@@ -6,6 +6,7 @@ import 'dart:io';
 import '../../../core/design_tokens.dart';
 import '../../../models/meal.dart';
 import '../../../services/meal_service.dart';
+import '../../../widgets/app_alert.dart';
 import '../nutrition_screen_v2.dart';
 
 // Диалог добавления блюда
@@ -38,8 +39,11 @@ class AddDishDialogState extends ConsumerState<AddDishDialog> {
 
   Future<void> _saveDish() async {
     if (_nameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter dish name')),
+      AppAlert.show(
+        context,
+        title: 'Missing information',
+        description: 'Please enter a dish name',
+        type: AlertType.warning,
       );
       return;
     }
@@ -428,11 +432,11 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to pick image: $e'),
-            backgroundColor: DesignTokens.error,
-          ),
+        AppAlert.show(
+          context,
+          title: 'Failed to pick image',
+          description: e.toString(),
+          type: AlertType.error,
         );
       }
     }
@@ -440,8 +444,11 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
 
   Future<void> _generateMealPlan() async {
     if (_selectedImagePath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a fridge photo first')),
+      AppAlert.show(
+        context,
+        title: 'No image selected',
+        description: 'Please select a fridge photo first',
+        type: AlertType.warning,
       );
       return;
     }
@@ -518,11 +525,11 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
 
     if (mounted) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Meal plan applied successfully!'),
-          backgroundColor: DesignTokens.success,
-        ),
+      AppAlert.show(
+        context,
+        title: 'Meal plan applied',
+        description: 'Your meals have been generated successfully!',
+        type: AlertType.success,
       );
     }
   }

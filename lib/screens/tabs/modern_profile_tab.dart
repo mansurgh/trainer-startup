@@ -12,7 +12,7 @@ import '../body_scan_screen.dart';
 import '../edit_profile_data_screen.dart';
 import '../settings_screen.dart';
 import '../about_screen.dart';
-import '../progress_gallery_screen.dart';
+
 import '../../l10n/app_localizations.dart';
 
 /// Современный экран профиля в стиле Today's workout
@@ -312,20 +312,6 @@ class _ModernProfileTabState extends ConsumerState<ModernProfileTab> {
                     () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const EditProfileDataScreen()),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  _buildActionButton(
-                    AppLocalizations.of(context)!.gallery,
-                    Icons.photo_library,
-                    const Color(0xFF00D4AA),
-                    () {
-                      // Открываем галерею прогресса
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ProgressGalleryScreen()),
                       );
                     },
                   ),

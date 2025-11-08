@@ -32,6 +32,10 @@ dependencies:
   url_launcher: ^6.2.2
   # Barcode scanner для сканирования продуктов (работает без Firebase)
   mobile_scanner: ^5.2.3
+  # Supabase для backend (auth, database, storage)
+  supabase_flutter: ^2.8.0
+  # Шифрование для хранения токенов
+  flutter_secure_storage: ^9.2.2
 
 dev_dependencies:
   flutter_test:

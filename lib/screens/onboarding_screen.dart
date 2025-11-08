@@ -5,7 +5,8 @@ import '../core/modern_components.dart';
 import '../core/apple_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/user_state.dart';
-import 'body_scan_screen.dart';
+import '../widgets/app_alert.dart';
+import 'home_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -187,30 +188,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           goal: _goal,
                         );
 
-                        // открыть загрузку фото тела
+                        // Переход на главный экран (HomeScreen)
                         if (mounted) {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const BodyScanScreen(fromOnboarding: true)),
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const HomeScreen()),
                           );
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Ошибка: $e'),
-                              backgroundColor: DesignTokens.error,
-                            ),
+                          AppAlert.show(
+                            context,
+                            title: 'Error',
+                            description: e.toString(),
+                            type: AlertType.error,
                           );
                         }
                       }
                     }
                   : () {
-                      // Показываем что нужно заполнить
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Заполните все поля'),
-                          backgroundColor: DesignTokens.cardSurface,
-                        ),
+                      AppAlert.show(
+                        context,
+                        title: 'Incomplete form',
+                        description: 'Please fill in all fields',
+                        type: AlertType.warning,
                       );
                     },
               child: Text(_canContinue ? 'Продолжить' : 'Заполните все поля'),
