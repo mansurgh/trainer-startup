@@ -54,6 +54,7 @@ flutter:
     - assets/gifs/motivation/m1.gif
     - assets/gifs/motivation/m2.gif
     - assets/logo/trainer_mark.png
+    - secrets.json
    # - assets/gifs/exercises/squat.gif
 
 flutter_native_splash:

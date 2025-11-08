@@ -27,19 +27,6 @@ class SupabaseConfig {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-        // Auto-refresh tokens
-        autoRefreshToken: true,
-      ),
-      // Use secure storage for auth tokens
-      localStorage: const SecureLocalStorage(),
-      realtimeClientOptions: const RealtimeClientOptions(
-        logLevel: RealtimeLogLevel.info,
-      ),
-      storageOptions: const StorageClientOptions(
-        retryAttempts: 3,
-      ),
     );
 
     if (kDebugMode) {

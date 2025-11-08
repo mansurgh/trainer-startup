@@ -70,32 +70,9 @@ class MyApp extends ConsumerWidget {
         Locale('en', ''),
         Locale('ru', ''),
       ],
-      home: FutureBuilder<Session?>(
-        future: SupabaseConfig.client.auth.currentSession.then((session) => session),
-        builder: (context, snapshot) {
-          // Loading
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              backgroundColor: Color(0xFF000000),
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
-              ),
-            );
-          }
-          
-          // Check if user has valid session
-          final session = snapshot.data;
-          if (session != null) {
-            // User is logged in - go to home
-            return const HomeScreen();
-          }
-          
-          // No session - go to login
-          return const LoginScreen();
-        },
-      ),
+      home: SupabaseConfig.client.auth.currentUser != null
+          ? const HomeScreen()
+          : const LoginScreen(),
     );
   }
 }
