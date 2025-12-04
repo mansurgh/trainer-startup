@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart'; // GradientScaffold
 import '../state/exercisedb_providers.dart';
+import '../state/workout_settings_provider.dart';
 import '../widgets/workout_media.dart';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   int _total = 60;
   bool _running = false;
   bool _workPhase = true;
+  bool _workoutStarted = false;
+  
+  int _workTime = 60;  // секунды на упражнение
+  int _restTime = 30;  // секунды отдыха
 
   late List<String> _plan;
   int _currentIdx = 0;
@@ -48,13 +53,77 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       ];
       _currentIdx = 0;
     }
+
+    // Загружаем сохраненные настройки
+    final settings = ref.read(workoutSettingsProvider);
+    _workTime = settings.workTime;
+    _restTime = settings.restTime;
+
     _loadMediaForCurrent();
+    
+    // Показываем диалог настройки перед началом тренировки
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showWorkoutSetupDialog();
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  // Диалог настройки времени перед началом тренировки
+  Future<void> _showWorkoutSetupDialog() async {
+    final result = await showDialog<Map<String, int>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _WorkoutSetupDialog(
+        initialWorkTime: _workTime,
+        initialRestTime: _restTime,
+      ),
+    );
+    
+    if (result != null && mounted) {
+      // Сохраняем настройки глобально
+      ref.read(workoutSettingsProvider.notifier).updateSettings(
+        workTime: result['workTime'],
+        restTime: result['restTime'],
+      );
+
+      setState(() {
+        _workTime = result['workTime']!;
+        _restTime = result['restTime']!;
+        _total = _workTime;
+        _seconds = _workTime;
+        _workoutStarted = true;
+      });
+    } else if (mounted) {
+      // Пользователь отменил - возвращаемся назад
+      Navigator.pop(context);
+    }
+  }
+
+  // Завершение тренировки
+  void _completeWorkout() {
+    _timer?.cancel();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🎉 Тренировка завершена!'),
+        content: const Text('Отличная работа! Тренировка успешно завершена.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Закрываем диалог
+              Navigator.pop(context, true); // Возвращаемся с результатом
+            },
+            child: const Text('ОК'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadMediaForCurrent() async {
@@ -101,15 +170,31 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) return;
       if (_seconds <= 0) {
-        setState(() {
-          _workPhase = !_workPhase;
-          _total = _workPhase ? 60 : 30;
-          _seconds = _total;
-          if (_workPhase) {
-            _currentIdx = (_currentIdx + 1) % _plan.length;
+        if (_workPhase) {
+          // Завершили упражнение - автоматически начинаем отдых
+          setState(() {
+            _workPhase = false;
+            _total = _restTime;
+            _seconds = _restTime;
+          });
+        } else {
+          // Завершили отдых - переходим к следующему упражнению
+          _currentIdx++;
+          if (_currentIdx >= _plan.length) {
+            // Все упражнения завершены
+            _timer?.cancel();
+            setState(() => _running = false);
+            _completeWorkout();
+          } else {
+            // Переходим к следующему упражнению
+            setState(() {
+              _workPhase = true;
+              _total = _workTime;
+              _seconds = _workTime;
+            });
             _loadMediaForCurrent();
           }
-        });
+        }
       } else {
         setState(() => _seconds--);
       }
@@ -121,11 +206,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     setState(() {
       _running = false;
       _workPhase = true;
-      _total = 60;
-      _seconds = 60;
+      _total = _workTime;
+      _seconds = _workTime;
       _currentIdx = 0;
       _gifUrl = _imageUrl = _videoUrl = null;
     });
+    _loadMediaForCurrent();
   }
 
   @override
@@ -229,6 +315,144 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Диалог настройки времени тренировки
+class _WorkoutSetupDialog extends StatefulWidget {
+  final int initialWorkTime;
+  final int initialRestTime;
+
+  const _WorkoutSetupDialog({
+    required this.initialWorkTime,
+    required this.initialRestTime,
+  });
+
+  @override
+  State<_WorkoutSetupDialog> createState() => _WorkoutSetupDialogState();
+}
+
+class _WorkoutSetupDialogState extends State<_WorkoutSetupDialog> {
+  late int _workTime;
+  late int _restTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _workTime = widget.initialWorkTime;
+    _restTime = widget.initialRestTime;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('⚙️ Настройка тренировки'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Установите время для упражнений и отдыха:',
+            style: TextStyle(fontSize: 14),
+          ),
+          const SizedBox(height: 24),
+          
+          // Время упражнения
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Упражнение:'),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      if (_workTime > 10) {
+                        setState(() => _workTime -= 5);
+                      }
+                    },
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      '$_workTime с',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      if (_workTime < 300) {
+                        setState(() => _workTime += 5);
+                      }
+                    },
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Время отдыха
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Отдых:'),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      if (_restTime > 5) {
+                        setState(() => _restTime -= 5);
+                      }
+                    },
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      '$_restTime с',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      if (_restTime < 180) {
+                        setState(() => _restTime += 5);
+                      }
+                    },
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(context, {
+              'workTime': _workTime,
+              'restTime': _restTime,
+            });
+          },
+          child: const Text('Начать'),
+        ),
+      ],
     );
   }
 }

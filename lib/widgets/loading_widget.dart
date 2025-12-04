@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class LoadingWidget extends StatelessWidget {
   final String? message;
@@ -86,6 +87,7 @@ class ErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -99,7 +101,7 @@ class ErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Упс! Что-то пошло не так',
+              l10n.error,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -120,7 +122,7 @@ class ErrorWidget extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Попробовать снова'),
+                label: Text(l10n.retry),
               ),
             ],
           ],
@@ -194,22 +196,23 @@ class EmptyStateWidget extends StatelessWidget {
 
 class RetryButton extends StatelessWidget {
   final VoidCallback onPressed;
-  final String text;
+  final String? text;
   final IconData? icon;
 
   const RetryButton({
     super.key,
     required this.onPressed,
-    this.text = 'Попробовать снова',
+    this.text,
     this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return FilledButton.icon(
       onPressed: onPressed,
       icon: Icon(icon ?? Icons.refresh),
-      label: Text(text),
+      label: Text(text ?? l10n.retry),
     );
   }
 }

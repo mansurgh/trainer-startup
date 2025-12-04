@@ -13,6 +13,7 @@ import '../../models/user_model.dart';
 import '../body_scan_screen.dart';
 import '../edit_profile_data_screen.dart';
 import '../settings_screen.dart';
+import '../../widgets/app_alert.dart';
 
 /// Premium Profile Screen с Activity Heatmap и achievements
 class PremiumProfileTab extends ConsumerStatefulWidget {
@@ -502,14 +503,13 @@ class _PremiumProfileTabState extends ConsumerState<PremiumProfileTab> {
   }
 
   Widget _buildActivityHeatmap() {
-    // Генерируем случайные данные активности
+    // Для нового пользователя показываем пустую активность
     final activities = <DateTime, int>{};
     final now = DateTime.now();
     
     for (int i = 0; i < 84; i++) {
       final date = now.subtract(Duration(days: i));
-      final activity = (i % 7 == 0 || i % 7 == 6) ? 0 : (1 + (i % 4)); // Выходные = 0
-      activities[DateTime(date.year, date.month, date.day)] = activity;
+      activities[DateTime(date.year, date.month, date.day)] = 0; // Нет активности
     }
 
     return PremiumComponents.activityHeatmap(
@@ -851,21 +851,22 @@ class _PremiumProfileTabState extends ConsumerState<PremiumProfileTab> {
         await userNotifier.setAvatarPath(image.path);
         
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Аватар обновлен! 📸'),
-              backgroundColor: DesignTokens.success,
-            ),
+          AppAlert.show(
+            context,
+            title: 'Аватар обновлен! 📸',
+            type: AlertType.success,
+            duration: const Duration(seconds: 3),
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при обновлении аватара: $e'),
-            backgroundColor: DesignTokens.error,
-          ),
+        AppAlert.show(
+          context,
+          title: 'Ошибка',
+          description: 'Не удалось обновить аватар: $e',
+          type: AlertType.error,
+          duration: const Duration(seconds: 3),
         );
       }
     }
@@ -883,19 +884,20 @@ class _PremiumProfileTabState extends ConsumerState<PremiumProfileTab> {
       
       if (image != null) {
         ref.read(userProvider.notifier).updateAvatar(image.path);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Аватар обновлён'),
-            backgroundColor: DesignTokens.success,
-          ),
+        AppAlert.show(
+          context,
+          title: 'Аватар обновлён',
+          type: AlertType.success,
+          duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Ошибка при обновлении аватара: $e'),
-          backgroundColor: DesignTokens.error,
-        ),
+      AppAlert.show(
+        context,
+        title: 'Ошибка',
+        description: 'Не удалось обновить аватар: $e',
+        type: AlertType.error,
+        duration: const Duration(seconds: 3),
       );
     }
   }

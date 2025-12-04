@@ -14,6 +14,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.0
+  shimmer: ^3.0.0
   image_picker: ^1.1.2
   intl: ^0.20.2
   window_manager: ^0.3.9 # опционально, чтобы на десктопе заголовок окна был "trainer."
@@ -50,11 +51,13 @@ flutter:
     #- assets/placeholder/profile.png
     - assets/placeholder/profile.jpg
     - assets/images/champ_avatar.jpg
+    - assets/images/gwagon.png
     - assets/images/muscles/
     - assets/gifs/motivation/m1.gif
     - assets/gifs/motivation/m2.gif
     - assets/logo/trainer_mark.png
     - assets/logo/app_logo.png
+    - assets/logo/app_logo.jpg
     - secrets.json
    # - assets/gifs/exercises/squat.gif
 

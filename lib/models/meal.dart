@@ -105,12 +105,14 @@ class Meal {
   final MealType type;
   final List<Dish> dishes;
   final DateTime date;
+  final String? customName;
 
   Meal({
     required this.id,
     required this.type,
     required this.dishes,
     required this.date,
+    this.customName,
   });
 
   int get totalCalories => dishes.fold(0, (sum, dish) => sum + dish.calories);
@@ -123,17 +125,21 @@ class Meal {
   double get completedFat => dishes.where((d) => d.isCompleted).fold(0.0, (sum, dish) => sum + dish.fat);
   double get completedCarbs => dishes.where((d) => d.isCompleted).fold(0.0, (sum, dish) => sum + dish.carbs);
 
+  String get displayName => customName ?? type.displayNameRu;
+  
   Meal copyWith({
     String? id,
     MealType? type,
     List<Dish>? dishes,
     DateTime? date,
+    String? customName,
   }) {
     return Meal(
       id: id ?? this.id,
       type: type ?? this.type,
       dishes: dishes ?? this.dishes,
       date: date ?? this.date,
+      customName: customName ?? this.customName,
     );
   }
 
@@ -143,6 +149,7 @@ class Meal {
       'type': type.name,
       'dishes': dishes.map((d) => d.toJson()).toList(),
       'date': date.toIso8601String(),
+      'customName': customName,
     };
   }
 
@@ -152,6 +159,7 @@ class Meal {
       type: MealType.values.firstWhere((e) => e.name == json['type']),
       dishes: (json['dishes'] as List).map((d) => Dish.fromJson(d as Map<String, dynamic>)).toList(),
       date: DateTime.parse(json['date'] as String),
+      customName: json['customName'] as String?,
     );
   }
 }

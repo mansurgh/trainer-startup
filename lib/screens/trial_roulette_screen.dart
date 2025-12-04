@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/design_tokens.dart';
 import '../widgets/app_alert.dart';
 import 'onboarding_screen.dart';
+import 'premium_subscription_screen.dart';
 import 'dart:async';
 
 class TrialRouletteScreen extends ConsumerStatefulWidget {
@@ -15,16 +16,16 @@ class TrialRouletteScreen extends ConsumerStatefulWidget {
 
 class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late Animation<double> _animation;
   bool _isSpinning = false;
+  bool _hasSpun = false;
   int? _result; // null = not spun, 0 = no luck, 7/14/30 = days
 
   final List<RouletteItem> _items = [
-    RouletteItem(days: 7, probability: 0.60, color: const Color(0xFF16A34A)), // 60%
-    RouletteItem(days: 0, probability: 0.10, color: const Color(0xFFDC2626)), // 10%
-    RouletteItem(days: 7, probability: 0.15, color: const Color(0xFF16A34A)), // 15%
-    RouletteItem(days: 14, probability: 0.10, color: const Color(0xFF3B82F6)), // 10%
-    RouletteItem(days: 7, probability: 0.04, color: const Color(0xFF16A34A)), // 4%
-    RouletteItem(days: 30, probability: 0.01, color: const Color(0xFFF59E0B)), // 1%
+    RouletteItem(days: 7, probability: 0.99, color: const Color(0xFF16A34A)), // Week - 99%
+    RouletteItem(days: 30, probability: 0.0033, color: const Color(0xFF2563EB)), // Month - 0.33%
+    RouletteItem(days: 3, probability: 0.0033, color: const Color(0xFFEAB308)), // 3 Days - 0.33%
+    RouletteItem(days: 0, probability: 0.0034, color: const Color(0xFFDC2626)), // No Luck - 0.34%
   ];
 
   @override
@@ -34,6 +35,14 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
       vsync: this,
       duration: const Duration(seconds: 3),
     );
+    // Инициализируем анимацию с начальным значением 0
+    _animation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    ));
   }
 
   @override
@@ -43,56 +52,73 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
   }
 
   Future<void> _spinRoulette() async {
-    if (_isSpinning) return;
+    if (_isSpinning || _hasSpun) return;
 
     setState(() {
       _isSpinning = true;
       _result = null;
     });
 
-    // Pick result based on probabilities
     final random = Random();
-    double roll = random.nextDouble();
-    double cumulative = 0;
-    int selectedDays = 7; // default
-
-    for (final item in _items) {
-      cumulative += item.probability;
-      if (roll <= cumulative) {
-        selectedDays = item.days;
+    
+    // Взвешенный случайный выбор (99% шанс на неделю)
+    int targetIndex = 0;
+    double cumulativeProbability = 0.0;
+    double rand = random.nextDouble();
+    
+    for (int i = 0; i < _items.length; i++) {
+      cumulativeProbability += _items[i].probability;
+      if (rand <= cumulativeProbability) {
+        targetIndex = i;
         break;
       }
     }
 
-    // Animate
-    await _controller.forward(from: 0);
+    // Рассчитываем угол поворота
+    // Сектора расположены по 90 градусов.
+    // Item 0 (Week): Центр в -45°. Чтобы попал наверх (-90°), нужно повернуть на -45° (или 315°).
+    // Item 1 (Month): Центр в 45°. Чтобы попал наверх, нужно повернуть на -135° (или 225°).
+    // Item 2 (3 Days): Центр в 135°. Чтобы попал наверх, нужно повернуть на -225° (или 135°).
+    // Item 3 (No Luck): Центр в 225°. Чтобы попал наверх, нужно повернуть на -315° (или 45°).
+    // Формула: 315 - (index * 90)
+    
+    final fullRotations = 5;
+    final targetAngle = (fullRotations * 360.0) + (315.0 - (targetIndex * 90.0));
+    
+    // Создаем анимацию с physics-based easing
+    _animation = Tween<double>(
+      begin: 0,
+      end: targetAngle,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    ));
+
+    // Запускаем анимацию
+    _controller.reset();
+    await _controller.forward();
+    
     await Future.delayed(const Duration(milliseconds: 500));
+
+    final int selectedDays = _items[targetIndex].days;
 
     setState(() {
       _result = selectedDays;
       _isSpinning = false;
+      _hasSpun = true;
     });
 
     // Show result
-    if (selectedDays > 0) {
-      if (mounted) {
-        AppAlert.show(
-          context,
-          title: 'Congratulations! 🎉',
-          description: 'You won $selectedDays days of free trial!',
-          type: AlertType.success,
-          duration: const Duration(seconds: 5),
-        );
-      }
-    } else {
-      if (mounted) {
-        AppAlert.show(
-          context,
-          title: 'Not this time',
-          description: 'But you can still purchase a subscription below',
-          type: AlertType.info,
-        );
-      }
+    if (mounted) {
+      AppAlert.show(
+        context,
+        title: selectedDays > 0 ? 'Congratulations! 🎉' : 'Try Again!',
+        description: selectedDays > 0 
+            ? 'You won $selectedDays days of free trial!'
+            : 'No luck this time, but you can still get premium!',
+        type: selectedDays > 0 ? AlertType.success : AlertType.info,
+        duration: const Duration(seconds: 5),
+      );
     }
   }
 
@@ -121,36 +147,64 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
               ),
               const SizedBox(height: 48),
 
-              // Roulette Wheel
+              // Roulette Wheel with Indicator
               Expanded(
                 child: Center(
-                  child: RotationTransition(
-                    turns: Tween(begin: 0.0, end: 8.0).animate(
-                      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-                    ),
-                    child: Container(
-                      width: 280,
-                      height: 280,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: DesignTokens.textPrimary,
-                          width: 4,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: DesignTokens.textPrimary.withOpacity(0.3),
-                            blurRadius: 30,
-                            spreadRadius: 5,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Используем минимальное измерение для создания идеального круга
+                      final size = constraints.maxWidth < constraints.maxHeight 
+                          ? constraints.maxWidth * 0.8  // 80% ширины
+                          : constraints.maxHeight * 0.8; // или 80% высоты
+                      
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Вращающееся колесо
+                          AnimatedBuilder(
+                            animation: _animation,
+                            builder: (context, child) {
+                              return Transform.rotate(
+                                angle: _animation.value * pi / 180,
+                                child: child,
+                              );
+                            },
+                            child: Container(
+                              width: size,
+                              height: size,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: DesignTokens.textPrimary,
+                                  width: 4,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: DesignTokens.textPrimary.withOpacity(0.3),
+                                    blurRadius: 30,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: CustomPaint(
+                                  painter: RoulettePainter(_items),
+                                ),
+                              ),
+                            ),
+                          ),
+                          
+                          // Стрелка-указатель сверху (не вращается)
+                          Positioned(
+                            top: -10,
+                            child: CustomPaint(
+                              size: const Size(30, 40),
+                              painter: ArrowIndicatorPainter(),
+                            ),
                           ),
                         ],
-                      ),
-                      child: ClipOval(
-                        child: CustomPaint(
-                          painter: RoulettePainter(_items),
-                        ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -228,7 +282,8 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
                           ),
                         ),
                 )
-              else
+              // Continue button - ТОЛЬКО если выпало НЕ No Luck
+              else if (_result! > 0)
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
@@ -251,6 +306,61 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
                       color: DesignTokens.bgBase,
                     ),
                   ),
+                )
+              // Если No Luck - показываем ТОЛЬКО инфо о подписке
+              else
+                Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDC2626).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFDC2626).withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.info_outline, color: Color(0xFFDC2626), size: 48),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Try Again!',
+                            style: DesignTokens.h3.copyWith(color: const Color(0xFFDC2626)),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'No luck this time, but you can still get premium!',
+                            style: DesignTokens.bodySmall.copyWith(color: DesignTokens.textSecondary),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Кнопка перехода на Premium
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (_) => const PremiumSubscriptionScreen()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Get Premium Now',
+                        style: DesignTokens.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               const SizedBox(height: 16),
 
@@ -296,12 +406,10 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
                     // Buy Premium Button
                     ElevatedButton(
                       onPressed: () {
-                        // TODO: Navigate to payment screen
-                        AppAlert.show(
-                          context,
-                          title: 'Coming Soon',
-                          description: 'Premium subscription payment will be available soon!',
-                          type: AlertType.info,
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PremiumSubscriptionScreen(),
+                          ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -353,10 +461,11 @@ class RoulettePainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     
-    double startAngle = -pi / 2;
+    double startAngle = -pi / 2; // Начинаем сверху
     final sweepAngle = (2 * pi) / items.length;
 
     for (int i = 0; i < items.length; i++) {
+      // Рисуем сектор
       final paint = Paint()
         ..color = items[i].color
         ..style = PaintingStyle.fill;
@@ -369,28 +478,87 @@ class RoulettePainter extends CustomPainter {
         paint,
       );
 
-      // Draw text
+      // Рисуем белую границу между секторами
+      final borderPaint = Paint()
+        ..color = Colors.white.withOpacity(0.3)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
+      
+      canvas.drawLine(
+        center,
+        Offset(
+          center.dx + radius * cos(startAngle),
+          center.dy + radius * sin(startAngle),
+        ),
+        borderPaint,
+      );
+
+      // Рисуем текст с улучшенной читаемостью
+      final text = items[i].days > 0 ? '${items[i].days} days' : 'No Luck';
       final textPainter = TextPainter(
         text: TextSpan(
-          text: items[i].days > 0 ? '${items[i].days}d' : '❌',
-          style: const TextStyle(
+          text: text,
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: size.width * 0.07, // Увеличенный размер
+            fontWeight: FontWeight.w900, // Самый жирный шрифт
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.5),
+                offset: const Offset(1, 1),
+                blurRadius: 2,
+              ),
+            ],
           ),
         ),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
 
+      // Позиционируем текст в центре сектора
       final angle = startAngle + sweepAngle / 2;
-      final textX = center.dx + (radius * 0.6) * cos(angle) - textPainter.width / 2;
-      final textY = center.dy + (radius * 0.6) * sin(angle) - textPainter.height / 2;
+      final textRadius = radius * 0.65; // Чуть ближе к центру
+      final textX = center.dx + textRadius * cos(angle) - textPainter.width / 2;
+      final textY = center.dy + textRadius * sin(angle) - textPainter.height / 2;
 
       textPainter.paint(canvas, Offset(textX, textY));
 
       startAngle += sweepAngle;
     }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Стрелка-указатель
+class ArrowIndicatorPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    
+    // Треугольная стрелка вниз
+    path.moveTo(size.width / 2, size.height); // Нижняя точка (острие)
+    path.lineTo(0, 0); // Верхний левый угол
+    path.lineTo(size.width, 0); // Верхний правый угол
+    path.close();
+
+    // Тень для стрелки
+    canvas.drawShadow(path, Colors.black, 4, true);
+    
+    // Сама стрелка
+    canvas.drawPath(path, paint);
+    
+    // Белая обводка
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawPath(path, borderPaint);
   }
 
   @override

@@ -18,28 +18,28 @@ ThemeData buildTheme() {
     onPrimary: Colors.white,
   );
 
-  // Глобальная типографика: Manrope — современный геометрический гротеск с кириллицей
-  final display = GoogleFonts.manropeTextTheme(base.textTheme)
+  // Глобальная типографика: Inter — современный, чистый шрифт
+  final display = GoogleFonts.interTextTheme(base.textTheme)
     .apply(displayColor: DesignTokens.textPrimary, bodyColor: DesignTokens.textPrimary);
-  final body = GoogleFonts.manropeTextTheme(base.textTheme)
+  final body = GoogleFonts.interTextTheme(base.textTheme)
     .apply(displayColor: DesignTokens.textPrimary, bodyColor: DesignTokens.textSecondary);
 
   return base.copyWith(
     colorScheme: scheme,
     scaffoldBackgroundColor: DesignTokens.bgBase,
     textTheme: body.copyWith(
-      displayLarge: DesignTokens.h1.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      displayMedium: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      displaySmall: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      headlineLarge: DesignTokens.h1.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      headlineMedium: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      headlineSmall: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      titleLarge: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      titleMedium: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      titleSmall: DesignTokens.bodyLarge.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      bodyLarge: DesignTokens.bodyLarge.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      bodyMedium: DesignTokens.bodyMedium.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
-      bodySmall: DesignTokens.bodySmall.copyWith(fontFamily: GoogleFonts.manrope().fontFamily),
+      displayLarge: DesignTokens.h1.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      displayMedium: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      displaySmall: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      headlineLarge: DesignTokens.h1.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      headlineMedium: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      headlineSmall: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      titleLarge: DesignTokens.h2.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      titleMedium: DesignTokens.h3.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      titleSmall: DesignTokens.bodyLarge.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      bodyLarge: DesignTokens.bodyLarge.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      bodyMedium: DesignTokens.bodyMedium.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
+      bodySmall: DesignTokens.bodySmall.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,

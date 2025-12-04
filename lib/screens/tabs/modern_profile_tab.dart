@@ -245,7 +245,7 @@ class _ModernProfileTabState extends ConsumerState<ModernProfileTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ModernComponents.sexyText(
-                          'Weekly Progress',
+                          AppLocalizations.of(context)!.weeklyProgress,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -253,11 +253,11 @@ class _ModernProfileTabState extends ConsumerState<ModernProfileTab> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildProgressItem('Workouts', 0.8, const Color(0xFF00D4AA)),
+                        _buildProgressItem(AppLocalizations.of(context)!.workouts, 0.8, const Color(0xFF00D4AA)),
                         const SizedBox(height: 12),
-                        _buildProgressItem('Nutrition', 0.6, const Color(0xFF007AFF)),
+                        _buildProgressItem(AppLocalizations.of(context)!.nutrition, 0.6, const Color(0xFF007AFF)),
                         const SizedBox(height: 12),
-                        _buildProgressItem('Sleep', 0.9, const Color(0xFF5B21B6)),
+                        _buildProgressItem(AppLocalizations.of(context)!.sleep, 0.9, const Color(0xFF5B21B6)),
                       ],
                     ),
                   ),
@@ -279,8 +279,8 @@ class _ModernProfileTabState extends ConsumerState<ModernProfileTab> {
                         ),
                         const SizedBox(height: 16),
                         _buildAchievementItem(
-                          'First Workout',
-                          'Completed your first workout!',
+                          AppLocalizations.of(context)!.firstWorkout,
+                          AppLocalizations.of(context)!.completedFirstWorkout,
                           Icons.star,
                           const Color(0xFFFFD700),
                         ),

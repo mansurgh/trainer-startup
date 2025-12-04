@@ -374,7 +374,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get full => 'Full';
 
   @override
-  String get pushNotifications => 'Push notifications';
+  String get pushNotifications => 'Push Notifications';
 
   @override
   String get workoutAndNutritionReminders => 'Workout and nutrition reminders';
@@ -416,7 +416,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageAndRegion => 'Language and Region';
 
   @override
-  String get russian => 'Russian';
+  String get russian => 'Русский';
 
   @override
   String get english => 'English';
@@ -547,4 +547,515 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photoDeleted => 'Photo deleted successfully';
+
+  @override
+  String get trialRoulette => 'Trial Roulette';
+
+  @override
+  String get spinTheWheel => 'Spin the wheel to get your trial period!';
+
+  @override
+  String get spin => 'Spin';
+
+  @override
+  String get congratulations => 'Congratulations!';
+
+  @override
+  String youWonDays(Object days) {
+    return 'You won $days days of free trial!';
+  }
+
+  @override
+  String get buyPremium => 'Buy Premium';
+
+  @override
+  String get premiumSubscription => 'Premium Subscription';
+
+  @override
+  String get unlockFullPotential => 'Unlock Your Full Potential';
+
+  @override
+  String get personalizedWorkouts => 'Personalized AI Workouts';
+
+  @override
+  String get personalizedWorkoutsDesc =>
+      'Custom training plans adapted to your goals';
+
+  @override
+  String get nutritionTracking => 'Nutrition Tracking';
+
+  @override
+  String get nutritionTrackingDesc =>
+      'Track macros and get meal recommendations';
+
+  @override
+  String get progressAnalytics => 'Progress Analytics';
+
+  @override
+  String get progressAnalyticsDesc => 'Detailed statistics and achievements';
+
+  @override
+  String get aiNutritionCoach => 'AI Nutrition Coach';
+
+  @override
+  String get aiNutritionCoachDesc => 'Get personalized diet advice';
+
+  @override
+  String get workoutLibrary => 'Workout Library';
+
+  @override
+  String get workoutLibraryDesc => 'Access 500+ exercises with video guides';
+
+  @override
+  String get bodyScanAnalysis => 'Body Scan Analysis';
+
+  @override
+  String get bodyScanAnalysisDesc => 'Track your body composition changes';
+
+  @override
+  String get prioritySupport => 'Priority Support';
+
+  @override
+  String get prioritySupportDesc => 'Get faster responses from our team';
+
+  @override
+  String get adFreeExperience => 'Ad-Free Experience';
+
+  @override
+  String get adFreeExperienceDesc => 'Enjoy the app without interruptions';
+
+  @override
+  String get investInYourself => 'Invest in Yourself';
+
+  @override
+  String get gwagonMessage =>
+      'For the price of 3 coffees, you get a personal trainer. Or save up for a G-Wagon... your choice 😎';
+
+  @override
+  String get choosePlan => 'Choose Your Plan';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get yearly => 'Yearly';
+
+  @override
+  String get save40 => 'Save 40%';
+
+  @override
+  String get startFreeTrial => 'Start Free Trial';
+
+  @override
+  String get aiChatTrainer => 'AI Chat - Trainer';
+
+  @override
+  String get aiChatNutritionist => 'AI Chat - Nutritionist';
+
+  @override
+  String get typeMessage => 'Type your message...';
+
+  @override
+  String get nutritionGoals => 'Nutrition Goals';
+
+  @override
+  String get editGoal => 'Edit Goal';
+
+  @override
+  String get recommended => 'Recommended';
+
+  @override
+  String get basedOnYourData =>
+      'Based on your height, weight, age and activity level';
+
+  @override
+  String get useRecommended => 'Use Recommended Value';
+
+  @override
+  String get goalUpdated => 'Goal updated';
+
+  @override
+  String get protein => 'Protein';
+
+  @override
+  String get fat => 'Fat';
+
+  @override
+  String get carbs => 'Carbs';
+
+  @override
+  String get kcal => 'kcal';
+
+  @override
+  String get aiNutritionistChat => 'AI Nutritionist Chat';
+
+  @override
+  String get fridgeBasedMealPlan => 'Fridge-based Meal Plan';
+
+  @override
+  String get addDish => 'Add Dish';
+
+  @override
+  String get breakfast => 'Breakfast';
+
+  @override
+  String get dinner => 'Dinner';
+
+  @override
+  String get snack => 'Snack';
+
+  @override
+  String get deleteMeal => 'Delete Meal?';
+
+  @override
+  String get deleteMealConfirm => 'Are you sure you want to delete this meal?';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get mealDeleted => 'Meal Deleted';
+
+  @override
+  String get editDish => 'Edit Dish';
+
+  @override
+  String get dishName => 'Dish Name';
+
+  @override
+  String get caloriesKcal => 'Calories (kcal)';
+
+  @override
+  String get proteinG => 'Protein (g)';
+
+  @override
+  String get fatG => 'Fat (g)';
+
+  @override
+  String get carbsG => 'Carbs (g)';
+
+  @override
+  String get deleteDish => 'Delete Dish?';
+
+  @override
+  String deleteDishConfirm(Object name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get dishDeleted => 'Dish Deleted';
+
+  @override
+  String get dishUpdated => 'Dish Updated';
+
+  @override
+  String get enterDishName => 'Enter dish name';
+
+  @override
+  String get enterValidCalories => 'Please enter valid calories';
+
+  @override
+  String get enterValidProtein => 'Please enter valid protein amount';
+
+  @override
+  String get enterValidFat => 'Please enter valid fat amount';
+
+  @override
+  String get enterValidCarbs => 'Please enter valid carbs amount';
+
+  @override
+  String get commandHelp => 'Available Commands';
+
+  @override
+  String get commandFat => '/fat <number> - Set fat goal';
+
+  @override
+  String get commandProtein => '/protein <number> - Set protein goal';
+
+  @override
+  String get commandCarbs => '/carbs <number> - Set carbs goal';
+
+  @override
+  String get commandCalories => '/calories <number> - Set calories goal';
+
+  @override
+  String get commandSwapMeal => '/swap_meal <old> -> <new> - Replace meal';
+
+  @override
+  String get commandSwapExercise =>
+      '/swap_exercise <old> -> <new> - Replace exercise';
+
+  @override
+  String get unknownCommand =>
+      'Unknown command. Type /help for available commands.';
+
+  @override
+  String get completeProfile => 'Complete your profile';
+
+  @override
+  String get years => 'years';
+
+  @override
+  String get trackYourIntake => 'Track your daily intake';
+
+  @override
+  String get exerciseSwapped => 'Exercise replaced successfully';
+
+  @override
+  String get exerciseNotFound => 'Exercise not found in current workout';
+
+  @override
+  String get noActiveWorkout => 'No active workout. Start a workout first.';
+
+  @override
+  String get replaceDish => 'Replace Dish';
+
+  @override
+  String get enterNewDishName => 'Enter the name of the new dish';
+
+  @override
+  String get newDishName => 'New dish name';
+
+  @override
+  String get replace => 'Replace';
+
+  @override
+  String get replacementRequested => 'Replacement requested';
+
+  @override
+  String get aiWillSuggestReplacement => 'AI will suggest a replacement';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get notificationsSection => 'Notifications';
+
+  @override
+  String get workoutReminders => 'Workout Reminders';
+
+  @override
+  String get dataSection => 'Data';
+
+  @override
+  String get clearData => 'Clear Data';
+
+  @override
+  String get clearDataSubtitle => 'Delete all application data';
+
+  @override
+  String get aboutSection => 'About';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get privacyPolicySubtitle => 'How we use your data';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get termsOfServiceSubtitle => 'Application usage rules';
+
+  @override
+  String get support => 'Support';
+
+  @override
+  String get supportSubtitle => 'Contact us';
+
+  @override
+  String get languageSetting => 'Language';
+
+  @override
+  String get logoutButton => 'Logout';
+
+  @override
+  String get workoutCompleted => 'Workout Completed!';
+
+  @override
+  String get workoutCompletedDesc =>
+      'Great work! Workout successfully completed.';
+
+  @override
+  String get nutritionGoalMet => 'Nutrition Goal Met!';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get deleteDataWarning =>
+      'Are you sure you want to delete all application data?';
+
+  @override
+  String get deleteDataDescription =>
+      'This action cannot be undone. All data about workouts, nutrition, and progress will be deleted.';
+
+  @override
+  String get deleteButton => 'Delete';
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get supportDescription =>
+      'If you have questions or suggestions, contact us:';
+
+  @override
+  String get emailLabel => 'Email';
+
+  @override
+  String get privacyPolicyTitle => 'Privacy Policy';
+
+  @override
+  String get privacyPolicyContent =>
+      'PulseFit Pro respects your privacy. All data is stored locally on your device and is not shared with third parties without your consent.';
+
+  @override
+  String get workoutsCount => 'workouts';
+
+  @override
+  String get todaysWin => 'Today\'s Win';
+
+  @override
+  String get todaysWinDescription =>
+      'Complete workout or nutrition goal to earn today\'s win';
+
+  @override
+  String get bmiDescription =>
+      'BMI (Body Mass Index) shows the ratio of your weight to height. Formula: Weight (kg) / (Height (m))². Normal: 18.5-24.9. Below 18.5 - underweight, 25-29.9 - overweight, 30+ - obesity.';
+
+  @override
+  String get weeklyProgress => 'Weekly Progress';
+
+  @override
+  String get sleep => 'Sleep';
+
+  @override
+  String get firstWorkout => 'First Workout';
+
+  @override
+  String get completedFirstWorkout => 'Completed first workout!';
+
+  @override
+  String get completeYourProfile => 'Complete your profile';
+
+  @override
+  String get heightUnit => 'cm';
+
+  @override
+  String get fridgeMealPlan => 'Fridge-based meal plan';
+
+  @override
+  String get workoutSettingsTitle => 'Workout Settings';
+
+  @override
+  String get workoutSettingsSubtitle => 'Set time for exercises and rest:';
+
+  @override
+  String get exerciseLabel => 'Exercise:';
+
+  @override
+  String get restLabel => 'Rest:';
+
+  @override
+  String get seconds => 's';
+
+  @override
+  String get generatingProgramTitle =>
+      'Creating your personal\nworkout program...';
+
+  @override
+  String get generatingProgramSubtitle => 'This will take just a few seconds';
+
+  @override
+  String streakDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get streakLabel => 'Streak';
+
+  @override
+  String get streakHelp =>
+      'Number of consecutive days you completed at least one goal (workout or nutrition).';
+
+  @override
+  String get activityLabel => 'Activity';
+
+  @override
+  String get activityDays => 'days';
+
+  @override
+  String get workoutScheduleTitle => 'Training Program';
+
+  @override
+  String get startAgain => 'Start Again';
+
+  @override
+  String get restDayTitle => 'Rest Day';
+
+  @override
+  String get restDayDesc => 'Recovery is just as important as training';
+
+  @override
+  String get customizeWorkout => 'Customize Workout';
+
+  @override
+  String get aiTrainerChat => 'AI Trainer Chat';
+
+  @override
+  String get workoutUpdated => 'Workout updated successfully';
+
+  @override
+  String get failedToUpdateWorkout => 'Failed to update workout';
+
+  @override
+  String get workoutAvailableTodayOnly => 'Workout available today only';
+
+  @override
+  String get workoutAvailableTodayOnlyDesc =>
+      'You can only perform the workout on the current day. Select today.';
+
+  @override
+  String get mealAdded => 'Meal Added';
+
+  @override
+  String get mealRenamed => 'Meal Renamed';
+
+  @override
+  String get dishAdded => 'Dish Added';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get partial => 'Partial';
+
+  @override
+  String get missed => 'Missed';
+
+  @override
+  String get noActivity => 'No activity';
+
+  @override
+  String get workoutCheck => 'Workout ✓';
+
+  @override
+  String get nutritionCheck => 'Nutrition ✓';
+
+  @override
+  String get workoutAndNutritionCheck => 'Workout ✓ Nutrition ✓';
 }

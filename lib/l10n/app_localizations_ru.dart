@@ -21,7 +21,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingSubtitle => 'Ваш персональный AI-тренер';
 
   @override
-  String get name => 'Имя';
+  String get name => 'Название';
 
   @override
   String get age => 'Возраст';
@@ -550,4 +550,523 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get photoDeleted => 'Фото удалено успешно';
+
+  @override
+  String get trialRoulette => 'Рулетка пробного периода';
+
+  @override
+  String get spinTheWheel => 'Крути колесо и получи пробный период!';
+
+  @override
+  String get spin => 'Крутить';
+
+  @override
+  String get congratulations => 'Поздравляем!';
+
+  @override
+  String youWonDays(Object days) {
+    return 'Вы выиграли $days дней бесплатного пробного периода!';
+  }
+
+  @override
+  String get buyPremium => 'Купить Premium';
+
+  @override
+  String get premiumSubscription => 'Premium подписка';
+
+  @override
+  String get unlockFullPotential => 'Раскрой свой потенциал';
+
+  @override
+  String get personalizedWorkouts => 'Персональные AI-тренировки';
+
+  @override
+  String get personalizedWorkoutsDesc => 'Программы тренировок под твои цели';
+
+  @override
+  String get nutritionTracking => 'Отслеживание питания';
+
+  @override
+  String get nutritionTrackingDesc => 'Отслеживай КБЖУ и получай рекомендации';
+
+  @override
+  String get progressAnalytics => 'Аналитика прогресса';
+
+  @override
+  String get progressAnalyticsDesc => 'Детальная статистика и достижения';
+
+  @override
+  String get aiNutritionCoach => 'AI-нутрициолог';
+
+  @override
+  String get aiNutritionCoachDesc => 'Персональные советы по питанию';
+
+  @override
+  String get workoutLibrary => 'Библиотека упражнений';
+
+  @override
+  String get workoutLibraryDesc => 'Доступ к 500+ упражнениям с видео';
+
+  @override
+  String get bodyScanAnalysis => 'Анализ состава тела';
+
+  @override
+  String get bodyScanAnalysisDesc => 'Отслеживай изменения состава тела';
+
+  @override
+  String get prioritySupport => 'Приоритетная поддержка';
+
+  @override
+  String get prioritySupportDesc => 'Быстрые ответы от нашей команды';
+
+  @override
+  String get adFreeExperience => 'Без рекламы';
+
+  @override
+  String get adFreeExperienceDesc => 'Наслаждайся приложением без прерываний';
+
+  @override
+  String get investInYourself => 'Инвестируй в себя';
+
+  @override
+  String get gwagonMessage =>
+      'За цену 3 чашек кофе ты получаешь личного тренера. Или копи на гелик... выбирай 😎';
+
+  @override
+  String get choosePlan => 'Выбери свой план';
+
+  @override
+  String get monthly => 'Месяц';
+
+  @override
+  String get yearly => 'Год';
+
+  @override
+  String get save40 => 'Экономия 40%';
+
+  @override
+  String get startFreeTrial => 'Начать пробный период';
+
+  @override
+  String get aiChatTrainer => 'AI Чат - Тренер';
+
+  @override
+  String get aiChatNutritionist => 'AI Чат - Нутрициолог';
+
+  @override
+  String get typeMessage => 'Введите сообщение...';
+
+  @override
+  String get nutritionGoals => 'Цели по питанию';
+
+  @override
+  String get editGoal => 'Изменить цель';
+
+  @override
+  String get recommended => 'Рекомендовано';
+
+  @override
+  String get basedOnYourData =>
+      'На основе вашего роста, веса, возраста и активности';
+
+  @override
+  String get useRecommended => 'Использовать рекомендованное значение';
+
+  @override
+  String get goalUpdated => 'Цель обновлена';
+
+  @override
+  String get protein => 'Белки';
+
+  @override
+  String get fat => 'Жиры';
+
+  @override
+  String get carbs => 'Углеводы';
+
+  @override
+  String get kcal => 'ккал';
+
+  @override
+  String get aiNutritionistChat => 'AI Чат с нутрициологом';
+
+  @override
+  String get fridgeBasedMealPlan => 'План питания по холодильнику';
+
+  @override
+  String get addDish => 'Добавить блюдо';
+
+  @override
+  String get breakfast => 'Завтрак';
+
+  @override
+  String get dinner => 'Ужин';
+
+  @override
+  String get snack => 'Перекус';
+
+  @override
+  String get deleteMeal => 'Удалить прием пищи?';
+
+  @override
+  String get deleteMealConfirm =>
+      'Вы уверены, что хотите удалить этот прием пищи?';
+
+  @override
+  String get delete => 'Удалить';
+
+  @override
+  String get mealDeleted => 'Прием пищи удален';
+
+  @override
+  String get editDish => 'Редактировать блюдо';
+
+  @override
+  String get dishName => 'Название блюда';
+
+  @override
+  String get caloriesKcal => 'Калории (ккал)';
+
+  @override
+  String get proteinG => 'Белки (г)';
+
+  @override
+  String get fatG => 'Жиры (г)';
+
+  @override
+  String get carbsG => 'Углеводы (г)';
+
+  @override
+  String get deleteDish => 'Удалить блюдо?';
+
+  @override
+  String deleteDishConfirm(Object name) {
+    return 'Вы уверены, что хотите удалить \"$name\"?';
+  }
+
+  @override
+  String get dishDeleted => 'Блюдо удалено';
+
+  @override
+  String get dishUpdated => 'Блюдо обновлено';
+
+  @override
+  String get enterDishName => 'Введите название блюда';
+
+  @override
+  String get enterValidCalories =>
+      'Пожалуйста, введите корректное количество калорий';
+
+  @override
+  String get enterValidProtein =>
+      'Пожалуйста, введите корректное количество белков';
+
+  @override
+  String get enterValidFat => 'Пожалуйста, введите корректное количество жиров';
+
+  @override
+  String get enterValidCarbs =>
+      'Пожалуйста, введите корректное количество углеводов';
+
+  @override
+  String get commandHelp => 'Доступные команды';
+
+  @override
+  String get commandFat => '/fat <число> - Установить цель по жирам';
+
+  @override
+  String get commandProtein => '/protein <число> - Установить цель по белкам';
+
+  @override
+  String get commandCarbs => '/carbs <число> - Установить цель по углеводам';
+
+  @override
+  String get commandCalories =>
+      '/calories <число> - Установить цель по калориям';
+
+  @override
+  String get commandSwapMeal =>
+      '/swap_meal <старое> -> <новое> - Заменить блюдо';
+
+  @override
+  String get commandSwapExercise =>
+      '/swap_exercise <старое> -> <новое> - Заменить упражнение';
+
+  @override
+  String get unknownCommand =>
+      'Неизвестная команда. Напишите /help для списка доступных команд.';
+
+  @override
+  String get completeProfile => 'Заполните профиль';
+
+  @override
+  String get years => 'лет';
+
+  @override
+  String get trackYourIntake => 'Отслеживай свой рацион';
+
+  @override
+  String get exerciseSwapped => 'Упражнение успешно заменено';
+
+  @override
+  String get exerciseNotFound => 'Упражнение не найдено в текущей тренировке';
+
+  @override
+  String get noActiveWorkout =>
+      'Нет активной тренировки. Сначала начните тренировку.';
+
+  @override
+  String get replaceDish => 'Заменить блюдо';
+
+  @override
+  String get enterNewDishName => 'Введите название нового блюда';
+
+  @override
+  String get newDishName => 'Новое название';
+
+  @override
+  String get replace => 'Заменить';
+
+  @override
+  String get replacementRequested => 'Запрошена замена';
+
+  @override
+  String get aiWillSuggestReplacement => 'AI предложит замену';
+
+  @override
+  String get settingsTitle => 'Настройки';
+
+  @override
+  String get notificationsSection => 'Уведомления';
+
+  @override
+  String get workoutReminders => 'Напоминания о тренировках';
+
+  @override
+  String get dataSection => 'Данные';
+
+  @override
+  String get clearData => 'Очистить данные';
+
+  @override
+  String get clearDataSubtitle => 'Удалить все данные приложения';
+
+  @override
+  String get aboutSection => 'О приложении';
+
+  @override
+  String get version => 'Версия';
+
+  @override
+  String get privacyPolicy => 'Политика конфиденциальности';
+
+  @override
+  String get privacyPolicySubtitle => 'Как мы используем ваши данные';
+
+  @override
+  String get termsOfService => 'Условия использования';
+
+  @override
+  String get termsOfServiceSubtitle => 'Правила использования приложения';
+
+  @override
+  String get support => 'Поддержка';
+
+  @override
+  String get supportSubtitle => 'Связаться с нами';
+
+  @override
+  String get languageSetting => 'Язык';
+
+  @override
+  String get logoutButton => 'Выйти из аккаунта';
+
+  @override
+  String get workoutCompleted => 'Тренировка завершена!';
+
+  @override
+  String get workoutCompletedDesc =>
+      'Отличная работа! Тренировка успешно завершена.';
+
+  @override
+  String get nutritionGoalMet => 'Цель по питанию достигнута!';
+
+  @override
+  String get selectLanguage => 'Выберите язык';
+
+  @override
+  String get deleteDataWarning =>
+      'Вы уверены, что хотите удалить все данные приложения?';
+
+  @override
+  String get deleteDataDescription =>
+      'Это действие нельзя отменить. Все данные о тренировках, питании и прогрессе будут удалены.';
+
+  @override
+  String get deleteButton => 'Удалить';
+
+  @override
+  String get supportTitle => 'Поддержка';
+
+  @override
+  String get supportDescription =>
+      'Если у вас есть вопросы или предложения, свяжитесь с нами:';
+
+  @override
+  String get emailLabel => 'Email';
+
+  @override
+  String get privacyPolicyTitle => 'Политика конфиденциальности';
+
+  @override
+  String get privacyPolicyContent =>
+      'PulseFit Pro уважает вашу приватность. Все данные хранятся локально на вашем устройстве и не передаются третьим лицам без вашего согласия.';
+
+  @override
+  String get workoutsCount => 'тренировок';
+
+  @override
+  String get todaysWin => 'Успех дня';
+
+  @override
+  String get todaysWinDescription =>
+      'Выполните тренировку или цель по питанию, чтобы заработать успех дня';
+
+  @override
+  String get bmiDescription =>
+      'ИМТ (Индекс Массы Тела) показывает соотношение вашего веса к росту. Формула: Вес (кг) / (Рост (м))². Норма: 18.5-24.9. Меньше 18.5 - недостаточный вес, 25-29.9 - избыточный вес, 30+ - ожирение.';
+
+  @override
+  String get weeklyProgress => 'Прогресс за неделю';
+
+  @override
+  String get sleep => 'Сон';
+
+  @override
+  String get firstWorkout => 'Первая тренировка';
+
+  @override
+  String get completedFirstWorkout => 'Выполнил первую тренировку!';
+
+  @override
+  String get completeYourProfile => 'Заполните профиль';
+
+  @override
+  String get heightUnit => 'см';
+
+  @override
+  String get fridgeMealPlan => 'Рацион по фото холодильника';
+
+  @override
+  String get workoutSettingsTitle => 'Настройка тренировки';
+
+  @override
+  String get workoutSettingsSubtitle =>
+      'Установите время для упражнений и отдыха:';
+
+  @override
+  String get exerciseLabel => 'Упражнение:';
+
+  @override
+  String get restLabel => 'Отдых:';
+
+  @override
+  String get seconds => 'с';
+
+  @override
+  String get generatingProgramTitle =>
+      'Составляем персональную\nпрограмму тренировок...';
+
+  @override
+  String get generatingProgramSubtitle => 'Это займет всего несколько секунд';
+
+  @override
+  String streakDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count дней',
+      many: '$count дней',
+      few: '$count дня',
+      one: '$count день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get streakLabel => 'Серия';
+
+  @override
+  String get streakHelp =>
+      'Количество дней подряд, когда вы выполняли хотя бы одну цель (тренировка или питание).';
+
+  @override
+  String get activityLabel => 'Активность';
+
+  @override
+  String get activityDays => 'дней';
+
+  @override
+  String get workoutScheduleTitle => 'Программа тренировок';
+
+  @override
+  String get startAgain => 'Пройти заново';
+
+  @override
+  String get restDayTitle => 'День отдыха';
+
+  @override
+  String get restDayDesc => 'Восстановление так же важно, как и тренировки';
+
+  @override
+  String get customizeWorkout => 'Настроить тренировку';
+
+  @override
+  String get aiTrainerChat => 'Чат с AI-тренером';
+
+  @override
+  String get workoutUpdated => 'Тренировка обновлена успешно';
+
+  @override
+  String get failedToUpdateWorkout => 'Не удалось обновить тренировку';
+
+  @override
+  String get workoutAvailableTodayOnly => 'Тренировка доступна только сегодня';
+
+  @override
+  String get workoutAvailableTodayOnlyDesc =>
+      'Вы можете выполнить тренировку только в текущий день. Выберите сегодняшний день.';
+
+  @override
+  String get mealAdded => 'Прием пищи добавлен';
+
+  @override
+  String get mealRenamed => 'Прием пищи переименован';
+
+  @override
+  String get dishAdded => 'Блюдо добавлено';
+
+  @override
+  String get rename => 'Переименовать';
+
+  @override
+  String get all => 'Все';
+
+  @override
+  String get partial => 'Частично';
+
+  @override
+  String get missed => 'Пропущено';
+
+  @override
+  String get noActivity => 'Нет активности';
+
+  @override
+  String get workoutCheck => 'Тренировка ✓';
+
+  @override
+  String get nutritionCheck => 'Питание ✓';
+
+  @override
+  String get workoutAndNutritionCheck => 'Тренировка ✓ Питание ✓';
 }

@@ -1,5 +1,6 @@
 class UserModel {
   final String id;
+  final String? email;          // EMAIL
   final String? name;           // <= ИМЯ
   final String? gender;         // m/f
   final int? age;
@@ -19,6 +20,7 @@ class UserModel {
 
   const UserModel({
     required this.id,
+    this.email,
     this.name,
     this.gender,
     this.age,
@@ -39,6 +41,7 @@ class UserModel {
 
   UserModel copyWith({
     String? id,
+    String? email,
     String? name,
     String? gender,
     int? age,
@@ -58,6 +61,7 @@ class UserModel {
   }) {
     return UserModel(
       id: id ?? this.id,
+      email: email ?? this.email,
       name: name ?? this.name,
       gender: gender ?? this.gender,
       age: age ?? this.age,
@@ -80,6 +84,7 @@ class UserModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'email': email,
       'name': name,
       'gender': gender,
       'age': age,
@@ -102,6 +107,7 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] ?? '',
+      email: json['email'],
       name: json['name'],
       gender: json['gender'],
       age: json['age'],

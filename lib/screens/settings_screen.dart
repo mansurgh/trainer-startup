@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/theme.dart';
+import '../config/supabase_config.dart';
 import '../state/user_state.dart';
+import '../state/activity_state.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -32,7 +37,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _notificationsEnabled = settings['notifications_enabled'] ?? true;
       _dataSharingEnabled = settings['data_sharing_enabled'] ?? false;
       _analyticsEnabled = settings['analytics_enabled'] ?? true;
-      _selectedLanguage = settings['language'] ?? 'ru';
+      // Default to 'en' if not set, matching LocaleProvider
+      _selectedLanguage = settings['language'] ?? 'en';
     });
   }
 
@@ -47,11 +53,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Настройки'),
+          title: Text(l10n.settingsTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -60,12 +67,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             // Основные настройки
             _buildSection(
-              title: 'Уведомления',
+              title: l10n.notificationsSection,
               icon: Icons.notifications_outlined,
               children: [
                 _buildSwitchTile(
-                  title: 'Push-уведомления',
-                  subtitle: 'Напоминания о тренировках',
+                  title: l10n.pushNotifications,
+                  subtitle: l10n.workoutReminders,
                   value: _notificationsEnabled,
                   onChanged: (value) async {
                     setState(() => _notificationsEnabled = value);
@@ -83,83 +90,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Данные
-            _buildSection(
-              title: 'Данные',
-              icon: Icons.storage_outlined,
-              children: [
-                _buildListTile(
-                  title: 'Экспорт данных',
-                  subtitle: 'Скачать все ваши данные',
-                  icon: Icons.download,
-                  onTap: () => _exportData(),
-                ),
-                _buildListTile(
-                  title: 'Очистить данные',
-                  subtitle: 'Удалить все данные приложения',
-                  icon: Icons.delete_forever,
-                  onTap: () => _showDeleteDataDialog(),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Разрешения
-            _buildSection(
-              title: 'Разрешения',
-              icon: Icons.security_outlined,
-              children: [
-                _buildListTile(
-                  title: 'Камера',
-                  subtitle: 'Для фото прогресса и анализа еды',
-                  icon: Icons.camera_alt,
-                  onTap: () => _requestPermission(Permission.camera),
-                ),
-                _buildListTile(
-                  title: 'Галерея',
-                  subtitle: 'Для выбора изображений',
-                  icon: Icons.photo_library,
-                  onTap: () => _requestPermission(Permission.photos),
-                ),
-                _buildListTile(
-                  title: 'Уведомления',
-                  subtitle: 'Для напоминаний о тренировках',
-                  icon: Icons.notifications,
-                  onTap: () => _requestPermission(Permission.notification),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
             // О приложении
             _buildSection(
-              title: 'О приложении',
+              title: l10n.aboutSection,
               icon: Icons.info_outlined,
               children: [
                 _buildListTile(
-                  title: 'Версия',
+                  title: l10n.version,
                   subtitle: '1.0.0',
                   icon: Icons.info,
                 ),
                 _buildListTile(
-                  title: 'Политика конфиденциальности',
-                  subtitle: 'Как мы используем ваши данные',
+                  title: l10n.privacyPolicy,
+                  subtitle: l10n.privacyPolicySubtitle,
                   icon: Icons.policy,
                   onTap: () => _showPrivacyPolicy(),
                 ),
                 _buildListTile(
-                  title: 'Условия использования',
-                  subtitle: 'Правила использования приложения',
+                  title: l10n.termsOfService,
+                  subtitle: l10n.termsOfServiceSubtitle,
                   icon: Icons.description,
                   onTap: () => _showTermsOfService(),
                 ),
                 _buildListTile(
-                  title: 'Поддержка',
-                  subtitle: 'Связаться с нами',
+                  title: l10n.support,
+                  subtitle: l10n.supportSubtitle,
                   icon: Icons.support_agent,
                   onTap: () => _showSupport(),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Язык
+            _buildSection(
+              title: l10n.languageAndRegion,
+              icon: Icons.language,
+              children: [
+                _buildListTile(
+                  title: l10n.languageSetting,
+                  subtitle: _selectedLanguage == 'ru' ? l10n.russian : l10n.english,
+                  icon: Icons.translate,
+                  onTap: () => _showLanguageDialog(),
                 ),
               ],
             ),
@@ -172,7 +145,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: OutlinedButton.icon(
                 onPressed: () => _showLogoutDialog(),
                 icon: const Icon(Icons.logout),
-                label: const Text('Выйти из аккаунта'),
+                label: Text(l10n.logoutButton),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.red,
                   side: const BorderSide(color: Colors.red),
@@ -251,34 +224,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _showNotificationSettings() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        content: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Настройки уведомлений',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              const Text('Здесь можно настроить время и типы уведомлений.'),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showLanguageDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -287,95 +234,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Выберите язык',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              Text(
+                l10n.selectLanguage,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
               RadioListTile<String>(
-                title: const Text('Русский'),
+                title: Text(l10n.russian),
                 value: 'ru',
                 groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() => _selectedLanguage = value!);
-                  _saveSettings();
-                  Navigator.pop(context);
+                onChanged: (value) async {
+                  await ref.read(localeProvider.notifier).setLocale(Locale(value!));
+                  setState(() => _selectedLanguage = value);
+                  await _saveSettings();
+                  if (mounted) {
+                    Navigator.pop(context);
+                    // Перезагружаем весь экран
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    );
+                  }
                 },
               ),
               RadioListTile<String>(
-                title: const Text('English'),
+                title: Text(l10n.english),
                 value: 'en',
                 groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() => _selectedLanguage = value!);
-                  _saveSettings();
-                  Navigator.pop(context);
+                onChanged: (value) async {
+                  await ref.read(localeProvider.notifier).setLocale(Locale(value!));
+                  setState(() => _selectedLanguage = value);
+                  await _saveSettings();
+                  if (mounted) {
+                    Navigator.pop(context);
+                    // Перезагружаем весь экран
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    );
+                  }
                 },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _exportData() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Экспорт данных в разработке...'),
-        backgroundColor: Colors.blue,
-      ),
-    );
-  }
-
-  void _showDeleteDataDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        content: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.warning, color: Colors.red, size: 48),
-              const SizedBox(height: 16),
-              const Text(
-                'Удалить все данные?',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Это действие нельзя отменить. Все ваши данные будут удалены.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Отмена'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () async {
-                        await ref.read(userProvider.notifier).clearUser();
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Все данные удалены'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      },
-                      style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('Удалить'),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -385,6 +283,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showPrivacyPolicy() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -393,19 +292,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Политика конфиденциальности',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              Text(
+                l10n.privacyPolicyTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Мы серьезно относимся к защите ваших данных. Все ваши личные данные хранятся локально на вашем устройстве и не передаются третьим лицам без вашего согласия.',
+              Text(
+                l10n.privacyPolicyContent,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
+                child: Text(l10n.cancel),
               ),
             ],
           ),
@@ -444,7 +343,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _showSupport() {
+  void _showDeleteDataDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -453,13 +353,68 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Поддержка',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              const Icon(Icons.warning, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                l10n.deleteDataWarning,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.deleteDataDescription,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Если у вас есть вопросы или проблемы, свяжитесь с нами:',
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.clear();
+                        if (mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.clearData)),
+                          );
+                        }
+                      },
+                      style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                      child: Text(l10n.deleteButton),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSupport() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.transparent,
+        content: GlassCard(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.supportTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.supportDescription,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -468,7 +423,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
+                child: Text(l10n.cancel),
               ),
             ],
           ),
@@ -510,9 +465,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: FilledButton(
                       onPressed: () async {
-                        await ref.read(userProvider.notifier).clearUser();
-                        Navigator.pop(context);
-                        Navigator.pop(context);
+                        try {
+                          print('[Settings] Starting sign out...');
+                          
+                          // Получаем userId перед выходом
+                          final prefs = await SharedPreferences.getInstance();
+                          final userId = prefs.getString('user_id');
+                          
+                          // Выходим из Supabase с полной очисткой сессии
+                          await SupabaseConfig.client.auth.signOut(scope: SignOutScope.global);
+                          print('[Settings] Supabase sign out successful - session cleared');
+                          
+                          // Очищаем только данные текущего пользователя
+                          if (userId != null) {
+                            final keys = prefs.getKeys();
+                            for (final key in keys) {
+                              if (key.contains('_${userId}_') || key.contains('_$userId') || key == 'user_id') {
+                                await prefs.remove(key);
+                                print('[Settings] Removed key: $key');
+                              }
+                            }
+                          }
+                          
+                          // Invalidate Riverpod state to prevent stale data
+                          ref.invalidate(userProvider);
+                          ref.invalidate(activityDataProvider);
+                          ref.invalidate(todaysWinProvider);
+                          ref.invalidate(consistencyStreakProvider);
+                          
+                          print('[Settings] User data cleared, navigating to login screen...');
+                          
+                          // Навигация к LoginScreen через root navigator
+                          if (context.mounted) {
+                            Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+                              '/login',
+                              (route) => false,
+                            );
+                          }
+                        } catch (e) {
+                          print('[Settings] Sign out error: $e');
+                          
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Ошибка выхода: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
                       },
                       style: FilledButton.styleFrom(backgroundColor: Colors.red),
                       child: const Text('Выйти'),
@@ -523,38 +526,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Future<void> _requestPermission(Permission permission) async {
-    final status = await permission.request();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          status.isGranted 
-              ? 'Разрешение предоставлено' 
-              : 'Разрешение отклонено',
-        ),
-        backgroundColor: status.isGranted ? Colors.green : Colors.red,
-      ),
-    );
-  }
-
-  void _showFeedbackDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Обратная связь'),
-        content: const Text(
-          'Для обратной связи напишите нам на:\nsupport@pulsefit.pro'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
       ),
     );
   }

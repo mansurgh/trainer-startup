@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/design_tokens.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
+import '../config/supabase_config.dart';
 import '../widgets/app_alert.dart';
 import 'trial_roulette_screen.dart';
 
@@ -49,21 +51,52 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
+      print('[Register] Attempting to sign up: ${_emailController.text.trim()}');
+      
       final response = await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
+      print('[Register] Sign up response: ${response.user?.id}');
+
       if (response.user != null && mounted) {
+        final userId = response.user!.id;
+        
+        // Save user ID and email to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_id', userId);
+        await prefs.setString('user_email', _emailController.text.trim());
+        
         // Clear all previous user data for fresh start
         await StorageService.clearNewUserData();
+        
+        // Создаём пустой профиль в Supabase
+        try {
+          await SupabaseConfig.client.from('profiles').insert({
+            'id': userId,
+            'email': _emailController.text.trim(),
+            'name': null,
+            'age': null,
+            'height': null,
+            'weight': null,
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+          print('[Register] ✅ Created empty profile in Supabase');
+        } catch (e) {
+          print('[Register] ⚠️ Profile creation error (may already exist): $e');
+        }
         
         // Navigate to roulette screen for trial
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const TrialRouletteScreen()),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('[Register] Error: $e');
+      print('[Register] Stack trace: $stackTrace');
+      
       if (mounted) {
         AppAlert.show(
           context,
@@ -80,7 +113,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String _getErrorMessage(String error) {
-    if (error.contains('already registered') || error.contains('already exists')) {
+    if (error.contains('already registered') || error.contains('already exists') || error.contains('already been registered')) {
       return 'This email is already registered. Try logging in instead';
     } else if (error.contains('Invalid email')) {
       return 'Please enter a valid email address';
@@ -88,8 +121,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return 'Password must be at least 6 characters';
     } else if (error.contains('rate limit')) {
       return 'Too many attempts. Please try again later';
+    } else if (error.contains('User')) {
+      return 'Unable to create user account. Please try again';
+    } else if (error.contains('Database') || error.contains('Storage')) {
+      return 'Database error. Please try again';
     }
-    return 'An error occurred. Please try again';
+    // Показываем часть реальной ошибки для отладки
+    final shortError = error.length > 100 ? error.substring(0, 100) : error;
+    return 'Error: $shortError';
   }
 
   @override
@@ -99,10 +138,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
       body: SafeArea(
         child: Center(
@@ -114,37 +155,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo - circular with shadow
-                  Container(
+                  // Logo
+                  Image.asset(
+                    'assets/logo/app_logo.png',
                     width: 120,
                     height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: DesignTokens.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: DesignTokens.primaryAccent.withOpacity(0.3),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Image.asset(
-                          'assets/logo/app_logo.png',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.fitness_center,
-                              size: 60,
-                              color: DesignTokens.textPrimary,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.fitness_center,
+                        size: 60,
+                        color: DesignTokens.textPrimary,
+                      );
+                    },
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -365,7 +388,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextButton(
                         onPressed: _isLoading
                             ? null
-                            : () => Navigator.of(context).pop(),
+                            : () {
+                                if (Navigator.canPop(context)) {
+                                  Navigator.of(context).pop();
+                                } else {
+                                  Navigator.of(context).pushReplacementNamed('/login');
+                                }
+                              },
                         child: Text(
                           'Sign In',
                           style: DesignTokens.bodySmall.copyWith(

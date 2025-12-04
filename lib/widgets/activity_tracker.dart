@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/activity_day.dart';
 import '../core/design_tokens.dart';
+import '../l10n/app_localizations.dart';
 
 class ActivityTracker extends StatelessWidget {
   final List<ActivityDay> activityDays;
@@ -14,10 +15,11 @@ class ActivityTracker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Показываем последние 30 дней
-    final displayDays = activityDays.length >= 30
-        ? activityDays.sublist(activityDays.length - 30)
-        : _generateMissingDays(activityDays, 30);
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Generate days for the current month
+    final displayDays = _generateMonthDays(activityDays);
+    final daysInMonth = displayDays.length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -36,14 +38,14 @@ class ActivityTracker extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Activity',
+                l10n.activityLabel,
                 style: DesignTokens.h3.copyWith(
                   color: DesignTokens.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               Text(
-                '${_getCompletedDays(displayDays)}/30 days',
+                '${_getCompletedDays(displayDays)}/$daysInMonth ${l10n.activityDays}',
                 style: DesignTokens.bodyMedium.copyWith(
                   color: DesignTokens.textSecondary,
                 ),
@@ -52,41 +54,41 @@ class ActivityTracker extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           
-          // Grid 6x5 (30 квадратиков)
-          _buildActivityGrid(displayDays),
+          // Grid 7 columns (calendar style)
+          _buildActivityGrid(context, displayDays),
           
           const SizedBox(height: 12),
           
           // Legend
-          _buildLegend(),
+          _buildLegend(context),
         ],
       ),
     );
   }
 
-  Widget _buildActivityGrid(List<ActivityDay> days) {
+  Widget _buildActivityGrid(BuildContext context, List<ActivityDay> days) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 6,
+        crossAxisCount: 7, // 7 days a week
         mainAxisSpacing: 6,
         crossAxisSpacing: 6,
         childAspectRatio: 1,
       ),
-      itemCount: 30,
+      itemCount: days.length,
       itemBuilder: (context, index) {
         final day = days[index];
-        return _buildActivitySquare(day);
+        return _buildActivitySquare(context, day);
       },
     );
   }
 
-  Widget _buildActivitySquare(ActivityDay day) {
+  Widget _buildActivitySquare(BuildContext context, ActivityDay day) {
     final color = Color(day.status.colorValue);
     
     return Tooltip(
-      message: '${_formatDate(day.date)}\n${_getStatusText(day)}',
+      message: '${_formatDate(day.date)}\n${_getStatusText(context, day)}',
       child: Container(
         decoration: BoxDecoration(
           color: color,
@@ -96,15 +98,16 @@ class ActivityTracker extends StatelessWidget {
     );
   }
 
-  Widget _buildLegend() {
+  Widget _buildLegend(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildLegendItem('All', const Color(0xFF4CAF50)),
+        _buildLegendItem(l10n.all, const Color(0xFF4CAF50)),
         const SizedBox(width: 12),
-        _buildLegendItem('Partial', const Color(0xFFFFC107)),
+        _buildLegendItem(l10n.partial, const Color(0xFFFFC107)),
         const SizedBox(width: 12),
-        _buildLegendItem('Missed', const Color(0xFF424242)),
+        _buildLegendItem(l10n.missed, const Color(0xFF424242)),
       ],
     );
   }
@@ -133,37 +136,49 @@ class ActivityTracker extends StatelessWidget {
   }
 
   int _getCompletedDays(List<ActivityDay> days) {
-    return days.where((day) => day.status == ActivityStatus.completed).length;
+    // Считаем и полные, и частичные дни как активность
+    return days.where((day) => day.status == ActivityStatus.completed || day.status == ActivityStatus.partial).length;
   }
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  String _getStatusText(ActivityDay day) {
+  String _getStatusText(BuildContext context, ActivityDay day) {
+    final l10n = AppLocalizations.of(context)!;
     if (day.workoutCompleted && day.nutritionGoalMet) {
-      return 'Workout ✓ Nutrition ✓';
+      return l10n.workoutAndNutritionCheck;
     } else if (day.workoutCompleted) {
-      return 'Workout ✓';
+      return l10n.workoutCheck;
     } else if (day.nutritionGoalMet) {
-      return 'Nutrition ✓';
+      return l10n.nutritionCheck;
     } else {
-      return 'No activity';
+      return l10n.noActivity;
     }
   }
 
-  List<ActivityDay> _generateMissingDays(List<ActivityDay> existingDays, int totalDays) {
-    final result = List<ActivityDay>.from(existingDays);
-    final today = DateTime.now();
+  List<ActivityDay> _generateMonthDays(List<ActivityDay> existingDays) {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+    final daysInMonth = lastDayOfMonth.day;
     
-    // Заполняем недостающие дни серыми квадратиками
-    while (result.length < totalDays) {
-      final daysAgo = totalDays - result.length;
-      result.insert(0, ActivityDay(
-        date: today.subtract(Duration(days: daysAgo)),
-        workoutCompleted: false,
-        nutritionGoalMet: false,
-      ));
+    final result = <ActivityDay>[];
+    
+    for (int i = 0; i < daysInMonth; i++) {
+      final date = firstDayOfMonth.add(Duration(days: i));
+      
+      // Find existing day or create empty
+      final existingDay = existingDays.firstWhere(
+        (d) => d.date.year == date.year && d.date.month == date.month && d.date.day == date.day,
+        orElse: () => ActivityDay(
+          date: date,
+          workoutCompleted: false,
+          nutritionGoalMet: false,
+        ),
+      );
+      
+      result.add(existingDay);
     }
     
     return result;

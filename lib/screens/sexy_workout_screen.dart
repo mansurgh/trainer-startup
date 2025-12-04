@@ -442,16 +442,27 @@ class _SexyWorkoutScreenState extends State<SexyWorkoutScreen> {
               const SizedBox(height: 16),
               // Кнопка начать упражнение
               SexyComponents.sexyButton(
-                onPressed: () {
+                onPressed: () async {
                   Navigator.pop(context);
                   // Переходим на экран тренировки с выбранным упражнением
-                  Navigator.of(context).push(
+                  final completed = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
                       builder: (_) => WorkoutScreen(
                         selectedExercise: exercise['name'],
                       ),
                     ),
                   );
+                  
+                  // Если тренировка завершена, показываем уведомление
+                  if (completed == true && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🎉 Упражнение записано в статистику!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
                 },
                 child: const Text('Начать упражнение'),
               ),
@@ -795,11 +806,22 @@ class _SexyWorkoutScreenState extends State<SexyWorkoutScreen> {
                   
                   // Кнопка начала тренировки
                   SexyComponents.sexyButton(
-                    onPressed: isToday ? () {
+                    onPressed: isToday ? () async {
                       // Переходим на старый экран с гифками
-                      Navigator.of(context).push(
+                      final completed = await Navigator.of(context).push<bool>(
                         MaterialPageRoute(builder: (_) => const WorkoutScreen()),
                       );
+                      
+                      // Если тренировка завершена, обновляем статистику
+                      if (completed == true && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('🎉 Тренировка записана в статистику!'),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
                     } : null,
                     backgroundColor: isToday 
                         ? const Color(0xFF007AFF)

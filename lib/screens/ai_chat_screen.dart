@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 
 import '../core/design_tokens.dart';
 import '../core/premium_components.dart';
 import '../services/ai_service.dart';
+import '../services/workout_service.dart';
 import '../state/app_providers.dart';
+import '../utils/chat_command_parser.dart';
+import '../screens/tabs/nutrition_screen_v2.dart';
 
 class AIChatScreen extends ConsumerStatefulWidget {
   final String chatType; // 'workout', 'nutrition', 'general'
@@ -39,13 +43,31 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     String welcomeMessage;
     switch (widget.chatType) {
       case 'workout':
-        welcomeMessage = 'Привет! Я ваш AI тренер. Готов помочь с планированием тренировок и техникой упражнений. О чём хотите поговорить?';
+        welcomeMessage = '💪 Привет! Я ваш AI тренер.\n\n'
+                        'Доступные команды:\n'
+                        '• /plan - создать план тренировок\n'
+                        '• /form - проверить технику упражнения\n'
+                        '• /advice - получить совет по тренировкам\n'
+                        '• /progress - анализ прогресса\n\n'
+                        'Или просто задайте вопрос!';
         break;
       case 'nutrition':
-        welcomeMessage = 'Здравствуйте! Я AI диетолог. Помогу с планированием питания, подсчётом калорий и здоровыми рецептами. Что вас интересует?';
+        welcomeMessage = '🥗 Здравствуйте! Я AI диетолог.\n\n'
+                        'Доступные команды:\n'
+                        '• /meal - создать план питания\n'
+                        '• /analyze - проанализировать фото еды\n'
+                        '• /recipe - получить рецепт\n'
+                        '• /calories - рассчитать калорийность\n\n'
+                        'Чем могу помочь?';
         break;
       default:
-        welcomeMessage = 'Привет! Я ваш персональный AI фитнес-помощник. Могу помочь с тренировками, питанием и мотивацией. Как дела?';
+        welcomeMessage = '👋 Привет! Я ваш персональный AI фитнес-помощник.\n\n'
+                        'Могу помочь с:\n'
+                        '• Тренировками и упражнениями\n'
+                        '• Планированием питания\n'
+                        '• Мотивацией и советами\n'
+                        '• Анализом прогресса\n\n'
+                        'Что вас интересует?';
     }
 
     _messages.add(ChatMessage(
@@ -349,7 +371,8 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     ),
                     maxLines: null,
-                    textInputAction: TextInputAction.newline,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
               ),
@@ -423,6 +446,29 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     _scrollToBottom();
 
     try {
+      // Проверяем является ли сообщение командой
+      if (ChatCommandParser.isCommand(text)) {
+        final commandResult = ChatCommandParser.parseCommand(text);
+        
+        if (commandResult != null) {
+          // Обрабатываем команду
+          await _handleCommand(commandResult);
+          
+          // Показываем результат
+          setState(() {
+            _messages.add(ChatMessage(
+              text: commandResult.message,
+              isFromUser: false,
+              timestamp: DateTime.now(),
+            ));
+            _isTyping = false;
+          });
+          _scrollToBottom();
+          return;
+        }
+      }
+      
+      // Обычный AI ответ если это не команда
       final aiService = ref.read(aiServiceProvider);
       String response;
 
@@ -457,6 +503,30 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
         ));
         _isTyping = false;
       });
+
+      // Проверяем, содержит ли ответ AI команду
+      if (ChatCommandParser.isCommand(response)) {
+        // Ищем команду в тексте ответа (может быть в конце или отдельной строкой)
+        final lines = response.split('\n');
+        for (final line in lines) {
+          if (ChatCommandParser.isCommand(line)) {
+            final commandResult = ChatCommandParser.parseCommand(line);
+            if (commandResult != null) {
+              await _handleCommand(commandResult);
+              // Опционально: показать сообщение о выполнении команды
+              /*
+              setState(() {
+                _messages.add(ChatMessage(
+                  text: '⚡ Auto-executed: ${commandResult.message}',
+                  isFromUser: false,
+                  timestamp: DateTime.now(),
+                ));
+              });
+              */
+            }
+          }
+        }
+      }
 
       _scrollToBottom();
     } catch (e) {
@@ -526,6 +596,61 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       _messages.clear();
       _initializeChat();
     });
+  }
+  
+  Future<void> _handleCommand(CommandResult command) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('user_id') ?? 'anonymous';
+    
+    switch (command.type) {
+      case CommandType.updateNutrition:
+        // Получаем тип макронутриента и значение из data
+        final nutrientType = command.data['nutrientType'] as String;
+        final value = command.data['value'] as int;
+        
+        // Сохраняем новое значение
+        await prefs.setInt('nutrition_goal_${userId}_$nutrientType', value);
+        
+        // Инвалидируем провайдеры для обновления UI с задержкой
+        ref.invalidate(dailyTotalsProvider);
+        await Future.delayed(const Duration(milliseconds: 150));
+        ref.invalidate(dailyTotalsProvider);
+        break;
+        
+      case CommandType.swapMeal:
+        // TODO: Реализовать замену блюда через базу данных
+        // Требуется доступ к MealService и обновление meal_plans
+        break;
+        
+      case CommandType.swapExercise:
+        // Получаем старое и новое упражнение
+        final oldExercise = command.data['oldExercise'] as String;
+        final newExercise = command.data['newExercise'] as String;
+        
+        // Используем WorkoutService для замены
+        final workoutService = WorkoutService();
+        final success = await workoutService.swapExercise(oldExercise, newExercise);
+        
+        if (!success) {
+          // Если замена не удалась, добавляем сообщение об ошибке
+          setState(() {
+            _messages.add(ChatMessage(
+              text: 'Не удалось найти упражнение "$oldExercise" в текущей тренировке. Добавлено новое упражнение "$newExercise".',
+              isFromUser: false,
+              timestamp: DateTime.now(),
+            ));
+          });
+        }
+        break;
+        
+      case CommandType.help:
+        // Помощь отображается через commandResult.message
+        break;
+        
+      case CommandType.unknown:
+        // Ошибка отображается через commandResult.message
+        break;
+    }
   }
 
   @override

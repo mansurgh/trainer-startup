@@ -28,9 +28,17 @@ class AppAlert extends StatelessWidget {
         color: config.backgroundColor,
         border: Border.all(
           color: config.borderColor,
-          width: 1,
+          width: 1.5,
         ),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: config.borderColor.withOpacity(0.2),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,18 +93,18 @@ class AppAlert extends StatelessWidget {
     switch (type) {
       case AlertType.success:
         return _AlertConfig(
-          backgroundColor: const Color(0xFF0F1F14),
-          borderColor: const Color(0xFF16A34A),
-          iconColor: const Color(0xFF22C55E),
-          textColor: const Color(0xFF86EFAC),
+          backgroundColor: const Color(0xFF1A1A1A),
+          borderColor: const Color(0xFF4ADE80),
+          iconColor: const Color(0xFF4ADE80),
+          textColor: Colors.white,
           icon: Icons.check_circle_outline,
         );
       case AlertType.error:
         return _AlertConfig(
-          backgroundColor: const Color(0xFF1F0F14),
-          borderColor: const Color(0xFFDC2626),
-          iconColor: const Color(0xFFEF4444),
-          textColor: const Color(0xFFFCA5A5),
+          backgroundColor: const Color(0xFF1A1A1A),
+          borderColor: const Color(0xFFF87171),
+          iconColor: const Color(0xFFF87171),
+          textColor: Colors.white,
           icon: Icons.error_outline,
         );
       case AlertType.warning:

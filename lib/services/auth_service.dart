@@ -72,10 +72,11 @@ class AuthService {
   /// Sign out
   Future<void> signOut() async {
     try {
-      await _client.auth.signOut();
+      // Полностью очищаем сессию Supabase
+      await _client.auth.signOut(scope: SignOutScope.global);
       
       if (kDebugMode) {
-        print('[Auth] Sign out successful');
+        print('[Auth] Sign out successful - session cleared globally');
       }
     } catch (e) {
       if (kDebugMode) {

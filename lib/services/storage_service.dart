@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/user_model.dart';
 import '../models/daily_plan_model.dart';
 import '../models/exercise.dart';
+import '../config/supabase_config.dart';
 
 class StorageService {
   static const String _userKey = 'currentUser';
@@ -39,19 +40,17 @@ class StorageService {
   static Future<Database> _initDB() async {
     String path = join(await getDatabasesPath(), 'pulsefit_pro.db');
     
-    // Удаляем старую базу данных если она существует
-    final file = File(path);
-    if (await file.exists()) {
-      await file.delete();
-    }
+    // НЕ удаляем базу данных - сохраняем данные между запусками
+    // Если нужно обновить схему, используем onUpgrade
     
     return await openDatabase(
       path,
-      version: 4, // Увеличиваем версию для новых полей
+      version: 5, // +1 для email колонки
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE user_data(
             id TEXT PRIMARY KEY,
+            email TEXT,
             name TEXT,
             gender TEXT,
             age INTEGER,
@@ -80,6 +79,9 @@ class StorageService {
           await db.execute('ALTER TABLE user_data ADD COLUMN initialWeight REAL');
           await db.execute('ALTER TABLE user_data ADD COLUMN activityLevel TEXT');
         }
+        if (oldVersion < 5) {
+          await db.execute('ALTER TABLE user_data ADD COLUMN email TEXT');
+        }
       },
     );
   }
@@ -87,36 +89,56 @@ class StorageService {
   // User methods
   static Future<void> saveUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(_userKey, jsonEncode(user.toJson()));
+    final userId = prefs.getString('user_id') ?? 'anonymous';
+    prefs.setString('${_userKey}_$userId', jsonEncode(user.toJson()));
 
+    // Сохраняем в локальную SQLite БД
     final db = await database;
-    
-    // Конвертируем photoHistory в JSON строку для SQLite
     final userData = user.toJson();
     if (userData['photoHistory'] != null) {
       userData['photoHistory'] = jsonEncode(userData['photoHistory']);
     }
-    
     await db.insert(
       'user_data',
       userData,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    
+    // Синхронизируем с Supabase profiles таблицей
+    try {
+      final supabaseUser = SupabaseConfig.client.auth.currentUser;
+      if (supabaseUser != null && userId != 'anonymous') {
+        await SupabaseConfig.client.from('profiles').upsert({
+          'id': userId,
+          'email': user.email, // Added email field
+          'name': user.name,
+          'age': user.age,
+          'height': user.height,
+          'weight': user.weight,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+        print('[Storage] ✅ User profile synced to Supabase');
+      }
+    } catch (e) {
+      print('[Storage] ⚠️ Failed to sync to Supabase: $e');
+    }
   }
 
   static Future<UserModel?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
+    final userId = prefs.getString('user_id') ?? 'anonymous';
+    
+    // Пробуем загрузить из SharedPreferences
+    final userJson = prefs.getString('${_userKey}_$userId');
     if (userJson != null) {
       return UserModel.fromJson(jsonDecode(userJson));
     }
 
+    // Пробуем загрузить из локальной SQLite
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('user_data');
+    final List<Map<String, dynamic>> maps = await db.query('user_data', where: 'id = ?', whereArgs: [userId]);
     if (maps.isNotEmpty) {
       final userData = maps.first;
-      
-      // Конвертируем photoHistory из JSON строки обратно в List<String>
       if (userData['photoHistory'] != null && userData['photoHistory'] is String) {
         try {
           userData['photoHistory'] = jsonDecode(userData['photoHistory']);
@@ -124,9 +146,41 @@ class StorageService {
           userData['photoHistory'] = null;
         }
       }
-      
       return UserModel.fromJson(userData);
     }
+    
+    // Пробуем загрузить из Supabase
+    try {
+      final supabaseUser = SupabaseConfig.client.auth.currentUser;
+      if (supabaseUser != null && userId != 'anonymous') {
+        final response = await SupabaseConfig.client
+            .from('profiles')
+            .select()
+            .eq('id', userId)
+            .maybeSingle();
+        
+        if (response != null) {
+          print('[Storage] ✅ Loaded user profile from Supabase: ${response.toString()}');
+          final user = UserModel(
+            id: userId,
+            email: response['email'] as String?, // Populate email
+            name: response['name'] as String?,
+            age: response['age'] as int?,
+            height: response['height'] as int?,
+            weight: response['weight'] as double?,
+          );
+          print('[Storage] 📦 UserModel created: name=${user.name}, age=${user.age}, height=${user.height}, weight=${user.weight}');
+          // Сохраняем локально для быстрого доступа
+          await saveUser(user);
+          return user;
+        } else {
+          print('[Storage] ⚠️ No profile found in Supabase for userId: $userId');
+        }
+      }
+    } catch (e) {
+      print('[Storage] ⚠️ Failed to load from Supabase: $e');
+    }
+    
     return null;
   }
   
@@ -269,36 +323,80 @@ class StorageService {
     return Map<String, dynamic>.from(jsonDecode(settingsData));
   }
 
-  // Clear all data
+  // Clear all data for current user only (при выходе из аккаунта)
   static Future<void> clearAllData() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userKey);
-    await prefs.remove(_planKey);
-    await prefs.remove(_exercisesKey);
-    await prefs.remove(_progressKey);
-    await prefs.remove(_sessionsKey);
-    await prefs.remove(_settingsKey);
-
-    final db = await database;
-    await db.delete('user_data');
+    final userId = prefs.getString('user_id');
+    
+    // Очищаем только SharedPreferences для текущего пользователя
+    if (userId != null) {
+      await prefs.remove('${_userKey}_$userId');
+      await prefs.remove('${_planKey}_$userId');
+      await prefs.remove('${_exercisesKey}_$userId');
+      await prefs.remove('${_progressKey}_$userId');
+      await prefs.remove('${_sessionsKey}_$userId');
+    }
+    
+    // НЕ удаляем настройки - они общие для приложения
+    // НЕ удаляем данные из SQLite - они сохраняются для каждого пользователя
   }
 
   /// Clear data for new user (keep settings, clear meals/workouts/progress)
   static Future<void> clearNewUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    // Clear user profile data but keep settings
-    await prefs.remove(_userKey);
-    await prefs.remove(_planKey);
-    await prefs.remove(_exercisesKey);
-    await prefs.remove(_progressKey);
-    await prefs.remove(_sessionsKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Clear user profile data but keep settings
+      await prefs.remove(_userKey);
+      await prefs.remove(_planKey);
+      await prefs.remove(_exercisesKey);
+      await prefs.remove(_progressKey);
+      await prefs.remove(_sessionsKey);
+      
+      // Очищаем питание и прогресс фото для нового пользователя
+      await prefs.remove('progress_photos');
+      
+      // Очищаем все ключи, связанные с питанием
+      final keys = prefs.getKeys();
+      for (final key in keys) {
+        if (key.startsWith('meal_') || 
+            key.startsWith('nutrition_') || 
+            key.startsWith('food_')) {
+          await prefs.remove(key);
+        }
+      }
 
-    final db = await database;
-    // Clear all tables for fresh start
-    await db.delete('user_data');
-    await db.delete('meals');
-    await db.delete('meal_plans');
-    await db.delete('workout_sessions');
+      final db = await database;
+      // Clear only existing tables for fresh start
+      try {
+        await db.delete('user_data');
+      } catch (e) {
+        print('[Storage] Could not delete user_data: $e');
+      }
+      
+      // Эти таблицы могут не существовать - игнорируем ошибки
+      try {
+        await db.delete('meals');
+      } catch (e) {
+        // Таблица не существует - это нормально
+      }
+      
+      try {
+        await db.delete('meal_plans');
+      } catch (e) {
+        // Таблица не существует - это нормально
+      }
+      
+      try {
+        await db.delete('workout_sessions');
+      } catch (e) {
+        // Таблица не существует - это нормально
+      }
+      
+      print('[Storage] Cleared new user data successfully (including nutrition and progress)');
+    } catch (e) {
+      print('[Storage] Error clearing new user data: $e');
+      rethrow;
+    }
   }
 
   // Clear database completely (for development)
@@ -316,6 +414,152 @@ class StorageService {
     final file = File(path);
     if (await file.exists()) {
       await file.delete();
+    }
+  }
+
+  /// Очистить статистику и питание для ВСЕХ пользователей (сброс данных)
+  static Future<void> resetAllUsersData() async {
+    try {
+      print('[Storage] 🔄 Starting data reset for all users...');
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Сначала выводим ВСЕ существующие ключи для отладки
+      final allKeys = prefs.getKeys().toList();
+      print('[Storage] 📋 Total keys before reset: ${allKeys.length}');
+      for (final key in allKeys) {
+        print('[Storage]   - $key');
+      }
+      
+      // Очищаем прогресс, статистику и питание
+      await prefs.remove(_progressKey);
+      await prefs.remove(_sessionsKey);
+      await prefs.remove(_planKey);
+      await prefs.remove('progress_photos');
+      print('[Storage] ✓ Cleared standard keys');
+      
+      // Очищаем ВСЕ ключи, которые могут содержать данные пользователя
+      int removedCount = 0;
+      for (final key in allKeys) {
+        // НЕ удаляем системные ключи и настройки
+        if (key.startsWith('flutter.') || 
+            key.startsWith('data_reset_') ||
+            key == _settingsKey) {
+          continue;
+        }
+        
+        // Удаляем все остальные ключи (данные пользователя)
+        if (key != _userKey) { // Сохраняем информацию о пользователе (имя, параметры)
+          await prefs.remove(key);
+          removedCount++;
+          print('[Storage]   🗑️ Removed: $key');
+        }
+      }
+      print('[Storage] ✓ Removed $removedCount user data keys');
+
+      final db = await database;
+      
+      // Очищаем таблицы статистики (если существуют)
+      int tablesCleared = 0;
+      
+      try {
+        final count = await db.delete('meals');
+        if (count > 0) {
+          print('[Storage] ✓ Cleared meals table: $count rows');
+          tablesCleared++;
+        }
+      } catch (e) {
+        print('[Storage] ℹ️ meals table does not exist');
+      }
+      
+      try {
+        final count = await db.delete('meal_plans');
+        if (count > 0) {
+          print('[Storage] ✓ Cleared meal_plans table: $count rows');
+          tablesCleared++;
+        }
+      } catch (e) {
+        print('[Storage] ℹ️ meal_plans table does not exist');
+      }
+      
+      try {
+        final count = await db.delete('workout_sessions');
+        if (count > 0) {
+          print('[Storage] ✓ Cleared workout_sessions table: $count rows');
+          tablesCleared++;
+        }
+      } catch (e) {
+        print('[Storage] ℹ️ workout_sessions table does not exist');
+      }
+      
+      print('[Storage] ✅ Data reset completed: $tablesCleared tables cleared, $removedCount keys removed');
+    } catch (e) {
+      print('[Storage] ❌ Error resetting all users data: $e');
+      rethrow;
+    }
+  }
+
+  // Миграция профилей из SQLite в Supabase
+  static Future<void> migrateProfilesToSupabase() async {
+    try {
+      print('[Storage] 🔍 Checking for profiles in SQLite...');
+      final db = await database;
+      
+      // Получаем все профили из локальной БД
+      final List<Map<String, dynamic>> profiles = await db.query('user_data');
+      print('[Storage] 📋 Found ${profiles.length} profiles in SQLite');
+      
+      if (profiles.isEmpty) {
+        print('[Storage] ℹ️ No profiles to migrate');
+        return;
+      }
+      
+      int migrated = 0;
+      int skipped = 0;
+      
+      for (final profile in profiles) {
+        final userId = profile['id'] as String?;
+        if (userId == null || userId == 'anonymous') {
+          skipped++;
+          continue;
+        }
+        
+        try {
+          // Проверяем есть ли уже в Supabase
+          final existing = await SupabaseConfig.client
+              .from('profiles')
+              .select()
+              .eq('id', userId)
+              .maybeSingle();
+          
+          if (existing != null) {
+            print('[Storage] ⏭️ Profile already exists in Supabase: $userId');
+            skipped++;
+            continue;
+          }
+          
+          // Переносим в Supabase
+          await SupabaseConfig.client.from('profiles').insert({
+            'id': userId,
+            'name': profile['name'],
+            'age': profile['age'],
+            'height': profile['height'],
+            'weight': profile['weight'],
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+          
+          print('[Storage] ✅ Migrated profile: $userId (${profile['name'] ?? "No name"})');
+          migrated++;
+        } catch (e) {
+          print('[Storage] ⚠️ Failed to migrate profile $userId: $e');
+          skipped++;
+        }
+      }
+      
+      print('[Storage] 🎉 Migration complete: $migrated migrated, $skipped skipped');
+    } catch (e) {
+      print('[Storage] ❌ Error during profile migration: $e');
+      rethrow;
     }
   }
 
@@ -365,7 +609,8 @@ class StorageService {
     
     // Обновляем список, если некоторые файлы были удалены
     if (existingPhotos.length != photos.length) {
-      await prefs.setStringList('progress_photos', existingPhotos);
+      final userId = prefs.getString('user_id') ?? 'anonymous';
+      await prefs.setStringList('progress_photos_$userId', existingPhotos);
     }
     
     return existingPhotos;
@@ -378,7 +623,8 @@ class StorageService {
       final prefs = await SharedPreferences.getInstance();
       final List<String> photos = prefs.getStringList('progress_photos') ?? [];
       photos.remove(photoPath);
-      await prefs.setStringList('progress_photos', photos);
+      final userId = prefs.getString('user_id') ?? 'anonymous';
+      await prefs.setStringList('progress_photos_$userId', photos);
     } catch (e) {
       // Игнорируем ошибки удаления файла
     }

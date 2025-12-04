@@ -827,7 +827,7 @@ abstract class AppLocalizations {
   /// No description provided for @pushNotifications.
   ///
   /// In en, this message translates to:
-  /// **'Push notifications'**
+  /// **'Push Notifications'**
   String get pushNotifications;
 
   /// No description provided for @workoutAndNutritionReminders.
@@ -911,7 +911,7 @@ abstract class AppLocalizations {
   /// No description provided for @russian.
   ///
   /// In en, this message translates to:
-  /// **'Russian'**
+  /// **'Русский'**
   String get russian;
 
   /// No description provided for @english.
@@ -1147,6 +1147,972 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photo deleted successfully'**
   String get photoDeleted;
+
+  /// No description provided for @trialRoulette.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Roulette'**
+  String get trialRoulette;
+
+  /// No description provided for @spinTheWheel.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin the wheel to get your trial period!'**
+  String get spinTheWheel;
+
+  /// No description provided for @spin.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin'**
+  String get spin;
+
+  /// No description provided for @congratulations.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations!'**
+  String get congratulations;
+
+  /// No description provided for @youWonDays.
+  ///
+  /// In en, this message translates to:
+  /// **'You won {days} days of free trial!'**
+  String youWonDays(Object days);
+
+  /// No description provided for @buyPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy Premium'**
+  String get buyPremium;
+
+  /// No description provided for @premiumSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Subscription'**
+  String get premiumSubscription;
+
+  /// No description provided for @unlockFullPotential.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Your Full Potential'**
+  String get unlockFullPotential;
+
+  /// No description provided for @personalizedWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalized AI Workouts'**
+  String get personalizedWorkouts;
+
+  /// No description provided for @personalizedWorkoutsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom training plans adapted to your goals'**
+  String get personalizedWorkoutsDesc;
+
+  /// No description provided for @nutritionTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Tracking'**
+  String get nutritionTracking;
+
+  /// No description provided for @nutritionTrackingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track macros and get meal recommendations'**
+  String get nutritionTrackingDesc;
+
+  /// No description provided for @progressAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Analytics'**
+  String get progressAnalytics;
+
+  /// No description provided for @progressAnalyticsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed statistics and achievements'**
+  String get progressAnalyticsDesc;
+
+  /// No description provided for @aiNutritionCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Nutrition Coach'**
+  String get aiNutritionCoach;
+
+  /// No description provided for @aiNutritionCoachDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get personalized diet advice'**
+  String get aiNutritionCoachDesc;
+
+  /// No description provided for @workoutLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Library'**
+  String get workoutLibrary;
+
+  /// No description provided for @workoutLibraryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Access 500+ exercises with video guides'**
+  String get workoutLibraryDesc;
+
+  /// No description provided for @bodyScanAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Scan Analysis'**
+  String get bodyScanAnalysis;
+
+  /// No description provided for @bodyScanAnalysisDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your body composition changes'**
+  String get bodyScanAnalysisDesc;
+
+  /// No description provided for @prioritySupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority Support'**
+  String get prioritySupport;
+
+  /// No description provided for @prioritySupportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get faster responses from our team'**
+  String get prioritySupportDesc;
+
+  /// No description provided for @adFreeExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad-Free Experience'**
+  String get adFreeExperience;
+
+  /// No description provided for @adFreeExperienceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy the app without interruptions'**
+  String get adFreeExperienceDesc;
+
+  /// No description provided for @investInYourself.
+  ///
+  /// In en, this message translates to:
+  /// **'Invest in Yourself'**
+  String get investInYourself;
+
+  /// No description provided for @gwagonMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'For the price of 3 coffees, you get a personal trainer. Or save up for a G-Wagon... your choice 😎'**
+  String get gwagonMessage;
+
+  /// No description provided for @choosePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Plan'**
+  String get choosePlan;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
+  /// No description provided for @yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearly;
+
+  /// No description provided for @save40.
+  ///
+  /// In en, this message translates to:
+  /// **'Save 40%'**
+  String get save40;
+
+  /// No description provided for @startFreeTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Free Trial'**
+  String get startFreeTrial;
+
+  /// No description provided for @aiChatTrainer.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat - Trainer'**
+  String get aiChatTrainer;
+
+  /// No description provided for @aiChatNutritionist.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat - Nutritionist'**
+  String get aiChatNutritionist;
+
+  /// No description provided for @typeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your message...'**
+  String get typeMessage;
+
+  /// No description provided for @nutritionGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Goals'**
+  String get nutritionGoals;
+
+  /// No description provided for @editGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Goal'**
+  String get editGoal;
+
+  /// No description provided for @recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommended;
+
+  /// No description provided for @basedOnYourData.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your height, weight, age and activity level'**
+  String get basedOnYourData;
+
+  /// No description provided for @useRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Recommended Value'**
+  String get useRecommended;
+
+  /// No description provided for @goalUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal updated'**
+  String get goalUpdated;
+
+  /// No description provided for @protein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get protein;
+
+  /// No description provided for @fat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get fat;
+
+  /// No description provided for @carbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs'**
+  String get carbs;
+
+  /// No description provided for @kcal.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get kcal;
+
+  /// No description provided for @aiNutritionistChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Nutritionist Chat'**
+  String get aiNutritionistChat;
+
+  /// No description provided for @fridgeBasedMealPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Fridge-based Meal Plan'**
+  String get fridgeBasedMealPlan;
+
+  /// No description provided for @addDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Dish'**
+  String get addDish;
+
+  /// No description provided for @breakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get breakfast;
+
+  /// No description provided for @dinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinner'**
+  String get dinner;
+
+  /// No description provided for @snack.
+  ///
+  /// In en, this message translates to:
+  /// **'Snack'**
+  String get snack;
+
+  /// No description provided for @deleteMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Meal?'**
+  String get deleteMeal;
+
+  /// No description provided for @deleteMealConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this meal?'**
+  String get deleteMealConfirm;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @mealDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal Deleted'**
+  String get mealDeleted;
+
+  /// No description provided for @editDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Dish'**
+  String get editDish;
+
+  /// No description provided for @dishName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish Name'**
+  String get dishName;
+
+  /// No description provided for @caloriesKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories (kcal)'**
+  String get caloriesKcal;
+
+  /// No description provided for @proteinG.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein (g)'**
+  String get proteinG;
+
+  /// No description provided for @fatG.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat (g)'**
+  String get fatG;
+
+  /// No description provided for @carbsG.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs (g)'**
+  String get carbsG;
+
+  /// No description provided for @deleteDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Dish?'**
+  String get deleteDish;
+
+  /// No description provided for @deleteDishConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String deleteDishConfirm(Object name);
+
+  /// No description provided for @dishDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish Deleted'**
+  String get dishDeleted;
+
+  /// No description provided for @dishUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish Updated'**
+  String get dishUpdated;
+
+  /// No description provided for @enterDishName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter dish name'**
+  String get enterDishName;
+
+  /// No description provided for @enterValidCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter valid calories'**
+  String get enterValidCalories;
+
+  /// No description provided for @enterValidProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter valid protein amount'**
+  String get enterValidProtein;
+
+  /// No description provided for @enterValidFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter valid fat amount'**
+  String get enterValidFat;
+
+  /// No description provided for @enterValidCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter valid carbs amount'**
+  String get enterValidCarbs;
+
+  /// No description provided for @commandHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Commands'**
+  String get commandHelp;
+
+  /// No description provided for @commandFat.
+  ///
+  /// In en, this message translates to:
+  /// **'/fat <number> - Set fat goal'**
+  String get commandFat;
+
+  /// No description provided for @commandProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'/protein <number> - Set protein goal'**
+  String get commandProtein;
+
+  /// No description provided for @commandCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'/carbs <number> - Set carbs goal'**
+  String get commandCarbs;
+
+  /// No description provided for @commandCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'/calories <number> - Set calories goal'**
+  String get commandCalories;
+
+  /// No description provided for @commandSwapMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'/swap_meal <old> -> <new> - Replace meal'**
+  String get commandSwapMeal;
+
+  /// No description provided for @commandSwapExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'/swap_exercise <old> -> <new> - Replace exercise'**
+  String get commandSwapExercise;
+
+  /// No description provided for @unknownCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown command. Type /help for available commands.'**
+  String get unknownCommand;
+
+  /// No description provided for @completeProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get completeProfile;
+
+  /// No description provided for @years.
+  ///
+  /// In en, this message translates to:
+  /// **'years'**
+  String get years;
+
+  /// No description provided for @trackYourIntake.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your daily intake'**
+  String get trackYourIntake;
+
+  /// No description provided for @exerciseSwapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise replaced successfully'**
+  String get exerciseSwapped;
+
+  /// No description provided for @exerciseNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise not found in current workout'**
+  String get exerciseNotFound;
+
+  /// No description provided for @noActiveWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'No active workout. Start a workout first.'**
+  String get noActiveWorkout;
+
+  /// No description provided for @replaceDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Dish'**
+  String get replaceDish;
+
+  /// No description provided for @enterNewDishName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the name of the new dish'**
+  String get enterNewDishName;
+
+  /// No description provided for @newDishName.
+  ///
+  /// In en, this message translates to:
+  /// **'New dish name'**
+  String get newDishName;
+
+  /// No description provided for @replace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replace;
+
+  /// No description provided for @replacementRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement requested'**
+  String get replacementRequested;
+
+  /// No description provided for @aiWillSuggestReplacement.
+  ///
+  /// In en, this message translates to:
+  /// **'AI will suggest a replacement'**
+  String get aiWillSuggestReplacement;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @notificationsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsSection;
+
+  /// No description provided for @workoutReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Reminders'**
+  String get workoutReminders;
+
+  /// No description provided for @dataSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get dataSection;
+
+  /// No description provided for @clearData.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Data'**
+  String get clearData;
+
+  /// No description provided for @clearDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all application data'**
+  String get clearDataSubtitle;
+
+  /// No description provided for @aboutSection.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutSection;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @privacyPolicySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How we use your data'**
+  String get privacyPolicySubtitle;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @termsOfServiceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Application usage rules'**
+  String get termsOfServiceSubtitle;
+
+  /// No description provided for @support.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get support;
+
+  /// No description provided for @supportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact us'**
+  String get supportSubtitle;
+
+  /// No description provided for @languageSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageSetting;
+
+  /// No description provided for @logoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logoutButton;
+
+  /// No description provided for @workoutCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Completed!'**
+  String get workoutCompleted;
+
+  /// No description provided for @workoutCompletedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Great work! Workout successfully completed.'**
+  String get workoutCompletedDesc;
+
+  /// No description provided for @nutritionGoalMet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Goal Met!'**
+  String get nutritionGoalMet;
+
+  /// No description provided for @selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// No description provided for @deleteDataWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete all application data?'**
+  String get deleteDataWarning;
+
+  /// No description provided for @deleteDataDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. All data about workouts, nutrition, and progress will be deleted.'**
+  String get deleteDataDescription;
+
+  /// No description provided for @deleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteButton;
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportTitle;
+
+  /// No description provided for @supportDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'If you have questions or suggestions, contact us:'**
+  String get supportDescription;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @privacyPolicyContent.
+  ///
+  /// In en, this message translates to:
+  /// **'PulseFit Pro respects your privacy. All data is stored locally on your device and is not shared with third parties without your consent.'**
+  String get privacyPolicyContent;
+
+  /// No description provided for @workoutsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'workouts'**
+  String get workoutsCount;
+
+  /// No description provided for @todaysWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Win'**
+  String get todaysWin;
+
+  /// No description provided for @todaysWinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete workout or nutrition goal to earn today\'s win'**
+  String get todaysWinDescription;
+
+  /// No description provided for @bmiDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI (Body Mass Index) shows the ratio of your weight to height. Formula: Weight (kg) / (Height (m))². Normal: 18.5-24.9. Below 18.5 - underweight, 25-29.9 - overweight, 30+ - obesity.'**
+  String get bmiDescription;
+
+  /// No description provided for @weeklyProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Progress'**
+  String get weeklyProgress;
+
+  /// No description provided for @sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get sleep;
+
+  /// No description provided for @firstWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'First Workout'**
+  String get firstWorkout;
+
+  /// No description provided for @completedFirstWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed first workout!'**
+  String get completedFirstWorkout;
+
+  /// No description provided for @completeYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get completeYourProfile;
+
+  /// No description provided for @heightUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get heightUnit;
+
+  /// No description provided for @fridgeMealPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Fridge-based meal plan'**
+  String get fridgeMealPlan;
+
+  /// No description provided for @workoutSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Settings'**
+  String get workoutSettingsTitle;
+
+  /// No description provided for @workoutSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set time for exercises and rest:'**
+  String get workoutSettingsSubtitle;
+
+  /// No description provided for @exerciseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise:'**
+  String get exerciseLabel;
+
+  /// No description provided for @restLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest:'**
+  String get restLabel;
+
+  /// No description provided for @seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'s'**
+  String get seconds;
+
+  /// No description provided for @generatingProgramTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your personal\nworkout program...'**
+  String get generatingProgramTitle;
+
+  /// No description provided for @generatingProgramSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This will take just a few seconds'**
+  String get generatingProgramSubtitle;
+
+  /// No description provided for @streakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String streakDays(num count);
+
+  /// No description provided for @streakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get streakLabel;
+
+  /// No description provided for @streakHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of consecutive days you completed at least one goal (workout or nutrition).'**
+  String get streakHelp;
+
+  /// No description provided for @activityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activityLabel;
+
+  /// No description provided for @activityDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get activityDays;
+
+  /// No description provided for @workoutScheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Program'**
+  String get workoutScheduleTitle;
+
+  /// No description provided for @startAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Again'**
+  String get startAgain;
+
+  /// No description provided for @restDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest Day'**
+  String get restDayTitle;
+
+  /// No description provided for @restDayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery is just as important as training'**
+  String get restDayDesc;
+
+  /// No description provided for @customizeWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Workout'**
+  String get customizeWorkout;
+
+  /// No description provided for @aiTrainerChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Trainer Chat'**
+  String get aiTrainerChat;
+
+  /// No description provided for @workoutUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout updated successfully'**
+  String get workoutUpdated;
+
+  /// No description provided for @failedToUpdateWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update workout'**
+  String get failedToUpdateWorkout;
+
+  /// No description provided for @workoutAvailableTodayOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout available today only'**
+  String get workoutAvailableTodayOnly;
+
+  /// No description provided for @workoutAvailableTodayOnlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only perform the workout on the current day. Select today.'**
+  String get workoutAvailableTodayOnlyDesc;
+
+  /// No description provided for @mealAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal Added'**
+  String get mealAdded;
+
+  /// No description provided for @mealRenamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal Renamed'**
+  String get mealRenamed;
+
+  /// No description provided for @dishAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish Added'**
+  String get dishAdded;
+
+  /// No description provided for @rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @partial.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial'**
+  String get partial;
+
+  /// No description provided for @missed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get missed;
+
+  /// No description provided for @noActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity'**
+  String get noActivity;
+
+  /// No description provided for @workoutCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout ✓'**
+  String get workoutCheck;
+
+  /// No description provided for @nutritionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition ✓'**
+  String get nutritionCheck;
+
+  /// No description provided for @workoutAndNutritionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout ✓ Nutrition ✓'**
+  String get workoutAndNutritionCheck;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/design_tokens.dart';
 import 'home_screen.dart';
+import '../l10n/app_localizations.dart';
 
 /// Экран "Составляем персональную программу тренировок"
 /// Отображается после завершения onboarding
@@ -54,6 +55,7 @@ class _GeneratingProgramScreenState extends State<GeneratingProgramScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: DesignTokens.bgBase,
       body: FadeTransition(
@@ -66,36 +68,20 @@ class _GeneratingProgramScreenState extends State<GeneratingProgramScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo - circular with animated glow
-                  Container(
+                  // Logo
+                  Image.asset(
+                    'assets/logo/app_logo.png',
                     width: 140,
                     height: 140,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: DesignTokens.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: DesignTokens.primaryAccent.withOpacity(0.4),
-                          blurRadius: 30,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Image.asset(
-                          'assets/logo/app_logo.png',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Image.asset(
-                              'assets/logo/trainer_mark.png',
-                              fit: BoxFit.contain,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        'assets/logo/trainer_mark.png',
+                        width: 140,
+                        height: 140,
+                        fit: BoxFit.contain,
+                      );
+                    },
                   ),
                   const SizedBox(height: 48),
                   
@@ -114,7 +100,7 @@ class _GeneratingProgramScreenState extends State<GeneratingProgramScreen>
                   
                   // Main text
                   Text(
-                    'Составляем персональную\nпрограмму тренировок\nдля вас...',
+                    l10n.generatingProgramTitle,
                     style: DesignTokens.h2.copyWith(
                       fontSize: 22,
                       height: 1.4,
@@ -125,7 +111,7 @@ class _GeneratingProgramScreenState extends State<GeneratingProgramScreen>
                   
                   // Subtext
                   Text(
-                    'Это займет всего несколько секунд',
+                    l10n.generatingProgramSubtitle,
                     style: DesignTokens.bodyMedium.copyWith(
                       color: DesignTokens.textSecondary,
                     ),

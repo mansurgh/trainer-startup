@@ -7,11 +7,12 @@ import 'tabs/nutrition_screen_v2.dart';
 import 'tabs/modern_profile_screen.dart';
 import 'workout_schedule/workout_schedule_screen.dart';
 import '../core/design_tokens.dart';
+import '../l10n/app_localizations.dart';
 
 /// Modern Elite Fitness App (3 tabs)
 class HomeScreen extends ConsumerStatefulWidget {
-  final int initialTab;
-  const HomeScreen({super.key, this.initialTab = 0});
+  final int initialIndex;
+  const HomeScreen({super.key, this.initialIndex = 0});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -23,7 +24,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _index = widget.initialTab;
+    _index = widget.initialIndex;
   }
 
   final pages = const [
@@ -84,9 +85,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildNavItem(0, Icons.fitness_center_rounded, 'Workout'),
-                _buildNavItem(1, Icons.restaurant_rounded, 'Nutrition'),
-                _buildNavItem(2, Icons.person_rounded, 'Profile'),
+                _buildNavItem(0, Icons.fitness_center_rounded, AppLocalizations.of(context)?.workout ?? 'Workout'),
+                _buildNavItem(1, Icons.restaurant_rounded, AppLocalizations.of(context)?.nutrition ?? 'Nutrition'),
+                _buildNavItem(2, Icons.person_rounded, AppLocalizations.of(context)?.profile ?? 'Profile'),
               ],
             ),
           ),

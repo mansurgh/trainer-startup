@@ -8,6 +8,8 @@ import '../../../models/meal.dart';
 import '../../../services/meal_service.dart';
 import '../../../widgets/app_alert.dart';
 import '../nutrition_screen_v2.dart';
+import './edit_fridge_dish_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 
 // Диалог добавления блюда
 class AddDishDialog extends ConsumerStatefulWidget {
@@ -184,224 +186,6 @@ class AddDishDialogState extends ConsumerState<AddDishDialog> {
   }
 }
 
-// Диалог редактирования блюда
-class EditDishDialog extends ConsumerStatefulWidget {
-  final Dish dish;
-  final String mealId;
-
-  const EditDishDialog({super.key, required this.dish, required this.mealId});
-
-  @override
-  ConsumerState<EditDishDialog> createState() => EditDishDialogState();
-}
-
-class EditDishDialogState extends ConsumerState<EditDishDialog> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _caloriesController;
-  late final TextEditingController _proteinController;
-  late final TextEditingController _fatController;
-  late final TextEditingController _carbsController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.dish.name);
-    _caloriesController = TextEditingController(text: widget.dish.calories.toString());
-    _proteinController = TextEditingController(text: widget.dish.protein.toStringAsFixed(0));
-    _fatController = TextEditingController(text: widget.dish.fat.toStringAsFixed(0));
-    _carbsController = TextEditingController(text: widget.dish.carbs.toStringAsFixed(0));
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _caloriesController.dispose();
-    _proteinController.dispose();
-    _fatController.dispose();
-    _carbsController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveDish() async {
-    final updatedDish = Dish(
-      id: widget.dish.id,
-      name: _nameController.text,
-      calories: int.tryParse(_caloriesController.text) ?? widget.dish.calories,
-      protein: double.tryParse(_proteinController.text) ?? widget.dish.protein,
-      fat: double.tryParse(_fatController.text) ?? widget.dish.fat,
-      carbs: double.tryParse(_carbsController.text) ?? widget.dish.carbs,
-      isCompleted: widget.dish.isCompleted,
-    );
-
-    final service = ref.read(mealServiceProvider);
-    await service.updateDish(widget.mealId, updatedDish);
-    
-    ref.invalidate(mealsProvider);
-    ref.invalidate(dailyTotalsProvider);
-    
-    if (mounted) {
-      Navigator.pop(context);
-    }
-  }
-
-  Future<void> _deleteDish() async {
-    final service = ref.read(mealServiceProvider);
-    await service.removeDishFromMeal(widget.mealId, widget.dish.id);
-    
-    ref.invalidate(mealsProvider);
-    ref.invalidate(dailyTotalsProvider);
-    
-    if (mounted) {
-      Navigator.pop(context);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: DesignTokens.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Edit Dish',
-                    style: DesignTokens.h2.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          backgroundColor: DesignTokens.surface,
-                          title: const Text('Delete Dish?', style: TextStyle(color: DesignTokens.textPrimary)),
-                          content: const Text('This action cannot be undone.', style: TextStyle(color: DesignTokens.textSecondary)),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                _deleteDish();
-                              },
-                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              _buildTextField('Dish name', _nameController),
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField('Calories', _caloriesController, isNumber: true),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildTextField('Protein (g)', _proteinController, isNumber: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField('Fat (g)', _fatController, isNumber: true),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildTextField('Carbs (g)', _carbsController, isNumber: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: DesignTokens.textSecondary,
-                        side: BorderSide(color: DesignTokens.textSecondary),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _saveDish,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: DesignTokens.textPrimary,
-                        foregroundColor: DesignTokens.bgBase,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Save'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false}) {
-    return TextField(
-      controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: DesignTokens.textPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: DesignTokens.textSecondary),
-        filled: true,
-        fillColor: DesignTokens.cardSurface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: DesignTokens.textPrimary, width: 2),
-        ),
-      ),
-    );
-  }
-}
-
 // Диалог рациона по фото холодильника
 class FridgeMealPlanDialog extends ConsumerStatefulWidget {
   const FridgeMealPlanDialog({super.key});
@@ -533,6 +317,34 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
       );
     }
   }
+  
+  void _showEditDishDialog(Dish dish, int index) {
+    showDialog(
+      context: context,
+      builder: (context) => EditFridgeDishDialog(
+        dish: dish,
+        onUpdate: (updatedDish) {
+          setState(() {
+            _generatedDishes[index] = updatedDish;
+          });
+        },
+        onDelete: () {
+          setState(() {
+            _generatedDishes.removeAt(index);
+          });
+        },
+        onReplace: (oldDishName) {
+          // В реальном приложении здесь будет запрос к AI для замены блюда
+          AppAlert.show(
+            context,
+            title: 'Replacement requested',
+            description: 'AI will suggest a replacement for "$oldDishName"',
+            type: AlertType.info,
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -549,7 +361,7 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Fridge-based Meal Plan',
+                AppLocalizations.of(context)!.fridgeBasedMealPlan,
                 style: DesignTokens.h2.copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -657,32 +469,55 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
                 ),
                 const SizedBox(height: 12),
                 
-                ..._generatedDishes.map((dish) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.cardSurface,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        dish.name,
-                        style: DesignTokens.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
+                ..._generatedDishes.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final dish = entry.value;
+                  
+                  return GestureDetector(
+                    onTap: () => _showEditDishDialog(dish, index),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: DesignTokens.cardSurface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: DesignTokens.textSecondary.withOpacity(0.2),
+                          width: 1,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${dish.calories} kcal • P: ${dish.protein.toInt()}g F: ${dish.fat.toInt()}g C: ${dish.carbs.toInt()}g',
-                        style: DesignTokens.bodySmall.copyWith(
-                          color: DesignTokens.textSecondary,
-                        ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  dish.name,
+                                  style: DesignTokens.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${dish.calories} kcal • P: ${dish.protein.toInt()}g F: ${dish.fat.toInt()}g C: ${dish.carbs.toInt()}g',
+                                  style: DesignTokens.bodySmall.copyWith(
+                                    color: DesignTokens.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 18,
+                            color: DesignTokens.textSecondary,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
+                    ),
+                  );
+                }),
                 
                 const SizedBox(height: 16),
                 

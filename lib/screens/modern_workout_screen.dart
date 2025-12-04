@@ -267,13 +267,29 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
   }
 
   // Helper methods
-  void _startWorkout() {
-    Navigator.push(
+  Future<void> _startWorkout() async {
+    final completed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => WorkoutScreen(dayPlan: dayExercises),
       ),
     );
+    
+    // Если тренировка завершена, обновляем статистику
+    if (completed == true && mounted) {
+      setState(() {
+        // Обновляем интерфейс для отображения завершенной тренировки
+      });
+      
+      // Показываем уведомление
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🎉 Тренировка записана в статистику!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _showAICoach() {

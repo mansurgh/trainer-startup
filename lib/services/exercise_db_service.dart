@@ -21,6 +21,39 @@ class ExerciseDbService {
         'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com',
       };
 
+  /// Маппинг популярных названий упражнений к названиям в ExerciseDB
+  static const Map<String, String> _exerciseNameMapping = {
+    'cable fly': 'cable fly',
+    'cable flyes': 'cable fly',
+    'dip': 'chest dip',
+    'dips': 'chest dip',
+    'bench press': 'barbell bench press',
+    'push up': 'push-up',
+    'push ups': 'push-up',
+    'pushup': 'push-up',
+    'pull up': 'pull-up',
+    'pull ups': 'pull-up',
+    'pullup': 'pull-up',
+    'squat': 'barbell squat',
+    'squats': 'barbell squat',
+    'deadlift': 'barbell deadlift',
+    'deadlifts': 'barbell deadlift',
+    'bicep curl': 'dumbbell curl',
+    'biceps curl': 'dumbbell curl',
+    'tricep extension': 'cable triceps pushdown',
+    'triceps extension': 'cable triceps pushdown',
+    'shoulder press': 'dumbbell shoulder press',
+    'lat pulldown': 'cable lat pulldown',
+    'leg press': 'sled leg press',
+    'leg curl': 'lying leg curl',
+    'leg extension': 'leg extension',
+    'calf raise': 'standing calf raise',
+    'face pull': 'cable rear delt fly',
+    'rear delt fly': 'cable rear delt fly',
+    'hammer curl': 'dumbbell hammer curl',
+    'barbell row': 'barbell bent over row',
+  };
+  
   /// Первый найденный по имени (или null)
   Future<Exercise?> getByName(String name, {int limit = 1}) async {
     // Если нет ключа API, возвращаем null вместо исключения
@@ -30,7 +63,11 @@ class ExerciseDbService {
     
     try {
       // Преобразуем название в нижний регистр для API
-      final searchName = name.trim().toLowerCase();
+      var searchName = name.trim().toLowerCase();
+      
+      // Используем маппинг если название есть в словаре
+      searchName = _exerciseNameMapping[searchName] ?? searchName;
+      
       final encoded = Uri.encodeComponent(searchName);
       final uri = Uri.parse('$_base/exercises/name/$encoded?limit=$limit');
       

@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import '../core/design_tokens.dart';
 import '../core/modern_components.dart';
 import '../core/apple_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/user_state.dart';
+import '../services/storage_service.dart';
 import '../widgets/app_alert.dart';
 import 'generating_program_screen.dart';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/supabase_config.dart';
+
+import '../l10n/app_localizations.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -69,12 +76,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return GradientScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: AppleComponents.premiumText(
-            'Добро пожаловать',
+            l10n.welcome,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 20,
@@ -88,9 +97,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               controller: _name,
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
-                labelText: 'Имя',
+                labelText: l10n.name,
                 errorText: _name.text.isNotEmpty && _name.text.trim().isEmpty 
-                    ? 'Введите имя' 
+                    ? 'Enter name' 
                     : null,
               ),
             ),
@@ -99,10 +108,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             // Пол
             DropdownButtonFormField<String>(
               value: _gender,
-              decoration: const InputDecoration(labelText: 'Пол'),
-              items: const [
-                DropdownMenuItem(value: 'm', child: Text('Мужской')),
-                DropdownMenuItem(value: 'f', child: Text('Женский')),
+              decoration: InputDecoration(labelText: l10n.gender),
+              items: [
+                DropdownMenuItem(value: 'male', child: Text(l10n.male)),
+                DropdownMenuItem(value: 'female', child: Text(l10n.female)),
               ],
               onChanged: (v) => setState(() => _gender = v),
             ),
@@ -116,9 +125,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      labelText: 'Возраст',
+                      labelText: l10n.age,
                       errorText: _age.text.isNotEmpty && !_isValidAge(_age.text)
-                          ? 'Возраст от 10 до 120 лет'
+                          ? '10-120'
                           : null,
                     ),
                   ),
@@ -130,9 +139,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      labelText: 'Рост (см)',
+                      labelText: l10n.height,
                       errorText: _height.text.isNotEmpty && !_isValidHeight(_height.text)
-                          ? 'Рост от 100 до 250 см'
+                          ? '100-250'
                           : null,
                     ),
                   ),
@@ -148,9 +157,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      labelText: 'Вес (кг)',
+                      labelText: l10n.weight,
                       errorText: _weight.text.isNotEmpty && !_isValidWeight(_weight.text)
-                          ? 'Вес от 20 до 300 кг'
+                          ? '20-300'
                           : null,
                     ),
                   ),
@@ -162,11 +171,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             // Цель
             DropdownButtonFormField<String>(
               value: _goal,
-              decoration: const InputDecoration(labelText: 'Цель'),
-              items: const [
-                DropdownMenuItem(value: 'fat_loss', child: Text('Похудение')),
-                DropdownMenuItem(value: 'muscle_gain', child: Text('Набор массы')),
-                DropdownMenuItem(value: 'fitness', child: Text('Поддержание формы')),
+              decoration: InputDecoration(labelText: l10n.goal),
+              items: [
+                DropdownMenuItem(value: 'fat_loss', child: Text(l10n.weightLoss)),
+                DropdownMenuItem(value: 'muscle_gain', child: Text(l10n.muscleGain)),
+                DropdownMenuItem(value: 'fitness', child: Text(l10n.fitness)),
               ],
               onChanged: (v) => setState(() => _goal = v),
             ),
@@ -177,9 +186,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ? () async {
                       try {
                         // создаем или обновляем профиль пользователя
+                        final prefs = await SharedPreferences.getInstance();
+                        final userId = prefs.getString('user_id') ?? 'anonymous';
+                        
+                        final email = prefs.getString('user_email') ?? '';
+                        
                         final n = ref.read(userProvider.notifier);
                         await n.createOrUpdateProfile(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          id: userId, // Используем реальный userId из сессии
+                          email: email,
                           name: _name.text.trim(),
                           age: int.tryParse(_age.text),
                           height: int.tryParse(_height.text),
@@ -187,6 +202,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           gender: _gender,
                           goal: _goal,
                         );
+                        
+                        // Синхронизируем с Supabase
+                        final user = ref.read(userProvider);
+                        if (user != null) {
+                          await StorageService.saveUser(user);
+                          
+                          // Явное обновление в Supabase для надежности
+                          try {
+                            await SupabaseConfig.client.from('profiles').upsert({
+                              'id': userId,
+                              'email': email, // Добавляем email, так как он обязателен
+                              'name': user.name,
+                              'age': user.age,
+                              'height': user.height,
+                              'weight': user.weight,
+                              'gender': user.gender,
+                              'goal': user.goal,
+                              'updated_at': DateTime.now().toIso8601String(),
+                            });
+                            print('[Onboarding] ✅ Explicit Supabase sync successful');
+                          } catch (e) {
+                            print('[Onboarding] ⚠️ Explicit Supabase sync failed: $e');
+                          }
+                        }
 
                         // Переход на экран "Составляем программу..."
                         if (mounted) {
@@ -213,7 +252,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         type: AlertType.warning,
                       );
                     },
-              child: Text(_canContinue ? 'Продолжить' : 'Заполните все поля'),
+              child: Text(_canContinue ? l10n.continueButton : 'Fill all fields'),
             ).withAppleFadeIn(delay: const Duration(milliseconds: 800)),
           ],
         ),

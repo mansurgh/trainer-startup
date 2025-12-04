@@ -128,14 +128,22 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
           
           // Список приёмов пищи
           Expanded(
-            child: ListView.builder(
-              itemCount: meals.length + 1,
-              itemBuilder: (context, index) {
-                if (index == meals.length) {
-                  return _buildAddMealButton();
-                }
-                return _buildMealCard(meals[index], index);
-              },
+            child: Column(
+              children: [
+                Expanded(
+                  child: ReorderableListView.builder(
+                    buildDefaultDragHandles: true,
+                    onReorder: (oldIndex, newIndex) {
+                      ref.read(mealScheduleProvider.notifier).reorderMeals(oldIndex, newIndex);
+                    },
+                    itemCount: meals.length,
+                    itemBuilder: (context, index) {
+                      return _buildMealCard(meals[index], index);
+                    },
+                  ),
+                ),
+                _buildAddMealButton(),
+              ],
             ),
           ),
         ],
@@ -256,6 +264,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
 
   Widget _buildMealCard(MealGroup meal, int index) {
     return Container(
+      key: ValueKey('meal_$index'),
       margin: const EdgeInsets.only(bottom: 12),
       child: PremiumComponents.glassCard(
         child: Padding(
@@ -271,15 +280,16 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
                     size: 24,
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    _getMealTitle(index),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                  Expanded(
+                    child: Text(
+                      meal.name.isNotEmpty ? meal.name : _getMealTitle(index),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  const Spacer(),
                   Text(
                     '${_getMealCalories(meal)} ккал',
                     style: TextStyle(
@@ -287,6 +297,39 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
                       color: _getMealColor(index),
                       fontWeight: FontWeight.w600,
                     ),
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white70),
+                    color: const Color(0xFF2A2A2A),
+                    onSelected: (value) {
+                      if (value == 'rename') {
+                        _renameMeal(index, meal.name);
+                      } else if (value == 'delete') {
+                        _deleteMeal(index, meal.name);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'rename',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, color: Colors.white70, size: 20),
+                            SizedBox(width: 8),
+                            Text('Переименовать', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                            SizedBox(width: 8),
+                            Text('Удалить', style: TextStyle(color: Colors.redAccent)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -384,11 +427,144 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
   }
 
   void _addMeal() {
-    // Заглушка для добавления приёма пищи
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Функция добавления приёма пищи будет реализована'),
-        backgroundColor: Colors.blueAccent,
+    // Показываем диалог для ввода названия нового приёма пищи
+    showDialog(
+      context: context,
+      builder: (context) {
+        String mealName = '';
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            'Добавить приём пищи',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            autofocus: true,
+            onChanged: (value) => mealName = value,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: 'Название (например, Перекус)',
+              hintStyle: TextStyle(color: Colors.white54),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white54),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (mealName.trim().isNotEmpty) {
+                  ref.read(mealScheduleProvider.notifier).addMeal(mealName.trim());
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Приём пищи "$mealName" добавлен'),
+                      backgroundColor: Colors.greenAccent,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Добавить'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _renameMeal(int index, String currentName) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String newName = currentName;
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            'Переименовать приём пищи',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: TextEditingController(text: currentName),
+            autofocus: true,
+            onChanged: (value) => newName = value,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: 'Название',
+              hintStyle: TextStyle(color: Colors.white54),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white54),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (newName.trim().isNotEmpty) {
+                  ref.read(mealScheduleProvider.notifier).renameMeal(index, newName.trim());
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Приём пищи переименован в "$newName"'),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteMeal(int index, String mealName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        title: const Text(
+          'Удалить приём пищи?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Вы уверены, что хотите удалить "$mealName"?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () {
+              ref.read(mealScheduleProvider.notifier).removeMeal(index);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Приём пищи "$mealName" удалён'),
+                  backgroundColor: Colors.redAccent,
+                ),
+              );
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Text('Удалить'),
+          ),
+        ],
       ),
     );
   }

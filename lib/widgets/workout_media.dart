@@ -74,9 +74,11 @@ class _WorkoutMediaState extends State<WorkoutMedia> {
       );
     }
 
-    // 3) заглушка
+    // 3) заглушка - пустой контейнер вместо текста
     return _WhiteCard(
-      child: const Center(child: Text('Медиа недоступно')),
+      child: const Center(
+        child: SizedBox.shrink(), // Пустой виджет вместо "Медиа недоступно"
+      ),
     );
   }
 }

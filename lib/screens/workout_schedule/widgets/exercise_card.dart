@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/exercise.dart';
 import '../../../theme/tokens.dart';
+import '../../../l10n/app_localizations.dart';
 
 class ExerciseCard extends StatelessWidget {
   final Exercise exercise;
@@ -15,6 +16,7 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -36,7 +38,7 @@ class ExerciseCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    exercise.name,
+                    _getLocalizedName(context, exercise.name),
                     style: const TextStyle(
                       color: T.text,
                       fontSize: 16,
@@ -63,7 +65,7 @@ class ExerciseCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Sets: ${exercise.completedSets}/${exercise.sets}',
+                    '${l10n.sets}: ${exercise.completedSets}/${exercise.sets}',
                     style: const TextStyle(
                       color: T.textSec,
                       fontSize: 12,
@@ -105,5 +107,36 @@ class ExerciseCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getLocalizedName(BuildContext context, String name) {
+    final map = {
+      'barbell squat': 'Приседания со штангой',
+      'push up': 'Отжимания',
+      'barbell bench press': 'Жим лежа',
+      'lateral raise': 'Махи гантелями в стороны',
+      'cable lateral raise': 'Махи в кроссовере',
+      'pull up': 'Подтягивания',
+      'dumbbell shoulder press': 'Жим гантелей сидя',
+      'dumbbell bicep curl': 'Сгибание на бицепс',
+      'tricep pushdown': 'Разгибание на трицепс',
+      'leg press': 'Жим ногами',
+      'leg extension': 'Разгибание ног',
+      'leg curl': 'Сгибание ног',
+      'crunch': 'Скручивания',
+      'plank': 'Планка',
+      'deadlift': 'Становая тяга',
+      'overhead press': 'Армейский жим',
+      'lunges': 'Выпады',
+      'face pull': 'Тяга к лицу',
+      'lat pulldown': 'Тяга верхнего блока',
+      'seated row': 'Тяга нижнего блока',
+    };
+    
+    final locale = Localizations.localeOf(context).languageCode;
+    if (locale == 'ru' && map.containsKey(name.toLowerCase())) {
+      return map[name.toLowerCase()]!;
+    }
+    return name;
   }
 }

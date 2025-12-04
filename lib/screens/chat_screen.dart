@@ -27,6 +27,20 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   bool get _empty => _msgs.isEmpty;
 
+  @override
+  void initState() {
+    super.initState();
+    // Добавляем приветственное сообщение
+    _msgs.add(_Msg.bot(
+      text: '👋 Привет! Я твой AI тренер.\n\n'
+            'Доступные команды:\n'
+            '• Отправь текстовый вопрос - отвечу советом\n'
+            '• Пришли фото блюда - проанализирую калорийность\n'
+            '• Пришли фото упражнения - дам рекомендации по технике\n\n'
+            'Как могу помочь?',
+    ));
+  }
+
   Future<void> _send({String? text, String? imagePath}) async {
     if ((text == null || text.trim().isEmpty) && imagePath == null) return;
     setState(() {
@@ -88,20 +102,6 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(title: const Text('Чат с тренером')),
       body: Column(
         children: [
-          if (_empty)
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Text(
-                'Отправь текст — отвечу: «Привет! Я твой тренер.»\n'
-                'Пришли фото блюда — отвечу примерной калорийностью.',
-                style: TextStyle(color: Colors.white70, height: 1.4),
-              ),
-            ),
           Expanded(
             child: ListView.builder(
               controller: _listCtrl,

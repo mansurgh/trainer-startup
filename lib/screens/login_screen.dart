@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/design_tokens.dart';
 import '../services/auth_service.dart';
-import '../widgets/app_alert.dart';
+import '../services/storage_service.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
+import '../widgets/app_alert.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -42,6 +44,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       if (response.user != null && mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        final previousUserId = prefs.getString('user_id');
+        final newUserId = response.user!.id;
+        
+        print('[Login] Previous user: ${previousUserId ?? "none"}, New user: $newUserId');
+        
+        // Если это другой пользователь - очищаем данные предыдущего
+        if (previousUserId != null && previousUserId != newUserId) {
+          print('[Login] Different user detected - clearing previous user data');
+          final keys = prefs.getKeys().toList();
+          for (final key in keys) {
+            if (key.contains('_${previousUserId}_') || key.contains('_$previousUserId')) {
+              await prefs.remove(key);
+              print('[Login] Removed old key: $key');
+            }
+          }
+        }
+        
+        // Сохраняем ID нового пользователя
+        await prefs.setString('user_id', newUserId);
+        await prefs.setString('user_email', _emailController.text.trim());
+        print('[Login] ✅ User ID saved: $newUserId');
+        
         // Navigate to home screen
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -51,9 +76,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         AppAlert.show(
           context,
-          title: 'Login failed',
+          title: 'Login Error',
           description: _getErrorMessage(e.toString()),
           type: AlertType.error,
+          duration: const Duration(seconds: 4),
         );
       }
     } finally {
@@ -88,37 +114,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo - circular with shadow
-                  Container(
+                  // Logo
+                  Image.asset(
+                    'assets/logo/app_logo.png',
                     width: 120,
                     height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: DesignTokens.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: DesignTokens.primaryAccent.withOpacity(0.3),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Image.asset(
-                          'assets/logo/app_logo.png',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.fitness_center,
-                              size: 60,
-                              color: DesignTokens.textPrimary,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.fitness_center,
+                        size: 60,
+                        color: DesignTokens.textPrimary,
+                      );
+                    },
                   ),
                   const SizedBox(height: 24),
                   Text(

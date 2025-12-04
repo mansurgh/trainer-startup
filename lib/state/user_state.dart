@@ -23,6 +23,7 @@ class UserNotifier extends StateNotifier<UserModel?> {
   /// Создать или обновить профиль из онбординга
   Future<void> createOrUpdateProfile({
     required String id,
+    String? email,
     String? name,
     String? gender,
     int? age,
@@ -36,6 +37,7 @@ class UserNotifier extends StateNotifier<UserModel?> {
       lastActive: DateTime.now(),
     );
     final updatedUser = base.copyWith(
+      email: email ?? base.email,
       name: name ?? base.name,
       gender: gender ?? base.gender,
       age: age ?? base.age,
