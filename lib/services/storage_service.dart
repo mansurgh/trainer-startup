@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -117,10 +118,10 @@ class StorageService {
           'weight': user.weight,
           'updated_at': DateTime.now().toIso8601String(),
         });
-        print('[Storage] ✅ User profile synced to Supabase');
+        if (kDebugMode) print('[Storage] ✅ User profile synced to Supabase');
       }
     } catch (e) {
-      print('[Storage] ⚠️ Failed to sync to Supabase: $e');
+      if (kDebugMode) print('[Storage] ⚠️ Failed to sync to Supabase: $e');
     }
   }
 
@@ -160,7 +161,7 @@ class StorageService {
             .maybeSingle();
         
         if (response != null) {
-          print('[Storage] ✅ Loaded user profile from Supabase: ${response.toString()}');
+          if (kDebugMode) print('[Storage] ✅ Loaded user profile from Supabase: ${response.toString()}');
           final user = UserModel(
             id: userId,
             email: response['email'] as String?, // Populate email
@@ -169,16 +170,16 @@ class StorageService {
             height: response['height'] as int?,
             weight: response['weight'] as double?,
           );
-          print('[Storage] 📦 UserModel created: name=${user.name}, age=${user.age}, height=${user.height}, weight=${user.weight}');
+          if (kDebugMode) print('[Storage] 📦 UserModel created: name=${user.name}, age=${user.age}, height=${user.height}, weight=${user.weight}');
           // Сохраняем локально для быстрого доступа
           await saveUser(user);
           return user;
         } else {
-          print('[Storage] ⚠️ No profile found in Supabase for userId: $userId');
+          if (kDebugMode) print('[Storage] ⚠️ No profile found in Supabase for userId: $userId');
         }
       }
     } catch (e) {
-      print('[Storage] ⚠️ Failed to load from Supabase: $e');
+      if (kDebugMode) print('[Storage] ⚠️ Failed to load from Supabase: $e');
     }
     
     return null;
@@ -370,7 +371,7 @@ class StorageService {
       try {
         await db.delete('user_data');
       } catch (e) {
-        print('[Storage] Could not delete user_data: $e');
+        if (kDebugMode) print('[Storage] Could not delete user_data: $e');
       }
       
       // Эти таблицы могут не существовать - игнорируем ошибки
@@ -392,9 +393,9 @@ class StorageService {
         // Таблица не существует - это нормально
       }
       
-      print('[Storage] Cleared new user data successfully (including nutrition and progress)');
+      if (kDebugMode) print('[Storage] Cleared new user data successfully (including nutrition and progress)');
     } catch (e) {
-      print('[Storage] Error clearing new user data: $e');
+      if (kDebugMode) print('[Storage] Error clearing new user data: $e');
       rethrow;
     }
   }
@@ -420,14 +421,14 @@ class StorageService {
   /// Очистить статистику и питание для ВСЕХ пользователей (сброс данных)
   static Future<void> resetAllUsersData() async {
     try {
-      print('[Storage] 🔄 Starting data reset for all users...');
+      if (kDebugMode) print('[Storage] 🔄 Starting data reset for all users...');
       final prefs = await SharedPreferences.getInstance();
       
       // Сначала выводим ВСЕ существующие ключи для отладки
       final allKeys = prefs.getKeys().toList();
-      print('[Storage] 📋 Total keys before reset: ${allKeys.length}');
+      if (kDebugMode) print('[Storage] 📋 Total keys before reset: ${allKeys.length}');
       for (final key in allKeys) {
-        print('[Storage]   - $key');
+        if (kDebugMode) print('[Storage]   - $key');
       }
       
       // Очищаем прогресс, статистику и питание
@@ -435,7 +436,7 @@ class StorageService {
       await prefs.remove(_sessionsKey);
       await prefs.remove(_planKey);
       await prefs.remove('progress_photos');
-      print('[Storage] ✓ Cleared standard keys');
+      if (kDebugMode) print('[Storage] ✓ Cleared standard keys');
       
       // Очищаем ВСЕ ключи, которые могут содержать данные пользователя
       int removedCount = 0;
@@ -451,10 +452,10 @@ class StorageService {
         if (key != _userKey) { // Сохраняем информацию о пользователе (имя, параметры)
           await prefs.remove(key);
           removedCount++;
-          print('[Storage]   🗑️ Removed: $key');
+          if (kDebugMode) print('[Storage]   🗑️ Removed: $key');
         }
       }
-      print('[Storage] ✓ Removed $removedCount user data keys');
+      if (kDebugMode) print('[Storage] ✓ Removed $removedCount user data keys');
 
       final db = await database;
       
@@ -464,36 +465,36 @@ class StorageService {
       try {
         final count = await db.delete('meals');
         if (count > 0) {
-          print('[Storage] ✓ Cleared meals table: $count rows');
+          if (kDebugMode) print('[Storage] ✓ Cleared meals table: $count rows');
           tablesCleared++;
         }
       } catch (e) {
-        print('[Storage] ℹ️ meals table does not exist');
+        if (kDebugMode) print('[Storage] ℹ️ meals table does not exist');
       }
       
       try {
         final count = await db.delete('meal_plans');
         if (count > 0) {
-          print('[Storage] ✓ Cleared meal_plans table: $count rows');
+          if (kDebugMode) print('[Storage] ✓ Cleared meal_plans table: $count rows');
           tablesCleared++;
         }
       } catch (e) {
-        print('[Storage] ℹ️ meal_plans table does not exist');
+        if (kDebugMode) print('[Storage] ℹ️ meal_plans table does not exist');
       }
       
       try {
         final count = await db.delete('workout_sessions');
         if (count > 0) {
-          print('[Storage] ✓ Cleared workout_sessions table: $count rows');
+          if (kDebugMode) print('[Storage] ✓ Cleared workout_sessions table: $count rows');
           tablesCleared++;
         }
       } catch (e) {
-        print('[Storage] ℹ️ workout_sessions table does not exist');
+        if (kDebugMode) print('[Storage] ℹ️ workout_sessions table does not exist');
       }
       
-      print('[Storage] ✅ Data reset completed: $tablesCleared tables cleared, $removedCount keys removed');
+      if (kDebugMode) print('[Storage] ✅ Data reset completed: $tablesCleared tables cleared, $removedCount keys removed');
     } catch (e) {
-      print('[Storage] ❌ Error resetting all users data: $e');
+      if (kDebugMode) print('[Storage] ❌ Error resetting all users data: $e');
       rethrow;
     }
   }
@@ -501,15 +502,15 @@ class StorageService {
   // Миграция профилей из SQLite в Supabase
   static Future<void> migrateProfilesToSupabase() async {
     try {
-      print('[Storage] 🔍 Checking for profiles in SQLite...');
+      if (kDebugMode) print('[Storage] 🔍 Checking for profiles in SQLite...');
       final db = await database;
       
       // Получаем все профили из локальной БД
       final List<Map<String, dynamic>> profiles = await db.query('user_data');
-      print('[Storage] 📋 Found ${profiles.length} profiles in SQLite');
+      if (kDebugMode) print('[Storage] 📋 Found ${profiles.length} profiles in SQLite');
       
       if (profiles.isEmpty) {
-        print('[Storage] ℹ️ No profiles to migrate');
+        if (kDebugMode) print('[Storage] ℹ️ No profiles to migrate');
         return;
       }
       
@@ -532,7 +533,7 @@ class StorageService {
               .maybeSingle();
           
           if (existing != null) {
-            print('[Storage] ⏭️ Profile already exists in Supabase: $userId');
+            if (kDebugMode) print('[Storage] ⏭️ Profile already exists in Supabase: $userId');
             skipped++;
             continue;
           }
@@ -548,17 +549,17 @@ class StorageService {
             'updated_at': DateTime.now().toIso8601String(),
           });
           
-          print('[Storage] ✅ Migrated profile: $userId (${profile['name'] ?? "No name"})');
+          if (kDebugMode) print('[Storage] ✅ Migrated profile: $userId (${profile['name'] ?? "No name"})');
           migrated++;
         } catch (e) {
-          print('[Storage] ⚠️ Failed to migrate profile $userId: $e');
+          if (kDebugMode) print('[Storage] ⚠️ Failed to migrate profile $userId: $e');
           skipped++;
         }
       }
       
-      print('[Storage] 🎉 Migration complete: $migrated migrated, $skipped skipped');
+      if (kDebugMode) print('[Storage] 🎉 Migration complete: $migrated migrated, $skipped skipped');
     } catch (e) {
-      print('[Storage] ❌ Error during profile migration: $e');
+      if (kDebugMode) print('[Storage] ❌ Error during profile migration: $e');
       rethrow;
     }
   }

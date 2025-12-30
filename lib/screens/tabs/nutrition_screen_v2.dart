@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/design_tokens.dart';
+import '../../theme/app_theme.dart';
 import '../../models/meal.dart';
 import '../../services/meal_service.dart';
 import '../../state/user_state.dart';
@@ -39,29 +41,36 @@ class NutritionScreenV2 extends ConsumerWidget {
     final totalsAsync = ref.watch(dailyTotalsProvider(today));
 
     return Scaffold(
-      backgroundColor: DesignTokens.bgBase,
+      backgroundColor: kOledBlack,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // Header
+            // Header with gradient title
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.nutrition,
-                      style: DesignTokens.h1.copyWith(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [kElectricAmberStart, kElectricAmberEnd],
+                      ).createShader(bounds),
+                      child: Text(
+                        AppLocalizations.of(context)!.nutrition,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context)!.trackYourIntake,
-                      style: DesignTokens.bodyMedium.copyWith(
-                        color: DesignTokens.textSecondary,
+                      style: TextStyle(
+                        color: kTextSecondary,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -119,18 +128,19 @@ class NutritionScreenV2 extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: DesignTokens.textPrimary.withOpacity(0.1),
+                      color: kObsidianSurface,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: kObsidianBorder),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.add, color: DesignTokens.textPrimary, size: 20),
+                        Icon(Icons.add, color: kElectricAmberStart, size: 20),
                         const SizedBox(width: 8),
                         Text(
                           AppLocalizations.of(context)!.addMeal,
-                          style: DesignTokens.bodyMedium.copyWith(
-                            color: DesignTokens.textPrimary,
+                          style: TextStyle(
+                            color: kTextPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -576,19 +586,20 @@ class NutritionScreenV2 extends ConsumerWidget {
       child: Container(
         height: 60,
         decoration: BoxDecoration(
-          color: DesignTokens.cardSurface,
+          color: kObsidianSurface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kObsidianBorder),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.chat_bubble_outline, color: DesignTokens.textPrimary, size: 20),
+            Icon(Icons.chat_bubble_outline, color: kElectricAmberStart, size: 20),
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context)!.aiNutritionistChat,
-              style: DesignTokens.h3.copyWith(
-                color: DesignTokens.textPrimary,
-                fontSize: 18,
+              style: TextStyle(
+                color: kTextPrimary,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -604,21 +615,22 @@ class NutritionScreenV2 extends ConsumerWidget {
       child: Container(
         height: 60,
         decoration: BoxDecoration(
-          color: DesignTokens.cardSurface,
+          color: kObsidianSurface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kObsidianBorder),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.kitchen_rounded, color: DesignTokens.textPrimary, size: 20),
+            Icon(Icons.kitchen_rounded, color: kElectricAmberStart, size: 20),
             const SizedBox(width: 8),
             Consumer(
               builder: (context, ref, child) {
                 final l10n = AppLocalizations.of(context)!;
                 return Text(
                   l10n.fridgeMealPlan,
-                  style: DesignTokens.h3.copyWith(
-                    color: DesignTokens.textPrimary,
+                  style: TextStyle(
+                    color: kTextPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -680,64 +692,78 @@ class _MacroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCalories = label.toLowerCase().contains('cal') || label.toLowerCase().contains('кал');
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: isCalories 
+              ? kObsidianSurface
+              : kObsidianSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1.5,
+            color: isCalories ? kElectricAmberStart.withOpacity(0.3) : kObsidianBorder,
+            width: 1,
           ),
+          gradient: isCalories ? LinearGradient(
+            colors: [
+              kElectricAmberStart.withOpacity(0.1),
+              kElectricAmberEnd.withOpacity(0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ) : null,
         ),
       child: Column(
         children: [
           Text(
             label,
-            style: DesignTokens.bodyMedium.copyWith(
-              color: DesignTokens.textPrimary,
+            style: TextStyle(
+              color: isCalories ? kElectricAmberStart : kTextPrimary,
               fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 8),
           RichText(
             text: TextSpan(
-              style: DesignTokens.h2.copyWith(
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 24,
+                color: kTextPrimary,
               ),
               children: [
                 TextSpan(text: consumed),
                 TextSpan(
                   text: ' / ',
-                  style: DesignTokens.h2.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.w400,
                     fontSize: 20,
-                    color: DesignTokens.textSecondary,
+                    color: kTextSecondary,
                   ),
                 ),
                 TextSpan(
                   text: target,
-                  style: DesignTokens.h2.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 22,
-                    color: DesignTokens.textSecondary,
+                    color: kTextSecondary,
                   ),
                 ),
                 TextSpan(
                   text: unit,
-                  style: DesignTokens.bodySmall.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: DesignTokens.textSecondary,
+                    fontSize: 12,
+                    color: kTextTertiary,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 4),
-          Icon(Icons.edit, size: 14, color: DesignTokens.textSecondary.withOpacity(0.5)),
+          Icon(Icons.edit, size: 14, color: kTextTertiary),
         ],
       ),
       ),
@@ -767,8 +793,9 @@ class _MealSection extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Container(
         decoration: BoxDecoration(
-          color: DesignTokens.cardSurface,
+          color: kObsidianSurface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kObsidianBorder.withOpacity(0.5)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -781,7 +808,9 @@ class _MealSection extends ConsumerWidget {
                 children: [
                   Text(
                     displayName,
-                    style: DesignTokens.h3.copyWith(
+                    style: TextStyle(
+                      color: kTextPrimary,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -789,13 +818,14 @@ class _MealSection extends ConsumerWidget {
                     children: [
                       Text(
                         '${meal.completedCalories}/${meal.totalCalories} ${l10n.kcal}',
-                        style: DesignTokens.bodyMedium.copyWith(
-                          color: DesignTokens.textSecondary,
+                        style: TextStyle(
+                          color: kTextSecondary,
+                          fontSize: 14,
                         ),
                       ),
                       PopupMenuButton<String>(
-                        icon: Icon(Icons.more_vert, color: DesignTokens.textSecondary),
-                        color: DesignTokens.cardSurface,
+                        icon: Icon(Icons.more_vert, color: kTextSecondary),
+                        color: kObsidianSurface,
                         onSelected: (value) {
                           if (value == 'rename') {
                             onRename();
@@ -808,9 +838,9 @@ class _MealSection extends ConsumerWidget {
                             value: 'rename',
                             child: Row(
                               children: [
-                                Icon(Icons.edit_outlined, color: DesignTokens.textPrimary),
+                                Icon(Icons.edit_outlined, color: kTextPrimary),
                                 const SizedBox(width: 8),
-                                Text(l10n.rename, style: TextStyle(color: DesignTokens.textPrimary)),
+                                Text(l10n.rename, style: TextStyle(color: kTextPrimary)),
                               ],
                             ),
                           ),
@@ -818,9 +848,9 @@ class _MealSection extends ConsumerWidget {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, color: Colors.red),
+                                Icon(Icons.delete_outline, color: kErrorRed),
                                 const SizedBox(width: 8),
-                                Text(l10n.delete, style: TextStyle(color: Colors.red)),
+                                Text(l10n.delete, style: TextStyle(color: kErrorRed)),
                               ],
                             ),
                           ),
@@ -891,7 +921,7 @@ class _MealSection extends ConsumerWidget {
       ref.invalidate(todaysWinProvider);
       ref.invalidate(consistencyStreakProvider);
     } catch (e) {
-      print('[Nutrition] Error checking goal: $e');
+      if (kDebugMode) print('[Nutrition] Error checking goal: $e');
     }
   }
 

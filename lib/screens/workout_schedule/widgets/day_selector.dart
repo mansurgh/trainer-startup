@@ -19,7 +19,7 @@ class DaySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
+      height: 48,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(7, (index) {
@@ -43,34 +43,34 @@ class DaySelector extends StatelessWidget {
                     ? Border.all(color: T.border, width: 1)
                     : null,
                 ),
-                child: Center(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Text(
-                        _dayLabels[index],
-                        style: TextStyle(
-                          color: isSelected ? T.text : T.textSec,
-                          fontSize: 16,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Completion indicator at top
+                    SizedBox(
+                      height: 10,
+                      child: isCompleted && !isSelected 
+                          ? Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Colors.green,
+                                shape: BoxShape.circle,
+                              ),
+                            )
+                          : null,
+                    ),
+                    // Day letter
+                    Text(
+                      _dayLabels[index],
+                      style: TextStyle(
+                        color: isSelected ? T.text : T.textSec,
+                        fontSize: 16,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       ),
-                      // Зеленый индикатор завершения показываем только для НЕ выбранных дней
-                      if (isCompleted && !isSelected)
-                        Positioned(
-                          top: 2,
-                          right: 2,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Colors.green,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                 ),
               ),
             ),

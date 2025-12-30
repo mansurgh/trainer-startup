@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -70,10 +71,10 @@ class NutritionGoalsNotifier extends StateNotifier<NutritionGoals> {
       if (goalsJson != null) {
         final decoded = jsonDecode(goalsJson);
         state = NutritionGoals.fromJson(decoded);
-        print('[NutritionGoals] Loaded goals: ${state.calories} kcal');
+        if (kDebugMode) print('[NutritionGoals] Loaded goals: ${state.calories} kcal');
       }
     } catch (e) {
-      print('[NutritionGoals] Error loading goals: $e');
+      if (kDebugMode) print('[NutritionGoals] Error loading goals: $e');
     }
   }
 
@@ -81,11 +82,10 @@ class NutritionGoalsNotifier extends StateNotifier<NutritionGoals> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final goalsJson = jsonEncode(state.toJson());
-      final userId = await _getUserId();
-      await prefs.setString('${_storageKey}_$userId', goalsJson);
-      print('[NutritionGoals] Saved goals: ${state.calories} kcal');
+      await prefs.setString(_storageKey, goalsJson);
+      if (kDebugMode) print('[NutritionGoals] Saved goals: ${state.calories} kcal');
     } catch (e) {
-      print('[NutritionGoals] Error saving goals: $e');
+      if (kDebugMode) print('[NutritionGoals] Error saving goals: $e');
     }
   }
 

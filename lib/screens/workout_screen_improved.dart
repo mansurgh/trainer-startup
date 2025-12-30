@@ -1,6 +1,7 @@
 // lib/screens/workout_screen_improved.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
@@ -122,7 +123,7 @@ class _WorkoutScreenImprovedState extends ConsumerState<WorkoutScreenImproved> {
       ref.invalidate(activityDataProvider);
       ref.invalidate(workoutCountProvider);
     } catch (e) {
-      print('[Workout] Error saving workout: $e');
+      if (kDebugMode) print('[Workout] Error saving workout: $e');
     }
     
     if (!mounted) return;
@@ -158,7 +159,7 @@ class _WorkoutScreenImprovedState extends ConsumerState<WorkoutScreenImproved> {
     // Сохраняем, что тренировка выполнена (user-specific)
     await prefs.setBool('workout_completed_${userId}_$dateKey', true);
     
-    print('[Workout] Activity updated for user $userId on $dateKey (${_getDayName(workoutDay)})');
+    if (kDebugMode) print('[Workout] Activity updated for user $userId on $dateKey (${_getDayName(workoutDay)})');
   }
   
   String _getDayName(DateTime date) {

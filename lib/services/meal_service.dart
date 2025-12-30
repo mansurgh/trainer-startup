@@ -1,6 +1,7 @@
 // lib/services/meal_service.dart
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/meal.dart';
 import 'nutrition_goal_checker.dart';
@@ -41,7 +42,7 @@ class MealService {
       final List<dynamic> jsonList = json.decode(jsonString);
       return jsonList.map((json) => Meal.fromJson(json as Map<String, dynamic>)).toList();
     } catch (e) {
-      print('[MealService] Error loading meals: $e');
+      if (kDebugMode) print('[MealService] Error loading meals: $e');
       return _createEmptyMeals(date);
     }
   }

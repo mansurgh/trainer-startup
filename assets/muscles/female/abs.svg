@@ -1,0 +1,7 @@
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Female abdominal muscles - rectus abdominis, adapted for female torso -->
+  <path d="M130 180 L130 300 Q130 310 150 310 Q170 310 170 300 L170 180 Q170 170 150 170 Q130 170 130 180 Z" fill="white"/>
+  <!-- Obliques -->
+  <path d="M115 200 Q110 250 115 290 L130 290 Q125 250 130 200 Z" fill="white"/>
+  <path d="M185 200 Q190 250 185 290 L170 290 Q175 250 170 200 Z" fill="white"/>
+</svg>

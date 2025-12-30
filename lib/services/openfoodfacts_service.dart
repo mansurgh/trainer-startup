@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/food_product.dart';
@@ -42,7 +43,7 @@ class OpenFoodFactsService {
       
       return null;
     } catch (e) {
-      print('Error fetching product by barcode: $e');
+      if (kDebugMode) print('Error fetching product by barcode: $e');
       return null;
     }
   }
@@ -83,7 +84,7 @@ class OpenFoodFactsService {
       
       return [];
     } catch (e) {
-      print('Error searching products: $e');
+      if (kDebugMode) print('Error searching products: $e');
       return [];
     }
   }
@@ -122,7 +123,7 @@ class OpenFoodFactsService {
       
       return [];
     } catch (e) {
-      print('Error fetching products by category: $e');
+      if (kDebugMode) print('Error fetching products by category: $e');
       return [];
     }
   }

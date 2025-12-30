@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/design_tokens.dart';
@@ -51,14 +52,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      print('[Register] Attempting to sign up: ${_emailController.text.trim()}');
+      if (kDebugMode) print('[Register] Attempting to sign up: ${_emailController.text.trim()}');
       
       final response = await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      print('[Register] Sign up response: ${response.user?.id}');
+      if (kDebugMode) print('[Register] Sign up response: ${response.user?.id}');
 
       if (response.user != null && mounted) {
         final userId = response.user!.id;
@@ -83,9 +84,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             'created_at': DateTime.now().toIso8601String(),
             'updated_at': DateTime.now().toIso8601String(),
           });
-          print('[Register] ✅ Created empty profile in Supabase');
+          if (kDebugMode) print('[Register] ✅ Created empty profile in Supabase');
         } catch (e) {
-          print('[Register] ⚠️ Profile creation error (may already exist): $e');
+          if (kDebugMode) print('[Register] ⚠️ Profile creation error (may already exist): $e');
         }
         
         // Navigate to roulette screen for trial
@@ -94,8 +95,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
       }
     } catch (e, stackTrace) {
-      print('[Register] Error: $e');
-      print('[Register] Stack trace: $stackTrace');
+      if (kDebugMode) print('[Register] Error: $e');
+      if (kDebugMode) print('[Register] Stack trace: $stackTrace');
       
       if (mounted) {
         AppAlert.show(

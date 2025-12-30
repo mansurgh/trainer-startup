@@ -1,38 +1,64 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
+  
+  /// Check if notifications are supported on this platform
+  static bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS || Platform.isMacOS);
 
   static Future<void> initialize() async {
     if (_initialized) return;
+    if (!isSupported) {
+      _initialized = true;
+      debugPrint('[NotificationService] Platform not supported, skipping init');
+      return;
+    }
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-    
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+    try {
+      // Initialize timezone data
+      tz_data.initializeTimeZones();
+      tz.setLocalLocation(tz.getLocation('Europe/Moscow')); // Default timezone
 
-    await _notifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTap,
-    );
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+      
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
-    _initialized = true;
+      await _notifications.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTap,
+      );
+
+      _initialized = true;
+    } catch (e) {
+      debugPrint('[NotificationService] Init error: $e');
+      _initialized = true; // Mark as initialized to prevent retry loops
+    }
   }
 
   static Future<bool> requestPermissions() async {
-    final status = await Permission.notification.request();
-    return status.isGranted;
+    if (!isSupported) return false;
+    try {
+      final status = await Permission.notification.request();
+      return status.isGranted;
+    } catch (e) {
+      debugPrint('[NotificationService] Permission error: $e');
+      return false;
+    }
   }
 
   static Future<void> scheduleWorkoutReminder({
@@ -41,30 +67,35 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
-    final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tzScheduledTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'workout_reminders',
-          'Workout Reminders',
-          channelDescription: 'Reminders for workout sessions',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+    if (!isSupported) return;
+    try {
+      final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'workout_reminders',
+            'Workout Reminders',
+            channelDescription: 'Reminders for workout sessions',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] Schedule workout error: $e');
+    }
   }
 
   static Future<void> scheduleMealReminder({
@@ -73,30 +104,35 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
-    final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tzScheduledTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'meal_reminders',
-          'Meal Reminders',
-          channelDescription: 'Reminders for meal times',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+    if (!isSupported) return;
+    try {
+      final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'meal_reminders',
+            'Meal Reminders',
+            channelDescription: 'Reminders for meal times',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] Schedule meal error: $e');
+    }
   }
 
   static Future<void> scheduleProgressReminder({
@@ -105,42 +141,63 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
-    final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tzScheduledTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'progress_reminders',
-          'Progress Reminders',
-          channelDescription: 'Reminders for progress tracking',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+    if (!isSupported) return;
+    try {
+      final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'progress_reminders',
+            'Progress Reminders',
+            channelDescription: 'Reminders for progress tracking',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] Schedule progress error: $e');
+    }
   }
 
   static Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
+    if (!isSupported) return;
+    try {
+      await _notifications.cancel(id);
+    } catch (e) {
+      debugPrint('[NotificationService] Cancel error: $e');
+    }
   }
 
   static Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
+    if (!isSupported) return;
+    try {
+      await _notifications.cancelAll();
+    } catch (e) {
+      debugPrint('[NotificationService] Cancel all error: $e');
+    }
   }
 
   static Future<List<PendingNotificationRequest>> getPendingNotifications() async {
-    return await _notifications.pendingNotificationRequests();
+    if (!isSupported) return [];
+    try {
+      return await _notifications.pendingNotificationRequests();
+    } catch (e) {
+      debugPrint('[NotificationService] Get pending error: $e');
+      return [];
+    }
   }
 
   static void _onNotificationTap(NotificationResponse response) {
@@ -150,6 +207,8 @@ class NotificationService {
 
   // Predefined reminder schedules
   static Future<void> setupDefaultReminders() async {
+    if (!isSupported) return;
+    
     final now = DateTime.now();
     
     // Workout reminders (every day at 7:00 AM and 7:00 PM)
@@ -200,6 +259,7 @@ class NotificationService {
 
   // Legacy methods for compatibility
   Future<void> scheduleProteinReminder() async {
+    if (!isSupported) return;
     await scheduleMealReminder(
       id: 100,
       title: 'Белок! 💪',
@@ -209,6 +269,7 @@ class NotificationService {
   }
 
   Future<void> scheduleSupplementsReminder() async {
+    if (!isSupported) return;
     await scheduleMealReminder(
       id: 101,
       title: 'Витамины! 💊',

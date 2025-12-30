@@ -169,26 +169,28 @@ class _TrialRouletteScreenState extends ConsumerState<TrialRouletteScreen> with 
                                 child: child,
                               );
                             },
-                            child: Container(
+                            child: SizedBox(
                               width: size,
                               height: size,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: DesignTokens.textPrimary,
-                                  width: 4,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: DesignTokens.textPrimary.withOpacity(0.3),
-                                    blurRadius: 30,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
                               child: ClipOval(
-                                child: CustomPaint(
-                                  painter: RoulettePainter(_items),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: DesignTokens.textPrimary,
+                                      width: 4,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: DesignTokens.textPrimary.withOpacity(0.3),
+                                        blurRadius: 30,
+                                        spreadRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                  child: CustomPaint(
+                                    painter: RoulettePainter(_items),
+                                  ),
                                 ),
                               ),
                             ),

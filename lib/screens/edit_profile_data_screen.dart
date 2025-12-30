@@ -66,28 +66,45 @@ class _EditProfileDataScreenState extends ConsumerState<EditProfileDataScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final notifier = ref.read(userProvider.notifier);
-    if (_name.text.trim().isNotEmpty) notifier.setName(_name.text.trim());
+    
+    // Сохраняем имя
+    if (_name.text.trim().isNotEmpty) {
+      await notifier.setName(_name.text.trim());
+    }
+    
+    // Сохраняем остальные параметры
     final a = int.tryParse(_age.text);
     final h = int.tryParse(_height.text);
     final w = double.tryParse(_weight.text);
-    notifier.setParams(age: a, height: h, weight: w);
-    notifier.setComposition(
+    await notifier.setParams(age: a, height: h, weight: w);
+    
+    // Сохраняем композицию тела
+    await notifier.setComposition(
       fatPct: double.tryParse(_fat.text) ?? 20,
       musclePct: double.tryParse(_muscle.text) ?? 70,
     );
     
-    // Показываем уведомление об успешном сохранении
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Данные профиля сохранены!'),
-        backgroundColor: DesignTokens.primaryAccent,
-      ),
-    );
+    // ПРИНУДИТЕЛЬНО обновляем профиль из Supabase
+    await notifier.refreshFromSupabase();
     
-    // Возвращаемся в профиль
-    Navigator.pop(context);
+    // Показываем уведомление об успешном сохранении
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('✅ Данные профиля сохранены!'),
+          backgroundColor: DesignTokens.primaryAccent,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      
+      // Небольшая задержка перед возвратом для синхронизации
+      await Future.delayed(const Duration(milliseconds: 300));
+      
+      // Возвращаемся в профиль
+      Navigator.pop(context);
+    }
   }
 
   @override

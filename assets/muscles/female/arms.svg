@@ -1,0 +1,11 @@
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Female arm muscles - biceps and triceps, more slender proportions -->
+  <!-- Left bicep -->
+  <path d="M80 145 Q70 175 65 210 Q70 215 80 210 Q90 175 85 145 Z" fill="white"/>
+  <!-- Right bicep -->
+  <path d="M220 145 Q230 175 235 210 Q230 215 220 210 Q210 175 215 145 Z" fill="white"/>
+  <!-- Left forearm -->
+  <path d="M65 220 Q55 260 52 300 Q60 305 68 300 Q70 260 68 220 Z" fill="white"/>
+  <!-- Right forearm -->
+  <path d="M235 220 Q245 260 248 300 Q240 305 232 300 Q230 260 232 220 Z" fill="white"/>
+</svg>

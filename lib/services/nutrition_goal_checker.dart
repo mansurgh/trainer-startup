@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,7 +54,7 @@ class NutritionGoalChecker {
     // Если калории и белок в норме - считаем день успешным
     if (caloriesOk && proteinOk) {
       await prefs.setBool('nutrition_completed_${userId}_$dateKey', true);
-      print('[NutritionGoalChecker] ✅ Goals met for $dateKey (Cal: $currentCalories/$goalCalories, Prot: $currentProtein/$goalProtein)');
+      if (kDebugMode) print('[NutritionGoalChecker] ✅ Goals met for $dateKey (Cal: $currentCalories/$goalCalories, Prot: $currentProtein/$goalProtein)');
       // Обновляем статистику Today's Win
       ref?.invalidate(todaysWinProvider);
     } else {

@@ -1,0 +1,23 @@
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Female body front silhouette - more defined waist and curves -->
+  <!-- Head -->
+  <ellipse cx="150" cy="35" rx="25" ry="30" stroke="#333333" stroke-width="2"/>
+  <!-- Neck -->
+  <path d="M138 62 L138 85 L162 85 L162 62" stroke="#333333" stroke-width="2"/>
+  <!-- Shoulders -->
+  <path d="M138 85 L95 100 M162 85 L205 100" stroke="#333333" stroke-width="2"/>
+  <!-- Arms -->
+  <path d="M95 100 L75 140 L65 200 L55 270 L50 320" stroke="#333333" stroke-width="2"/>
+  <path d="M205 100 L225 140 L235 200 L245 270 L250 320" stroke="#333333" stroke-width="2"/>
+  <!-- Torso - female curves with defined waist -->
+  <path d="M138 85 L120 95 L105 130 L100 180 L115 230 L120 280 L115 320" stroke="#333333" stroke-width="2"/>
+  <path d="M162 85 L180 95 L195 130 L200 180 L185 230 L180 280 L185 320" stroke="#333333" stroke-width="2"/>
+  <!-- Hips - wider female hips -->
+  <path d="M115 320 L100 350 L95 390 M185 320 L200 350 L205 390" stroke="#333333" stroke-width="2"/>
+  <!-- Legs -->
+  <path d="M95 390 L90 480 L85 560 L80 580" stroke="#333333" stroke-width="2"/>
+  <path d="M205 390 L210 480 L215 560 L220 580" stroke="#333333" stroke-width="2"/>
+  <!-- Inner legs -->
+  <path d="M130 390 L135 480 L140 560 L145 580" stroke="#333333" stroke-width="2"/>
+  <path d="M170 390 L165 480 L160 560 L155 580" stroke="#333333" stroke-width="2"/>
+</svg>

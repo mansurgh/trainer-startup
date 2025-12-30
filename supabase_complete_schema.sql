@@ -282,7 +282,42 @@ create index body_measurements_user_date_idx on public.body_measurements(user_id
 create index chat_messages_user_created_idx on public.chat_messages(user_id, created_at desc);
 
 -- ============================================
--- 10. VIEWS FOR COMMON QUERIES
+-- 10. PROGRESS PHOTOS TABLE
+-- ============================================
+create table public.progress_photos (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  
+  -- Photo data
+  photo_url text not null,
+  note text,
+  weight numeric(5,2), -- optional weight at time of photo
+  
+  -- Metadata
+  created_at timestamptz default now()
+);
+
+-- Enable RLS
+alter table public.progress_photos enable row level security;
+
+-- Policies
+create policy "Users can view own progress photos"
+  on public.progress_photos for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own progress photos"
+  on public.progress_photos for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete own progress photos"
+  on public.progress_photos for delete
+  using (auth.uid() = user_id);
+
+-- Index for performance
+create index progress_photos_user_date_idx on public.progress_photos(user_id, created_at desc);
+
+-- ============================================
+-- 11. VIEWS FOR COMMON QUERIES
 -- ============================================
 
 -- Daily workout stats

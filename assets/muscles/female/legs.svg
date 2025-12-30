@@ -1,0 +1,15 @@
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Female leg muscles - quadriceps, hamstrings, calves -->
+  <!-- Left quadriceps -->
+  <path d="M100 350 Q90 420 88 480 Q100 485 115 480 Q118 420 115 350 Z" fill="white"/>
+  <!-- Right quadriceps -->
+  <path d="M200 350 Q210 420 212 480 Q200 485 185 480 Q182 420 185 350 Z" fill="white"/>
+  <!-- Left inner thigh (adductors) -->
+  <path d="M125 360 Q130 420 135 470 Q140 475 145 470 Q140 420 135 360 Z" fill="white"/>
+  <!-- Right inner thigh (adductors) -->
+  <path d="M175 360 Q170 420 165 470 Q160 475 155 470 Q160 420 165 360 Z" fill="white"/>
+  <!-- Left calf -->
+  <path d="M88 490 Q82 530 85 565 Q95 570 105 565 Q110 530 105 490 Z" fill="white"/>
+  <!-- Right calf -->
+  <path d="M212 490 Q218 530 215 565 Q205 570 195 565 Q190 530 195 490 Z" fill="white"/>
+</svg>

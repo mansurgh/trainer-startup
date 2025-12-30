@@ -14,6 +14,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.0
+  flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
   image_picker: ^1.1.2
   intl: ^0.20.2
@@ -27,6 +28,7 @@ dependencies:
   shared_preferences: ^2.2.2
   permission_handler: ^11.3.1
   flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
   sqflite: ^2.3.0
   sqflite_common_ffi: ^2.3.0
   path: ^1.9.0
@@ -37,6 +39,9 @@ dependencies:
   supabase_flutter: ^2.8.0
   # Шифрование для хранения токенов
   flutter_secure_storage: ^9.2.2
+  muscle_selector: ^1.0.4
+  # Share functionality
+  share_plus: ^7.2.2
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +58,8 @@ flutter:
     - assets/images/champ_avatar.jpg
     - assets/images/gwagon.png
     - assets/images/muscles/
+    - assets/muscles/
+    - assets/muscles/female/
     - assets/gifs/motivation/m1.gif
     - assets/gifs/motivation/m2.gif
     - assets/logo/trainer_mark.png

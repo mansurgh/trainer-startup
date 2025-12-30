@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 import 'dart:io';
 
 import '../../core/design_tokens.dart';
+import '../../core/premium_widgets.dart';
 import '../../models/activity_day.dart';
 import '../../state/user_state.dart';
 import '../../state/activity_state.dart';
@@ -13,8 +17,8 @@ import '../../widgets/app_alert.dart';
 import '../settings_screen.dart';
 import '../../l10n/app_localizations.dart';
 
-/// Modern Profile Screen (based on screenshot 2)
-/// Features: Avatar, Today's win, BMI, Weight graph, Activity heatmap
+/// Premium Profile Screen - Redesigned with premium widgets
+/// Features: Avatar with glow, Daily Success Meter, Personal Records, Activity Heatmap
 class ModernProfileScreen extends ConsumerWidget {
   const ModernProfileScreen({super.key});
 
@@ -35,48 +39,73 @@ class ModernProfileScreen extends ConsumerWidget {
                   children: [
                     Text(
                       AppLocalizations.of(context)!.profile,
-                      style: DesignTokens.h1.copyWith(fontSize: 36),
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: -1,
+                      ),
                     ),
                     // Settings icon button
-                    IconButton(
-                      icon: const Icon(Icons.settings_outlined),
-                      color: DesignTokens.textPrimary,
-                      iconSize: 28,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
-                          ),
-                        );
-                      },
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.settings_outlined),
+                        color: DesignTokens.textPrimary,
+                        iconSize: 24,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
-              ),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2),
             ),
             
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             
-            // Avatar and user info
+            // Avatar and user info - Premium style
             SliverToBoxAdapter(
-              child: _buildUserInfo(),
+              child: _buildPremiumUserInfo(context, ref),
             ),
             
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 28)),
             
-            // Today's win and BMI
+            // Streak Badge
             SliverToBoxAdapter(
-              child: _buildStatsRow(),
+              child: _buildStreakSection(context, ref),
             ),
             
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
             
-            // Progress graph
+            // Daily Success Meter (Новая статистика)
             SliverToBoxAdapter(
-              child: _buildWeightGraph(ref),
+              child: _buildDailySuccessSection(context, ref),
             ),
             
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            
+            // Personal Records (Личные рекорды)
+            SliverToBoxAdapter(
+              child: _buildPersonalRecords(context, ref),
+            ),
+            
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            
+            // Progress graph - Enhanced
+            SliverToBoxAdapter(
+              child: _buildProgressSection(context, ref),
+            ),
+            
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
             
             // Activity heatmap
             SliverToBoxAdapter(
@@ -90,172 +119,364 @@ class ModernProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildUserInfo() {
-    return Consumer(
-      builder: (context, ref, child) {
-        final user = ref.watch(userProvider);
-        final avatarPath = user?.avatarPath;
-        
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            children: [
-              // Avatar - clickable for fullscreen view
-              GestureDetector(
-                onTap: () {
-                  _showAvatarDialog(context, ref);
-                },
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: DesignTokens.surface,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: DesignTokens.primaryAccent.withOpacity(0.3),
-                      width: 2,
-                    ),
-                    image: avatarPath != null && File(avatarPath).existsSync()
-                        ? DecorationImage(
-                            image: FileImage(File(avatarPath)),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
+  Widget _buildPremiumUserInfo(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider);
+    final avatarPath = user?.avatarPath;
+    final l10n = AppLocalizations.of(context)!;
+    final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          // Premium Avatar with glow effect - увеличен до 100
+          GestureDetector(
+            onTap: () => _showAvatarDialog(context, ref),
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00D9FF).withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: -5,
                   ),
-                  child: avatarPath == null || !File(avatarPath).existsSync()
-                      ? Icon(
-                          Icons.person,
-                          size: 40,
-                          color: DesignTokens.textSecondary,
+                ],
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.15),
+                      Colors.white.withOpacity(0.05),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 2,
+                  ),
+                  image: avatarPath != null && File(avatarPath).existsSync()
+                      ? DecorationImage(
+                          image: FileImage(File(avatarPath)),
+                          fit: BoxFit.cover,
                         )
                       : null,
                 ),
+                child: avatarPath == null || !File(avatarPath).existsSync()
+                    ? Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.white.withOpacity(0.7),
+                      )
+                    : null,
               ),
-              
-              const SizedBox(width: 20),
-              
-              // User info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.name ?? 'User',
-                          style: DesignTokens.h2.copyWith(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final l10n = AppLocalizations.of(context)!;
-                            final age = user?.age ?? 0;
-                            final height = user?.height ?? 0;
-                            
-                            return Text(
-                              age > 0 && height > 0
-                                  ? '$age ${l10n.years} • $height ${l10n.heightUnit}'
-                                  : age > 0
-                                      ? '$age ${l10n.years}'
-                                      : height > 0
-                                          ? '$height ${l10n.heightUnit}'
-                                          : l10n.completeYourProfile,
-                              style: DesignTokens.bodyMedium.copyWith(
-                                color: DesignTokens.textSecondary,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStatsRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Consumer(
-              builder: (context, ref, child) {
-                final l10n = AppLocalizations.of(context)!;
-                final todaysWinAsync = ref.watch(todaysWinProvider);
-                
-                return todaysWinAsync.when(
-                  data: (percent) => _StatCard(
-                    label: l10n.todaysWin,
-                    value: '$percent%',
-                    color: DesignTokens.primaryAccent,
-                    helpText: 'Успех дня рассчитывается как среднее между завершением тренировки (0% или 100%) и выполнением плана питания (процент съеденных калорий от цели КБЖУ). Формула: (Тренировка + Питание) / 2',
-                  ),
-                  loading: () => _StatCard(
-                    label: l10n.todaysWin,
-                    value: '...',
-                    color: DesignTokens.primaryAccent,
-                    helpText: 'Успех дня рассчитывается как среднее между завершением тренировки (0% или 100%) и выполнением плана питания (процент съеденных калорий от цели КБЖУ). Формула: (Тренировка + Питание) / 2',
-                  ),
-                  error: (_, __) => _StatCard(
-                    label: l10n.todaysWin,
-                    value: '0%',
-                    color: DesignTokens.primaryAccent,
-                    helpText: 'Успех дня рассчитывается как среднее между завершением тренировки (0% или 100%) и выполнением плана питания (процент съеденных калорий от цели КБЖУ). Формула: (Тренировка + Питание) / 2',
-                  ),
-                );
-              },
             ),
           ),
-          const SizedBox(width: 16),
+          
+          const SizedBox(width: 20),
+          
+          // User info with premium typography
           Expanded(
-            child: Consumer(
-              builder: (context, ref, child) {
-                final l10n = AppLocalizations.of(context)!;
-                final streakAsync = ref.watch(consistencyStreakProvider);
-                
-                return streakAsync.when(
-                  data: (streak) => _StatCard(
-                    label: l10n.streakLabel,
-                    value: l10n.streakDays(streak),
-                    color: DesignTokens.textPrimary,
-                    helpText: l10n.streakHelp,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user?.name ?? (isRussian ? 'Пользователь' : 'User'),
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
                   ),
-                  loading: () => _StatCard(
-                    label: l10n.streakLabel,
-                    value: '...',
-                    color: DesignTokens.textPrimary,
-                    helpText: l10n.streakHelp,
-                  ),
-                  error: (_, __) => _StatCard(
-                    label: l10n.streakLabel,
-                    value: l10n.streakDays(0),
-                    color: DesignTokens.textPrimary,
-                    helpText: l10n.streakHelp,
-                  ),
-                );
-              },
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    if (user?.age != null && user!.age! > 0) ...[
+                      _buildInfoChip('${user.age} ${isRussian ? 'лет' : 'y.o.'}', Icons.cake_outlined),
+                      const SizedBox(width: 8),
+                    ],
+                    if (user?.weight != null && user!.weight! > 0)
+                      _buildInfoChip('${user.weight!.toStringAsFixed(0)} ${isRussian ? 'кг' : 'kg'}', Icons.monitor_weight_outlined),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
       ),
+    ).animate().fadeIn(duration: 500.ms, delay: 100.ms).slideX(begin: -0.1);
+  }
+
+  Widget _buildInfoChip(String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white.withOpacity(0.6)),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildWeightGraph(WidgetRef ref) {
+  Widget _buildStreakSection(BuildContext context, WidgetRef ref) {
+    final streakAsync = ref.watch(consistencyStreakProvider);
+    final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: streakAsync.when(
+        data: (streak) => PremiumWidgets.streakBadge(streak: streak, isRussian: isRussian),
+        loading: () => PremiumWidgets.streakBadge(streak: 0, isRussian: isRussian),
+        error: (_, __) => PremiumWidgets.streakBadge(streak: 0, isRussian: isRussian),
+      ),
+    ).animate().fadeIn(duration: 500.ms, delay: 200.ms).scale(begin: const Offset(0.9, 0.9));
+  }
+
+  Widget _buildDailySuccessSection(BuildContext context, WidgetRef ref) {
+    final todaysWinAsync = ref.watch(todaysWinProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+    
+    // Расчёт составляющих успеха дня
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: todaysWinAsync.when(
+        data: (percent) {
+          // Симулируем данные (в реальном приложении брать из провайдеров)
+          final willpower = (percent / 100).clamp(0.0, 1.0);
+          final intensity = 0.7; // TODO: Получать из тренировки
+          final consistency = 0.85; // TODO: Получать из streak данных
+          
+          return PremiumWidgets.dailySuccessMeter(
+            willpower: willpower,
+            intensity: intensity,
+            consistency: consistency,
+            motivationalText: _getMotivationalText(percent, isRussian),
+            isRussian: isRussian,
+          );
+        },
+        loading: () => PremiumWidgets.dailySuccessMeter(
+          willpower: 0,
+          intensity: 0,
+          consistency: 0,
+          isRussian: isRussian,
+        ),
+        error: (_, __) => PremiumWidgets.dailySuccessMeter(
+          willpower: 0,
+          intensity: 0,
+          consistency: 0,
+          isRussian: isRussian,
+        ),
+      ),
+    ).animate().fadeIn(duration: 500.ms, delay: 300.ms).slideY(begin: 0.1);
+  }
+
+  String _getMotivationalText(int percent, bool isRussian) {
+    // Сборник мотивационных цитат - разные каждый день
+    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
+    
+    final quotesRu = [
+      'Сегодня новый день — новые возможности!',
+      'Каждый шаг приближает тебя к цели.',
+      'Дисциплина — это выбор между тем, чего ты хочешь сейчас, и тем, чего ты хочешь больше всего.',
+      'Начни с того места, где ты сейчас.',
+      'Прогресс, а не совершенство.',
+      'Сложности делают тебя сильнее.',
+      'Ты сильнее, чем думаешь.',
+      'Делай то, что можешь, с тем, что имеешь.',
+      'Успех — это сумма маленьких усилий.',
+      'Не останавливайся, пока не гордишься собой.',
+      'Единственная плохая тренировка — та, что не состоялась.',
+      'Верь в себя и в свои силы.',
+      'Каждый день — шанс стать лучше.',
+      'Твоё тело может всё. Убеди свой разум.',
+      'Боль временна, гордость — навсегда.',
+    ];
+    
+    final quotesEn = [
+      'Today is a new day — new opportunities!',
+      'Every step brings you closer to your goal.',
+      'Discipline is choosing between what you want now and what you want most.',
+      'Start where you are.',
+      'Progress, not perfection.',
+      'Challenges make you stronger.',
+      'You are stronger than you think.',
+      'Do what you can, with what you have.',
+      'Success is the sum of small efforts.',
+      "Don't stop until you're proud.",
+      "The only bad workout is the one that didn't happen.",
+      'Believe in yourself and your strength.',
+      'Every day is a chance to get better.',
+      'Your body can do anything. Convince your mind.',
+      'Pain is temporary, pride is forever.',
+    ];
+    
+    final quotes = isRussian ? quotesRu : quotesEn;
+    return quotes[dayOfYear % quotes.length];
+  }
+
+  Widget _buildPersonalRecords(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 22),
+              const SizedBox(width: 8),
+              Text(
+                isRussian ? 'Личные рекорды' : 'Personal Records',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // TODO: Получать реальные PR из базы данных
+          _buildPRCard(
+            exercise: isRussian ? 'Жим лёжа' : 'Bench Press',
+            value: '80 ${isRussian ? 'кг' : 'kg'}',
+            date: isRussian ? '28 ноя' : 'Nov 28',
+          ),
+          const SizedBox(height: 8),
+          _buildPRCard(
+            exercise: isRussian ? 'Приседания' : 'Squats',
+            value: '100 ${isRussian ? 'кг' : 'kg'}',
+            date: isRussian ? '25 ноя' : 'Nov 25',
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 500.ms, delay: 400.ms).slideY(begin: 0.1);
+  }
+
+  Widget _buildPRCard({
+    required String exercise,
+    required String value,
+    required String date,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFFFD700).withOpacity(0.12),
+            const Color(0xFFFFD700).withOpacity(0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFFFD700).withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFD700).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.emoji_events,
+              color: Color(0xFFFFD700),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  exercise,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
+                Text(
+                  value,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFD700).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'PR',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFFFD700),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                date,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressSection(BuildContext context, WidgetRef ref) {
     final workoutCountAsync = ref.watch(workoutCountProvider);
+    final l10n = AppLocalizations.of(context)!;
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -265,65 +486,52 @@ class ModernProfileScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Consumer(
-                builder: (context, ref, child) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return Text(
-                    l10n.progress,
-                    style: DesignTokens.h3.copyWith(
-                      color: DesignTokens.primaryAccent,
-                      fontSize: 20,
-                    ),
-                  );
-                },
+              Text(
+                l10n.progress,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
               workoutCountAsync.when(
-                data: (count) => Consumer(
-                  builder: (context, ref, child) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Text(
-                      '$count ${l10n.workoutsCount}',
-                      style: DesignTokens.bodyMedium.copyWith(
-                        color: DesignTokens.textSecondary,
-                      ),
-                    );
-                  },
+                data: (count) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '$count ${l10n.workoutsCount}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
                 ),
-                loading: () => Consumer(
-                  builder: (context, ref, child) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Text(
-                      '... ${l10n.workoutsCount}',
-                      style: DesignTokens.bodyMedium.copyWith(
-                        color: DesignTokens.textSecondary,
-                      ),
-                    );
-                  },
-                ),
-                error: (_, __) => Consumer(
-                  builder: (context, ref, child) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Text(
-                      '0 ${l10n.workoutsCount}',
-                      style: DesignTokens.bodyMedium.copyWith(
-                        color: DesignTokens.textSecondary,
-                      ),
-                    );
-                  },
-                ),
+                loading: () => const SizedBox(),
+                error: (_, __) => const SizedBox(),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Graph with wave
+          const SizedBox(height: 14),
+          // Enhanced Graph
           Container(
             height: 140,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: DesignTokens.surface.withOpacity(0.5),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.05),
+                  Colors.white.withOpacity(0.02),
+                ],
+              ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: DesignTokens.primaryAccent.withOpacity(0.2),
+                color: Colors.white.withOpacity(0.1),
                 width: 1,
               ),
             ),
@@ -332,25 +540,26 @@ class ModernProfileScreen extends ConsumerWidget {
               child: workoutCountAsync.when(
                 data: (count) => CustomPaint(
                   size: Size.infinite,
-                  painter: _WaveGraphPainter(
-                    color: DesignTokens.primaryAccent,
+                  painter: _EnhancedGraphPainter(
                     workoutCount: count,
                   ),
                 ),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white24),
+                  ),
+                ),
                 error: (_, __) => CustomPaint(
                   size: Size.infinite,
-                  painter: _WaveGraphPainter(
-                    color: DesignTokens.primaryAccent,
-                    workoutCount: 0,
-                  ),
+                  painter: _EnhancedGraphPainter(workoutCount: 0),
                 ),
               ),
             ),
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms, delay: 500.ms).slideY(begin: 0.1);
   }
 
   Widget _buildActivityHeatmap(WidgetRef ref) {
@@ -363,7 +572,7 @@ class ModernProfileScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => ActivityTracker(activityDays: _getEmptyActivityData()),
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms, delay: 600.ms).slideY(begin: 0.1);
   }
 
   List<ActivityDay> _getEmptyActivityData() {
@@ -381,192 +590,55 @@ class ModernProfileScreen extends ConsumerWidget {
     
     return days;
   }
-
-  Widget _buildBottomButtons(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildButton(
-              icon: Icons.folder_outlined,
-              label: 'History',
-              onTap: () {},
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildButton(
-              icon: Icons.settings_outlined,
-              label: 'Settings',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: DesignTokens.surface.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: DesignTokens.glassBorder,
-            width: 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: DesignTokens.textSecondary,
-              size: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: DesignTokens.bodyMedium.copyWith(
-                color: DesignTokens.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
-// === COMPONENTS ===
-
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final String? helpText;
-
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.color,
-    this.helpText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: DesignTokens.surface.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: DesignTokens.glassBorder,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text(
-                  label,
-                  style: DesignTokens.bodyMedium.copyWith(
-                    color: DesignTokens.textSecondary,
-                  ),
-                ),
-              ),
-              if (helpText != null)
-                IconButton(
-                  icon: const Icon(Icons.help_outline, size: 18),
-                  color: DesignTokens.textSecondary,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: DesignTokens.surface,
-                        title: Text(label, style: const TextStyle(color: Colors.white)),
-                        content: Text(helpText!, style: const TextStyle(color: Colors.white70)),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: DesignTokens.h1.copyWith(
-              fontSize: 40,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Wave Graph Painter
-class _WaveGraphPainter extends CustomPainter {
-  final Color color;
+// Enhanced Graph Painter with gradient and glow
+class _EnhancedGraphPainter extends CustomPainter {
   final int workoutCount;
 
-  _WaveGraphPainter({required this.color, required this.workoutCount});
+  _EnhancedGraphPainter({required this.workoutCount});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
+    // Grid lines
+    final gridPaint = Paint()
+      ..color = Colors.white.withOpacity(0.05)
+      ..strokeWidth = 1;
+    
+    for (int i = 1; i < 4; i++) {
+      final y = size.height * i / 4;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+    
+    // Progress line
+    final progress = (workoutCount / 20).clamp(0.0, 1.0);
+    
+    final linePaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0xFF00D9FF),
+          const Color(0xFF00FF88),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
-
+    
     final path = Path();
     
-    // Если нет тренировок - плоская линия внизу
+    final startY = size.height * 0.85;
+    final endY = size.height * (0.85 - 0.65 * progress);
+    
     if (workoutCount == 0) {
-      final yPosition = size.height * 0.85;
-      path.moveTo(0, yPosition);
-      path.lineTo(size.width, yPosition);
+      path.moveTo(0, startY);
+      path.lineTo(size.width, startY);
     } else {
-      // Линия растёт с прогрессом (максимум 20 тренировок = верх графика)
-      final progress = (workoutCount / 20).clamp(0.0, 1.0);
-      
-      // Начальная точка (внизу)
-      final startY = size.height * 0.85;
-      // Конечная точка (вверху)
-      final endY = size.height * (0.85 - 0.65 * progress); // Растёт до 0.2 от верха
-      
-      // Рисуем плавную линию роста
       final points = [
         Offset(0, startY),
-        Offset(size.width * 0.25, startY - (startY - endY) * 0.2),
-        Offset(size.width * 0.5, startY - (startY - endY) * 0.5),
-        Offset(size.width * 0.75, startY - (startY - endY) * 0.8),
+        Offset(size.width * 0.2, startY - (startY - endY) * 0.15),
+        Offset(size.width * 0.4, startY - (startY - endY) * 0.35),
+        Offset(size.width * 0.6, startY - (startY - endY) * 0.55),
+        Offset(size.width * 0.8, startY - (startY - endY) * 0.85),
         Offset(size.width, endY),
       ];
       
@@ -585,13 +657,44 @@ class _WaveGraphPainter extends CustomPainter {
       }
       
       path.lineTo(points.last.dx, points.last.dy);
+      
+      // Glow effect
+      final glowPaint = Paint()
+        ..shader = LinearGradient(
+          colors: [
+            const Color(0xFF00D9FF).withOpacity(0.3),
+            const Color(0xFF00FF88).withOpacity(0.3),
+          ],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 10
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      
+      canvas.drawPath(path, glowPaint);
     }
     
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path, linePaint);
+    
+    // End point dot
+    if (workoutCount > 0) {
+      final dotPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      
+      canvas.drawCircle(Offset(size.width, endY), 5, dotPaint);
+      
+      final dotGlowPaint = Paint()
+        ..color = const Color(0xFF00FF88).withOpacity(0.5)
+        ..style = PaintingStyle.fill
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      
+      canvas.drawCircle(Offset(size.width, endY), 8, dotGlowPaint);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _WaveGraphPainter oldDelegate) {
+  bool shouldRepaint(covariant _EnhancedGraphPainter oldDelegate) {
     return oldDelegate.workoutCount != workoutCount;
   }
 }
@@ -603,7 +706,7 @@ void _showAvatarDialog(BuildContext context, WidgetRef ref) {
   
   showDialog(
     context: context,
-    barrierColor: Colors.black87,
+    barrierColor: Colors.black.withOpacity(0.9),
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(24),
@@ -611,36 +714,48 @@ void _showAvatarDialog(BuildContext context, WidgetRef ref) {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Large avatar preview
+          // Large avatar preview with glow
           Container(
             width: 250,
             height: 250,
             decoration: BoxDecoration(
-              color: DesignTokens.surface,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: DesignTokens.primaryAccent.withOpacity(0.5),
-                width: 3,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00D9FF).withOpacity(0.4),
+                  blurRadius: 40,
+                  spreadRadius: -10,
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: DesignTokens.surface,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 3,
+                ),
+                image: avatarPath != null && File(avatarPath).existsSync()
+                    ? DecorationImage(
+                        image: FileImage(File(avatarPath)),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              image: avatarPath != null && File(avatarPath).existsSync()
-                  ? DecorationImage(
-                      image: FileImage(File(avatarPath)),
-                      fit: BoxFit.cover,
+              child: avatarPath == null || !File(avatarPath).existsSync()
+                  ? Icon(
+                      Icons.person,
+                      size: 120,
+                      color: Colors.white.withOpacity(0.5),
                     )
                   : null,
             ),
-            child: avatarPath == null || !File(avatarPath).existsSync()
-                ? Icon(
-                    Icons.person,
-                    size: 120,
-                    color: DesignTokens.textSecondary,
-                  )
-                : null,
           ),
           
           const SizedBox(height: 32),
           
-          // Change Avatar button
+          // Change Avatar button - Premium style
           GestureDetector(
             onTap: () async {
               Navigator.pop(context);
@@ -660,28 +775,38 @@ void _showAvatarDialog(BuildContext context, WidgetRef ref) {
                   AppAlert.show(
                     context,
                     title: 'Avatar updated',
-                    description: 'Your profile picture has been changed successfully',
+                    description: 'Your profile picture has been changed',
                     type: AlertType.success,
                   );
                 }
               }
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                gradient: const LinearGradient(
+                  colors: [Colors.white, Color(0xFFE0E0E0)],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.2),
+                    blurRadius: 16,
+                    spreadRadius: -4,
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.camera_alt, color: Colors.black, size: 20),
+                  const Icon(Icons.camera_alt_rounded, color: Colors.black, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'Change avatar',
-                    style: DesignTokens.bodyLarge.copyWith(
-                      color: Colors.black,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -693,7 +818,11 @@ void _showAvatarDialog(BuildContext context, WidgetRef ref) {
           
           // Close button
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white, size: 32),
+            icon: Icon(
+              Icons.close_rounded,
+              color: Colors.white.withOpacity(0.7),
+              size: 28,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ],

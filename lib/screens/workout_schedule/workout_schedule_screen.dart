@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/workout_day.dart';
@@ -6,6 +7,7 @@ import '../../models/exercise.dart';
 import '../../models/muscle_group.dart';
 import '../../services/workout_repository.dart';
 import '../../theme/tokens.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/app_alert.dart';
 import '../workout_screen_improved.dart';
 import '../ai_chat_screen.dart';
@@ -56,7 +58,7 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
       
       if (mounted) setState(() {});
     } catch (e) {
-      print('[WorkoutSchedule] Error loading completed days: $e');
+      if (kDebugMode) print('[WorkoutSchedule] Error loading completed days: $e');
     }
   }
 
@@ -98,7 +100,7 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
         final savedExercises = prefs.getStringList('custom_workout_${userId}_$dateKey');
         
         if (savedExercises != null && savedExercises.isNotEmpty) {
-          print('[Workout] Loading custom workout for $dateKey: $savedExercises');
+          if (kDebugMode) print('[Workout] Loading custom workout for $dateKey: $savedExercises');
           
           // Создаём упражнения из сохранённых названий
           final customExercises = savedExercises.map<Exercise>((name) {
@@ -121,7 +123,7 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
         }
       }
     } catch (e) {
-      print('[Workout] Error loading custom workouts: $e');
+      if (kDebugMode) print('[Workout] Error loading custom workouts: $e');
     }
   }
 
@@ -140,7 +142,7 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: T.bg,
+      backgroundColor: kOledBlack,
       body: SafeArea(
         child: _isLoading 
           ? _buildLoadingState()
@@ -152,9 +154,9 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    return Center(
       child: CircularProgressIndicator(
-        color: T.accent,
+        color: kElectricAmberStart,
         strokeWidth: 2,
       ),
     );
@@ -165,16 +167,16 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline,
-            color: T.textSec,
+            color: kTextSecondary,
             size: 48,
           ),
           const SizedBox(height: 16),
           Text(
             _error ?? 'Something went wrong',
-            style: const TextStyle(
-              color: T.textSec,
+            style: TextStyle(
+              color: kTextSecondary,
               fontSize: 16,
             ),
           ),
@@ -183,14 +185,16 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
             onTap: _loadWeekPlan,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: const BoxDecoration(
-                color: T.accent,
-                borderRadius: BorderRadius.all(T.r10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [kElectricAmberStart, kElectricAmberEnd],
+                ),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Text(
                 'Retry',
                 style: TextStyle(
-                  color: T.text,
+                  color: kOledBlack,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -205,20 +209,25 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       child: Padding(
-        padding: T.p16,
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
             
-            // Header
-            Text(
-              l10n.workoutScheduleTitle,
-              style: const TextStyle(
-                color: T.text,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
+            // Header with gradient text
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [kElectricAmberStart, kElectricAmberEnd],
+              ).createShader(bounds),
+              child: Text(
+                l10n.workoutScheduleTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
+                ),
               ),
             ),
             
@@ -240,8 +249,8 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
             // Current Day Title
             Text(
               _currentDay.title,
-              style: const TextStyle(
-                color: T.text,
+              style: TextStyle(
+                color: kTextPrimary,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -273,20 +282,21 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: const BoxDecoration(
-                    color: T.cardElevated,
-                    borderRadius: BorderRadius.all(T.r16),
+                  decoration: BoxDecoration(
+                    color: kObsidianSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: kObsidianBorder),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.chat_bubble_outline, color: T.text, size: 20),
+                      Icon(Icons.chat_bubble_outline, color: kElectricAmberStart, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         l10n.aiTrainerChat,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: T.text,
+                        style: TextStyle(
+                          color: kTextPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -346,14 +356,22 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
+                    gradient: _currentDay.exercises.isEmpty 
+                        ? null
+                        : const LinearGradient(
+                            colors: [kElectricAmberStart, kElectricAmberEnd],
+                          ),
                     color: _currentDay.exercises.isEmpty 
-                        ? T.cardElevated.withOpacity(0.3)
-                        : T.cardElevated,
-                    borderRadius: const BorderRadius.all(T.r16),
-                    border: Border.all(
-                      color: T.text.withOpacity(_currentDay.exercises.isEmpty ? 0.1 : 0.3),
-                      width: 1,
-                    ),
+                        ? kObsidianSurface.withOpacity(0.3)
+                        : null,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: _currentDay.exercises.isEmpty ? null : [
+                      BoxShadow(
+                        color: kElectricAmberStart.withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -362,7 +380,9 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
                         _currentDay.exercises.isEmpty 
                             ? Icons.block 
                             : Icons.play_circle_outline, 
-                        color: T.text.withOpacity(_currentDay.exercises.isEmpty ? 0.3 : 1.0), 
+                        color: _currentDay.exercises.isEmpty 
+                            ? kTextTertiary 
+                            : kOledBlack, 
                         size: 24,
                       ),
                       const SizedBox(width: 8),
@@ -372,9 +392,11 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
                             : _completedDays[_selectedDayIndex] ? l10n.startAgain : l10n.startWorkout,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: T.text.withOpacity(_currentDay.exercises.isEmpty ? 0.3 : 1.0),
+                          color: _currentDay.exercises.isEmpty 
+                              ? kTextTertiary 
+                              : kOledBlack,
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -392,15 +414,16 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
                 onTap: _showCustomizeSheet,
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: const BoxDecoration(
-                    color: T.cardElevated,
-                    borderRadius: BorderRadius.all(T.r16),
+                  decoration: BoxDecoration(
+                    color: kObsidianSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: kObsidianBorder),
                   ),
                   child: Text(
                     l10n.customizeWorkout,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: T.text,
+                    style: TextStyle(
+                      color: kTextPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -422,22 +445,22 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: T.card,
-        borderRadius: const BorderRadius.all(T.r16),
-        border: Border.all(color: T.border, width: 0.5),
+        color: kObsidianSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kObsidianBorder, width: 0.5),
       ),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.spa_outlined,
-            color: T.textSec,
+            color: kSuccessGreen.withOpacity(0.7),
             size: 48,
           ),
           const SizedBox(height: 12),
           Text(
             l10n.restDayTitle,
-            style: const TextStyle(
-              color: T.text,
+            style: TextStyle(
+              color: kTextPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -445,8 +468,8 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
           const SizedBox(height: 8),
           Text(
             l10n.restDayDesc,
-            style: const TextStyle(
-              color: T.textSec,
+            style: TextStyle(
+              color: kTextSecondary,
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
@@ -477,7 +500,7 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
       ),
     ).then((selectedExercises) {
       if (selectedExercises != null && selectedExercises is List<String>) {
-        print('Selected exercises: $selectedExercises');
+        if (kDebugMode) print('Selected exercises: $selectedExercises');
         
         // Создаем новые упражнения из выбранных
         final newExercises = selectedExercises.map<Exercise>((name) {
@@ -514,9 +537,9 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
       final exerciseNames = day.exercises.map((e) => e.name).toList();
       await prefs.setStringList('custom_workout_${userId}_$dateKey', exerciseNames);
       
-      print('[Workout] Saved custom workout for $dateKey: $exerciseNames');
+      if (kDebugMode) print('[Workout] Saved custom workout for $dateKey: $exerciseNames');
     } catch (e) {
-      print('[Workout] Error saving custom workout: $e');
+      if (kDebugMode) print('[Workout] Error saving custom workout: $e');
     }
   }
   

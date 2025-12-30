@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:async';
 
 import '../core/design_tokens.dart';
@@ -627,9 +628,16 @@ class _WorkoutCompleteDialog extends StatelessWidget {
                 const SizedBox(width: DesignTokens.space12),
                 Expanded(
                   child: PremiumComponents.glassButton(
-                    onPressed: () {
-                      // TODO: Share workout
-                      Navigator.of(context).pop();
+                    onPressed: () async {
+                      await Share.share(
+                        '🏆 Я завершил тренировку в PulseFit Pro! 💪\n\n'
+                        'Присоединяйся к тренировкам с AI-тренером!\n'
+                        '#PulseFitPro #Fitness #Workout',
+                        subject: 'Моя тренировка в PulseFit Pro',
+                      );
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
                     },
                     isPrimary: true,
                     child: const Text('Поделиться'),

@@ -1,24 +1,23 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/user_model.dart';
 import '../models/message_model.dart';
 import '../models/ai_response.dart';
 import '../models/daily_plan_model.dart';
 import '../services/ai_service.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
+import '../services/auth_service.dart';
+import '../services/profile_service.dart';
+
+// Реэкспортируем userProvider из user_state.dart
+export 'user_state.dart' show userProvider;
 
 // Services
 final aiServiceProvider = Provider((_) => AIService());
 final firestoreProvider = Provider((_) => FirestoreService());
 final storageProvider = Provider((_) => StorageService());
-
-// User
-class UserNotifier extends StateNotifier<UserModel?> {
-  UserNotifier(): super(null);
-  void set(UserModel user) => state = user;
-}
-final userProvider = StateNotifierProvider<UserNotifier, UserModel?>((_) => UserNotifier());
+final authServiceProvider = Provider((_) => AuthService());
+final profileServiceProvider = Provider((_) => ProfileService());
 
 // Daily plan (simple per-today plan)
 class PlanNotifier extends StateNotifier<DailyPlanModel?> {

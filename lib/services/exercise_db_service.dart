@@ -1,5 +1,6 @@
 // lib/services/exercise_db_service.dart
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/exercise.dart';
 
@@ -71,26 +72,26 @@ class ExerciseDbService {
       final encoded = Uri.encodeComponent(searchName);
       final uri = Uri.parse('$_base/exercises/name/$encoded?limit=$limit');
       
-      print('[ExerciseDB] Searching for: "$searchName" at $uri');
+      if (kDebugMode) print('[ExerciseDB] Searching for: "$searchName" at $uri');
       final res = await http.get(uri, headers: _headers);
 
-      print('[ExerciseDB] Response status: ${res.statusCode}');
+      if (kDebugMode) print('[ExerciseDB] Response status: ${res.statusCode}');
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        print('[ExerciseDB] Response data: $data');
+        if (kDebugMode) print('[ExerciseDB] Response data: $data');
         
         if (data is List && data.isNotEmpty) {
           return Exercise.fromJson(Map<String, dynamic>.from(data.first as Map));
         }
-        print('[ExerciseDB] No exercises found for "$searchName"');
+        if (kDebugMode) print('[ExerciseDB] No exercises found for "$searchName"');
         return null;
       }
       
       // Логируем ошибку и возвращаем null вместо исключения
-      print('[ExerciseDB] Request failed: ${res.statusCode} ${res.body}');
+      if (kDebugMode) print('[ExerciseDB] Request failed: ${res.statusCode} ${res.body}');
       return null;
     } catch (e) {
-      print('[ExerciseDB] Exception: $e');
+      if (kDebugMode) print('[ExerciseDB] Exception: $e');
       return null;
     }
   }
@@ -112,10 +113,10 @@ class ExerciseDbService {
         return null;
       }
       
-      print('[ExerciseDB] GetById failed: ${res.statusCode}');
+      if (kDebugMode) print('[ExerciseDB] GetById failed: ${res.statusCode}');
       return null;
     } catch (e) {
-      print('[ExerciseDB] GetById exception: $e');
+      if (kDebugMode) print('[ExerciseDB] GetById exception: $e');
       return null;
     }
   }

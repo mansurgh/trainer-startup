@@ -1,0 +1,9 @@
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Female back muscles - latissimus dorsi, adapted for female proportions -->
+  <!-- Left lat -->
+  <path d="M115 120 Q100 160 105 220 Q110 240 125 235 Q135 200 130 150 Q125 120 115 120 Z" fill="white"/>
+  <!-- Right lat -->
+  <path d="M185 120 Q200 160 195 220 Q190 240 175 235 Q165 200 170 150 Q175 120 185 120 Z" fill="white"/>
+  <!-- Lower back (erector spinae) -->
+  <path d="M135 240 Q140 280 140 310 Q145 315 150 315 Q155 315 160 310 Q160 280 165 240 Q155 235 150 235 Q145 235 135 240 Z" fill="white"/>
+</svg>

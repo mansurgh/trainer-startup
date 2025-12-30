@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:ui';
 
 import 'tabs/nutrition_screen_v2.dart';
-import 'tabs/modern_profile_screen.dart';
+import 'profile_screen.dart';
 import 'workout_schedule/workout_schedule_screen.dart';
 import '../core/design_tokens.dart';
+import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 
-/// Modern Elite Fitness App (3 tabs)
+/// Modern Elite Fitness App (3 tabs) — iOS 26 Liquid Glass Style
 class HomeScreen extends ConsumerStatefulWidget {
   final int initialIndex;
   const HomeScreen({super.key, this.initialIndex = 0});
@@ -30,54 +32,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final pages = const [
     WorkoutScheduleScreen(),        // Workout
     NutritionScreenV2(),            // Nutrition
-    ModernProfileScreen(),          // Profile
+    ProfileScreen(),                // Profile (Premium Dark Industrial)
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Debug info
-    print('[HomeScreen] Building with index: $_index, showing: ${pages[_index].runtimeType}');
-    
     return Container(
-      decoration: BoxDecoration(
-        gradient: DesignTokens.backgroundGradient,
+      decoration: const BoxDecoration(
+        // Premium Dark Industrial - OLED Black base
+        color: kOledBlack,
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: pages[_index]
-              .animate()
-              .fadeIn(duration: DesignTokens.durationMedium)
-              .slideX(begin: 0.1, end: 0),
-        ),
-        bottomNavigationBar: _buildGlassBottomNavigation(),
+        extendBody: true, // Content extends behind tab bar
+        body: pages[_index]
+            .animate()
+            .fadeIn(duration: kDurationMedium),
+        bottomNavigationBar: _buildIOSTabBar(),
       ),
     );
   }
 
-  Widget _buildGlassBottomNavigation() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+  /// iOS 26 style tab bar — floating ovoid liquid glass pill
+  Widget _buildIOSTabBar() {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 40,
+        right: 40,
+        bottom: bottomPadding + 20,
+      ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(32), // Pill shape
         child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: DesignTokens.glassBlur,
-            sigmaY: DesignTokens.glassBlur,
-          ),
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
           child: Container(
-            height: 75,
+            height: 72,
             decoration: BoxDecoration(
-              color: DesignTokens.surface.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(30),
+              // Liquid glass gradient
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.15),
+                  Colors.white.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(32),
               border: Border.all(
-                color: DesignTokens.primaryAccent.withOpacity(0.2),
-                width: 1.5,
+                color: Colors.white.withOpacity(0.2),
+                width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 24,
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 0,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -85,69 +96,76 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildNavItem(0, Icons.fitness_center_rounded, AppLocalizations.of(context)?.workout ?? 'Workout'),
-                _buildNavItem(1, Icons.restaurant_rounded, AppLocalizations.of(context)?.nutrition ?? 'Nutrition'),
-                _buildNavItem(2, Icons.person_rounded, AppLocalizations.of(context)?.profile ?? 'Profile'),
+                _buildIOSTabItem(
+                  index: 0,
+                  icon: Icons.fitness_center_outlined,
+                  activeIcon: Icons.fitness_center_rounded,
+                  label: AppLocalizations.of(context)?.workout ?? 'Workout',
+                ),
+                _buildIOSTabItem(
+                  index: 1,
+                  icon: Icons.restaurant_outlined,
+                  activeIcon: Icons.restaurant_rounded,
+                  label: AppLocalizations.of(context)?.nutrition ?? 'Nutrition',
+                ),
+                _buildIOSTabItem(
+                  index: 2,
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                  label: AppLocalizations.of(context)?.profile ?? 'Profile',
+                ),
               ],
             ),
           ),
         ),
       ),
-    ).animate()
-      .slideY(begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutCubic);
+    );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
+  Widget _buildIOSTabItem({
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+  }) {
     final isSelected = _index == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() => _index = index);
-        },
-        child: Container(
-          height: 75,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isSelected 
-                      ? DesignTokens.primaryAccent
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: isSelected ? [
-                    BoxShadow(
-                      color: DesignTokens.primaryAccent.withOpacity(0.5),
-                      blurRadius: 16,
-                      spreadRadius: 0,
-                    ),
-                  ] : null,
-                ),
-                child: Icon(
-                  icon,
-                  color: isSelected 
-                      ? Colors.black
-                      : DesignTokens.textSecondary,
-                  size: 24,
-                ),
+    
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _index = index);
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: isSelected ? BoxDecoration(
+          color: kElectricAmberStart.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(20),
+        ) : null,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              size: 26,
+              color: isSelected ? kElectricAmberStart : Colors.white.withOpacity(0.6),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? kElectricAmberStart : Colors.white.withOpacity(0.6),
+                letterSpacing: -0.2,
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: DesignTokens.caption.copyWith(
-                  color: isSelected 
-                      ? DesignTokens.textPrimary
-                      : DesignTokens.textTertiary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  fontSize: 10,
-                  letterSpacing: 0.5,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/design_tokens.dart';
@@ -48,16 +49,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         final previousUserId = prefs.getString('user_id');
         final newUserId = response.user!.id;
         
-        print('[Login] Previous user: ${previousUserId ?? "none"}, New user: $newUserId');
+        if (kDebugMode) print('[Login] Previous user: ${previousUserId ?? "none"}, New user: $newUserId');
         
         // Если это другой пользователь - очищаем данные предыдущего
         if (previousUserId != null && previousUserId != newUserId) {
-          print('[Login] Different user detected - clearing previous user data');
+          if (kDebugMode) print('[Login] Different user detected - clearing previous user data');
           final keys = prefs.getKeys().toList();
           for (final key in keys) {
             if (key.contains('_${previousUserId}_') || key.contains('_$previousUserId')) {
               await prefs.remove(key);
-              print('[Login] Removed old key: $key');
+              if (kDebugMode) print('[Login] Removed old key: $key');
             }
           }
         }
@@ -65,7 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Сохраняем ID нового пользователя
         await prefs.setString('user_id', newUserId);
         await prefs.setString('user_email', _emailController.text.trim());
-        print('[Login] ✅ User ID saved: $newUserId');
+        if (kDebugMode) print('[Login] ✅ User ID saved: $newUserId');
         
         // Navigate to home screen
         Navigator.of(context).pushReplacement(

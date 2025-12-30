@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -85,7 +86,7 @@ class MealScheduleNotifier extends StateNotifier<List<MealGroup>> {
       final currentUserId = _currentUserId;
       if (_lastUserId != null && _lastUserId != currentUserId) {
         // Пользователь изменился - сбрасываем состояние
-        print('[MealSchedule] User changed from $_lastUserId to $currentUserId, resetting state');
+        if (kDebugMode) print('[MealSchedule] User changed from $_lastUserId to $currentUserId, resetting state');
         state = [];
       }
       _lastUserId = currentUserId;
@@ -96,7 +97,7 @@ class MealScheduleNotifier extends StateNotifier<List<MealGroup>> {
       if (mealsJson != null) {
         final List<dynamic> decoded = jsonDecode(mealsJson);
         state = decoded.map((e) => MealGroup.fromJson(e)).toList();
-        print('[MealSchedule] Loaded ${state.length} meals for user $currentUserId');
+        if (kDebugMode) print('[MealSchedule] Loaded ${state.length} meals for user $currentUserId');
       } else {
         // Дефолтные приемы пищи для нового пользователя
         state = [
@@ -107,7 +108,7 @@ class MealScheduleNotifier extends StateNotifier<List<MealGroup>> {
         await _saveMeals();
       }
     } catch (e) {
-      print('[MealSchedule] Error loading meals: $e');
+      if (kDebugMode) print('[MealSchedule] Error loading meals: $e');
       state = [
         MealGroup('Завтрак', [MealItem(name: 'Овсянка', grams: 300, kcal: 350, protein: 12, fat: 7, carbs: 58)]),
         MealGroup('Обед', [MealItem(name: 'Курица+рис', grams: 400, kcal: 520, protein: 45, fat: 8, carbs: 65)]),
@@ -127,9 +128,9 @@ class MealScheduleNotifier extends StateNotifier<List<MealGroup>> {
       final mealsJson = jsonEncode(state.map((e) => e.toJson()).toList());
       final userId = await _getUserId();
       await prefs.setString('\${_storageKey}_\$userId', mealsJson);
-      print('[MealSchedule] Saved \${state.length} meals');
+      if (kDebugMode) print('[MealSchedule] Saved \${state.length} meals');
     } catch (e) {
-      print('[MealSchedule] Error saving meals: \$e');
+      if (kDebugMode) print('[MealSchedule] Error saving meals: \$e');
     }
   }
 

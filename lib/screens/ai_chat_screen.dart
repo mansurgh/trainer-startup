@@ -1,15 +1,21 @@
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
 
 import '../core/design_tokens.dart';
+import '../theme/app_theme.dart';
 import '../core/premium_components.dart';
+import '../widgets/app_alert.dart';
 import '../services/ai_service.dart';
 import '../services/workout_service.dart';
+import '../services/notification_service.dart';
 import '../state/app_providers.dart';
+import '../state/user_state.dart';
 import '../utils/chat_command_parser.dart';
 import '../screens/tabs/nutrition_screen_v2.dart';
 
@@ -36,51 +42,82 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeChat();
+    // Defer initialization until after first frame to have proper context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeChat();
+    });
   }
 
   void _initializeChat() {
+    final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+    
     String welcomeMessage;
     switch (widget.chatType) {
       case 'workout':
-        welcomeMessage = '💪 Привет! Я ваш AI тренер.\n\n'
-                        'Доступные команды:\n'
-                        '• /plan - создать план тренировок\n'
-                        '• /form - проверить технику упражнения\n'
-                        '• /advice - получить совет по тренировкам\n'
-                        '• /progress - анализ прогресса\n\n'
-                        'Или просто задайте вопрос!';
+        welcomeMessage = isRussian
+            ? '💪 Привет! Я ваш AI тренер.\n\n'
+              'Доступные команды:\n'
+              '• /plan - создать план тренировок\n'
+              '• /form - проверить технику упражнения\n'
+              '• /advice - получить совет по тренировкам\n'
+              '• /progress - анализ прогресса\n\n'
+              'Или просто задайте вопрос!'
+            : '💪 Hi! I am your AI trainer.\n\n'
+              'Available commands:\n'
+              '• /plan - create workout plan\n'
+              '• /form - check exercise form\n'
+              '• /advice - get training advice\n'
+              '• /progress - progress analysis\n\n'
+              'Or just ask a question!';
         break;
       case 'nutrition':
-        welcomeMessage = '🥗 Здравствуйте! Я AI диетолог.\n\n'
-                        'Доступные команды:\n'
-                        '• /meal - создать план питания\n'
-                        '• /analyze - проанализировать фото еды\n'
-                        '• /recipe - получить рецепт\n'
-                        '• /calories - рассчитать калорийность\n\n'
-                        'Чем могу помочь?';
+        welcomeMessage = isRussian
+            ? '🥗 Здравствуйте! Я AI диетолог.\n\n'
+              'Доступные команды:\n'
+              '• /meal - создать план питания\n'
+              '• /analyze - проанализировать фото еды\n'
+              '• /recipe - получить рецепт\n'
+              '• /calories - рассчитать калорийность\n\n'
+              'Чем могу помочь?'
+            : '🥗 Hello! I am your AI nutritionist.\n\n'
+              'Available commands:\n'
+              '• /meal - create meal plan\n'
+              '• /analyze - analyze food photo\n'
+              '• /recipe - get a recipe\n'
+              '• /calories - calculate calories\n\n'
+              'How can I help?';
         break;
       default:
-        welcomeMessage = '👋 Привет! Я ваш персональный AI фитнес-помощник.\n\n'
-                        'Могу помочь с:\n'
-                        '• Тренировками и упражнениями\n'
-                        '• Планированием питания\n'
-                        '• Мотивацией и советами\n'
-                        '• Анализом прогресса\n\n'
-                        'Что вас интересует?';
+        welcomeMessage = isRussian
+            ? '👋 Привет! Я ваш персональный AI фитнес-помощник.\n\n'
+              'Могу помочь с:\n'
+              '• Тренировками и упражнениями\n'
+              '• Планированием питания\n'
+              '• Мотивацией и советами\n'
+              '• Анализом прогресса\n\n'
+              'Что вас интересует?'
+            : '👋 Hi! I am your personal AI fitness assistant.\n\n'
+              'I can help with:\n'
+              '• Workouts and exercises\n'
+              '• Meal planning\n'
+              '• Motivation and tips\n'
+              '• Progress analysis\n\n'
+              'What are you interested in?';
     }
 
-    _messages.add(ChatMessage(
-      text: welcomeMessage,
-      isFromUser: false,
-      timestamp: DateTime.now(),
-    ));
+    setState(() {
+      _messages.add(ChatMessage(
+        text: welcomeMessage,
+        isFromUser: false,
+        timestamp: DateTime.now(),
+      ));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DesignTokens.bgBase,
+      backgroundColor: kOledBlack, // OLED Black background
       appBar: _buildChatAppBar(),
       body: Column(
         children: [
@@ -93,10 +130,10 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   PreferredSizeWidget _buildChatAppBar() {
     return AppBar(
-      backgroundColor: DesignTokens.surface,
+      backgroundColor: kOledBlack,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: DesignTokens.textPrimary),
+        icon: const Icon(Icons.arrow_back, color: kTextPrimary),
         onPressed: () => Navigator.pop(context),
       ),
       title: Row(
@@ -105,12 +142,12 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: DesignTokens.cardSurface,
+              gradient: kElectricAmberGradient,
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.psychology_rounded,
-              color: DesignTokens.textPrimary,
+              color: Colors.white,
               size: 24,
             ),
           ),
@@ -122,16 +159,18 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                 Text(
                   _getChatTitle(),
                   style: const TextStyle(
-                    color: DesignTokens.textPrimary,
+                    color: kTextPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (_isTyping)
                   Text(
-                    'печатает...',
-                    style: TextStyle(
-                      color: DesignTokens.textSecondary,
+                    Localizations.localeOf(context).languageCode == 'ru' 
+                        ? 'печатает...' 
+                        : 'typing...',
+                    style: const TextStyle(
+                      color: kInfoCyan,
                       fontSize: 13,
                     ),
                   ),
@@ -145,7 +184,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   Widget _buildMessagesList() {
     return Container(
-      color: DesignTokens.bgBase,
+      color: kOledBlack,
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -174,12 +213,12 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
               height: 32,
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: DesignTokens.cardSurface,
+                gradient: kElectricAmberGradient,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.psychology_rounded,
-                color: DesignTokens.textSecondary,
+                color: Colors.white,
                 size: 18,
               ),
             ),
@@ -191,16 +230,22 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.7,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isFromUser 
-                    ? const Color(0xFF2B5278) // Telegram синий для исходящих
-                    : DesignTokens.surface,
+                    ? kInfoCyan.withOpacity(0.25) // Neon Cyan для пользователя
+                    : kObsidianSurface.withOpacity(0.6), // Темно-серый для AI
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
                   bottomLeft: isFromUser ? const Radius.circular(18) : const Radius.circular(4),
                   bottomRight: isFromUser ? const Radius.circular(4) : const Radius.circular(18),
+                ),
+                border: Border.all(
+                  color: isFromUser
+                      ? kInfoCyan.withOpacity(0.3)
+                      : Colors.white.withOpacity(0.1),
+                  width: 1,
                 ),
               ),
               child: Column(
@@ -225,7 +270,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                     Text(
                       message.text,
                       style: const TextStyle(
-                        color: DesignTokens.textPrimary,
+                        color: kTextPrimary,
                         fontSize: 15,
                         height: 1.3,
                       ),
@@ -242,8 +287,8 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                         _formatTime(message.timestamp),
                         style: TextStyle(
                           color: isFromUser
-                              ? DesignTokens.textPrimary.withOpacity(0.6)
-                              : DesignTokens.textSecondary,
+                              ? kTextPrimary.withOpacity(0.6)
+                              : kTextSecondary,
                           fontSize: 11,
                         ),
                       ),
@@ -252,7 +297,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                         Icon(
                           Icons.done_all,
                           size: 14,
-                          color: DesignTokens.textPrimary.withOpacity(0.6),
+                          color: kInfoCyan.withOpacity(0.8),
                         ),
                       ],
                     ],
@@ -272,138 +317,200 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
 
   Widget _buildInputArea() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        color: DesignTokens.surface,
-        border: Border(
-          top: BorderSide(
-            color: DesignTokens.cardSurface,
-            width: 1,
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Container(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 12,
+            bottom: bottomPadding + 12,
           ),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Предпросмотр выбранного изображения
-          if (_selectedImagePath != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: DesignTokens.cardSurface,
-                borderRadius: BorderRadius.circular(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withOpacity(0.08),
+                Colors.white.withOpacity(0.03),
+              ],
+            ),
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 0.5,
               ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(_selectedImagePath!),
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Image preview
+              if (_selectedImagePath != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: kInfoCyan.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Изображение прикреплено',
-                      style: TextStyle(
-                        color: DesignTokens.textSecondary,
-                        fontSize: 14,
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.file(
+                          File(_selectedImagePath!),
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          Localizations.localeOf(context).languageCode == 'ru'
+                              ? 'Изображение прикреплено'
+                              : 'Image attached',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() => _selectedImagePath = null);
+                        },
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: Colors.white.withOpacity(0.6),
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              
+              // Поле ввода и кнопки
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Кнопка прикрепления фото
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _pickImage();
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.15),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.attach_file_rounded,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 22,
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: DesignTokens.textSecondary, size: 20),
-                    onPressed: () {
-                      setState(() {
-                        _selectedImagePath = null;
-                      });
+                  
+                  // Поле ввода - glassmorphic pill
+                  Expanded(
+                    child: Container(
+                      constraints: const BoxConstraints(maxHeight: 120, minHeight: 44),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.15),
+                          width: 1,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: Localizations.localeOf(context).languageCode == 'ru'
+                              ? 'Сообщение…'
+                              : 'Message…',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 15,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 10),
+                  
+                  // Send button - amber gradient
+                  GestureDetector(
+                    onTap: _isTyping ? null : () {
+                      HapticFeedback.mediumImpact();
+                      _sendMessage();
                     },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: kElectricAmberGradient,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: kElectricAmberStart.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: _isTyping
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                    ),
                   ),
                 ],
               ),
-            ),
-          
-          // Поле ввода и кнопки
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Кнопка прикрепления фото
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: DesignTokens.cardSurface,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.attach_file, color: DesignTokens.textSecondary),
-                  onPressed: _pickImage,
-                  padding: const EdgeInsets.all(8),
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-              
-              // Поле ввода
-              Expanded(
-                child: Container(
-                  constraints: const BoxConstraints(maxHeight: 120),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.cardSurface,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: _messageController,
-                    style: const TextStyle(
-                      color: DesignTokens.textPrimary,
-                      fontSize: 15,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Сообщение',
-                      hintStyle: TextStyle(
-                        color: DesignTokens.textSecondary,
-                        fontSize: 15,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    ),
-                    maxLines: null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(width: 8),
-              
-              // Кнопка отправки
-              Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2B5278), // Telegram синий
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: _isTyping
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : const Icon(Icons.send, color: Colors.white, size: 20),
-                  onPressed: _isTyping ? null : _sendMessage,
-                  padding: const EdgeInsets.all(10),
-                  constraints: const BoxConstraints(),
-                ),
-              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -568,6 +675,37 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
   
   Future<void> _pickImage() async {
+    // Check platform - ImagePicker camera doesn't work on Windows/Linux/macOS
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      // On desktop - only gallery is available
+      try {
+        final XFile? image = await _imagePicker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+        
+        if (image != null) {
+          setState(() {
+            _selectedImagePath = image.path;
+          });
+        }
+      } catch (e) {
+        // Silently ignore - gallery might not be supported
+        if (mounted) {
+          AppAlert.showError(
+            context, 
+            Localizations.localeOf(context).languageCode == 'ru'
+                ? 'Выбор изображений недоступен'
+                : 'Image selection not available',
+          );
+        }
+      }
+      return;
+    }
+    
+    // Mobile platforms - show picker options
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -582,12 +720,14 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Не удалось выбрать изображение: $e'),
-          backgroundColor: DesignTokens.error,
-        ),
-      );
+      if (mounted) {
+        AppAlert.showError(
+          context, 
+          Localizations.localeOf(context).languageCode == 'ru'
+              ? 'Не удалось выбрать изображение'
+              : 'Failed to pick image',
+        );
+      }
     }
   }
 
@@ -600,7 +740,8 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   
   Future<void> _handleCommand(CommandResult command) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('user_id') ?? 'anonymous';
+    final user = ref.read(userProvider);
+    final userId = user?.id ?? 'anonymous';
     
     switch (command.type) {
       case CommandType.updateNutrition:
@@ -641,6 +782,144 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
             ));
           });
         }
+        break;
+      
+      case CommandType.setGoal:
+        final goal = command.data['goal'] as String;
+        // Обновляем через userProvider для синхронизации с Supabase
+        await ref.read(userProvider.notifier).setParams(goal: goal);
+        break;
+      
+      case CommandType.setLevel:
+        final level = command.data['level'] as String;
+        await prefs.setString('user_level_$userId', level);
+        break;
+      
+      case CommandType.setWeight:
+        final weight = command.data['weight'] as double;
+        // Обновляем через userProvider для синхронизации с Supabase
+        await ref.read(userProvider.notifier).setParams(weight: weight);
+        break;
+      
+      case CommandType.setHeight:
+        final height = command.data['height'] as int;
+        // Обновляем через userProvider для синхронизации с Supabase
+        await ref.read(userProvider.notifier).setParams(height: height);
+        break;
+      
+      case CommandType.setAge:
+        final age = command.data['age'] as int;
+        // Обновляем через userProvider для синхронизации с Supabase
+        await ref.read(userProvider.notifier).setParams(age: age);
+        break;
+      
+      case CommandType.setLanguage:
+        final language = command.data['language'] as String;
+        await prefs.setString('app_language', language);
+        // Требуется перезапуск приложения для применения
+        setState(() {
+          _messages.add(ChatMessage(
+            text: '🔄 Перезапустите приложение для применения нового языка.',
+            isFromUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+        break;
+      
+      case CommandType.toggleNotifications:
+        final current = prefs.getBool('notifications_enabled') ?? true;
+        await prefs.setBool('notifications_enabled', !current);
+        setState(() {
+          _messages.add(ChatMessage(
+            text: !current ? '🔔 Уведомления включены' : '🔕 Уведомления выключены',
+            isFromUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+        break;
+      
+      case CommandType.setReminder:
+        final hours = command.data['hours'] as int;
+        final minutes = command.data['minutes'] as int;
+        await prefs.setInt('reminder_hours', hours);
+        await prefs.setInt('reminder_minutes', minutes);
+        
+        // Интегрируем с NotificationService
+        try {
+          final now = DateTime.now();
+          var scheduledTime = DateTime(now.year, now.month, now.day, hours, minutes);
+          if (scheduledTime.isBefore(now)) {
+            scheduledTime = scheduledTime.add(const Duration(days: 1));
+          }
+          
+          await NotificationService.scheduleWorkoutReminder(
+            id: 1001,
+            title: '💪 Время тренировки!',
+            body: 'Не забудь сегодня позаниматься. Твой фитнес-помощник ждёт!',
+            scheduledTime: scheduledTime,
+          );
+          
+          setState(() {
+            _messages.add(ChatMessage(
+              text: '⏰ Напоминание установлено на ${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}',
+              isFromUser: false,
+              timestamp: DateTime.now(),
+            ));
+          });
+        } catch (e) {
+          setState(() {
+            _messages.add(ChatMessage(
+              text: '⚠️ Не удалось установить напоминание: $e',
+              isFromUser: false,
+              timestamp: DateTime.now(),
+            ));
+          });
+        }
+        break;
+      
+      case CommandType.status:
+        // Собираем данные из userProvider (синхронизировано с Supabase)
+        final currentUser = ref.read(userProvider);
+        final weight = currentUser?.weight ?? 0;
+        final height = currentUser?.height ?? 0;
+        final age = currentUser?.age ?? 0;
+        final goal = currentUser?.goal ?? 'не указана';
+        final calories = prefs.getInt('nutrition_goal_${userId}_calories') ?? 2000;
+        final protein = prefs.getInt('nutrition_goal_${userId}_protein') ?? 150;
+        
+        setState(() {
+          _messages.add(ChatMessage(
+            text: '''📊 **Текущий статус**
+
+👤 Профиль:
+• Вес: ${weight > 0 ? '${weight.toStringAsFixed(1)} кг' : 'не указан'}
+• Рост: ${height > 0 ? '$height см' : 'не указан'}
+• Возраст: ${age > 0 ? '$age лет' : 'не указан'}
+• Цель: $goal
+
+🍎 Цели питания:
+• Калории: $calories ккал
+• Белок: $protein г
+
+💪 Тренировки:
+• Уровень: ${prefs.getString('user_level_$userId') ?? 'не указан'}
+
+☁️ Синхронизация: ${currentUser != null ? 'активна' : 'офлайн'}
+''',
+            isFromUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+        break;
+      
+      case CommandType.export:
+        setState(() {
+          _messages.add(ChatMessage(
+            text: '📤 Функция экспорта данных скоро будет доступна!\n\nДанные будут экспортированы в формате JSON.',
+            isFromUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
         break;
         
       case CommandType.help:

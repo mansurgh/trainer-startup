@@ -1,6 +1,7 @@
 // lib/screens/workout_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart'; // GradientScaffold
@@ -143,14 +144,14 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           : shown;
       // безопасный лог без ключа:
       // ignore: avoid_print
-      print('[Workout] media "$name" -> $safeShown');
+      if (kDebugMode) print('[Workout] media "$name" -> $safeShown');
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _gifUrl = _imageUrl = _videoUrl = null;
       });
       // ignore: avoid_print
-      print('[Workout] media load error for "$name": $e');
+      if (kDebugMode) print('[Workout] media load error for "$name": $e');
     }
   }
 
