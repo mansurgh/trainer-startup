@@ -18,6 +18,7 @@ import '../state/app_providers.dart';
 import '../state/user_state.dart';
 import '../utils/chat_command_parser.dart';
 import '../screens/tabs/nutrition_screen_v2.dart';
+import '../l10n/app_localizations.dart';
 
 class AIChatScreen extends ConsumerStatefulWidget {
   final String chatType; // 'workout', 'nutrition', 'general'
@@ -516,13 +517,14 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
 
   String _getChatTitle() {
+    final l10n = AppLocalizations.of(context);
     switch (widget.chatType) {
       case 'workout':
-        return 'AI Тренер';
+        return l10n?.aiTrainer ?? 'AI Trainer';
       case 'nutrition':
-        return 'AI Диетолог';
+        return l10n?.aiNutritionist ?? 'AI Nutritionist';
       default:
-        return 'AI Помощник';
+        return l10n?.aiAssistant ?? 'AI Assistant';
     }
   }
 

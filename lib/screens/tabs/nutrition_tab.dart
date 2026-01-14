@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../core/modern_components.dart';
 import '../../state/meal_schedule_state.dart';
 import '../../state/fridge_state.dart';
+import '../../services/noir_toast_service.dart';
 // import '../../models/meal_group.dart'; // not used directly here
 
 class NutritionTab extends ConsumerStatefulWidget {
@@ -1051,14 +1052,11 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
         ? 'Приём пищи отмечен как выполненный! ✅'
         : 'Приём пищи отмечен как невыполненный';
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: meal['completed'] ? Colors.greenAccent : Colors.orangeAccent,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+    if (meal['completed']) {
+      NoirToast.success(context, message);
+    } else {
+      NoirToast.info(context, message);
+    }
   }
 
   void _addFoodToMeal(Map<String, dynamic> food) {
@@ -1162,14 +1160,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
       meal['calories'] = (meal['calories'] as int) + (food['kcal'] as int);
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${food['name']} добавлен в ${meal['name']}'),
-        backgroundColor: Colors.greenAccent,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+    NoirToast.success(context, '${food['name']} добавлен в ${meal['name']}');
   }
 
   void _showAddMealDialog() {
@@ -1505,19 +1496,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
   }
 
   void _scanFood() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.qr_code_scanner, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Сканирование штрихкода будет реализовано'),
-          ],
-        ),
-        backgroundColor: Colors.blueAccent,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    NoirToast.info(context, '🔍 Сканирование штрихкода будет реализовано');
   }
 
   void _takePhotoOfMeal() async {
@@ -1530,47 +1509,17 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
       );
 
       if (image != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.camera_alt, color: Colors.white),
-                SizedBox(width: 12),
-                Text('Фото блюда сохранено! 📸'),
-              ],
-            ),
-            backgroundColor: Colors.greenAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        NoirToast.success(context, 'Фото блюда сохранено! 📸');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при фотографировании: $e'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        NoirToast.error(context, 'Ошибка при фотографировании: $e');
       }
     }
   }
 
   void _openRecipes() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.menu_book, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Поиск рецептов будет реализован'),
-          ],
-        ),
-        backgroundColor: Colors.orangeAccent,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    NoirToast.info(context, '📖 Поиск рецептов будет реализован');
   }
 
   void _analyzeFridge() async {
@@ -1586,30 +1535,12 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
         ref.read(fridgeProvider.notifier).setImage(image.path);
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.kitchen, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Фото холодильника загружено! 🏠'),
-                ],
-              ),
-              backgroundColor: Colors.greenAccent,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          NoirToast.success(context, 'Фото холодильника загружено! 🏠');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при загрузке фото: $e'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        NoirToast.error(context, 'Ошибка при загрузке фото: $e');
       }
     }
   }
@@ -1620,22 +1551,9 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
         _waterGlasses++;
       });
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Стакан воды добавлен! 💧 ($_waterGlasses/8)'),
-          backgroundColor: Colors.blueAccent,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      NoirToast.info(context, 'Стакан воды добавлен! 💧 ($_waterGlasses/8)');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Дневная норма воды достигнута! 🎉'),
-          backgroundColor: Colors.greenAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      NoirToast.success(context, 'Дневная норма воды достигнута! 🎉');
     }
   }
 
@@ -1645,14 +1563,7 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
         _waterGlasses--;
       });
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Стакан воды убран ($_waterGlasses/8)'),
-          backgroundColor: Colors.orangeAccent,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      NoirToast.warning(context, 'Стакан воды убран ($_waterGlasses/8)');
     }
   }
 }

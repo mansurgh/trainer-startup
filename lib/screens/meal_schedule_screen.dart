@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart';
 import '../state/meal_schedule_state.dart';
+import '../l10n/app_localizations.dart';
 
 class MealScheduleScreen extends ConsumerWidget {
   const MealScheduleScreen({super.key});
@@ -132,8 +133,8 @@ class _MealBlockCard extends ConsumerWidget {
           Row(
             children: [
               FilledButton.tonal(
-                onPressed: () => notifier.addItem(index, MealItem(name: 'Новое блюдо', grams: 100, kcal: 120)),
-                child: const Text('Добавить блюдо'),
+                onPressed: () => notifier.addItem(index, MealItem(name: AppLocalizations.of(context)!.newDish, grams: 100, kcal: 120)),
+                child: Text(AppLocalizations.of(context)!.addDish),
               ),
             ],
           ),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../theme/tokens.dart';
+import '../../../l10n/app_localizations.dart';
 
 class DaySelector extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onDaySelected;
-  final List<bool> completedDays; // Список выполненных дней
+  final List<bool> completedDays; // List of completed days
 
   const DaySelector({
     super.key,
@@ -14,7 +15,20 @@ class DaySelector extends StatelessWidget {
     this.completedDays = const [false, false, false, false, false, false, false],
   });
 
-  static const _dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  // Get localized day labels
+  static List<String> getDayLabels(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    return [
+      l10n.mondayShort,
+      l10n.tuesdayShort,
+      l10n.wednesdayShort,
+      l10n.thursdayShort,
+      l10n.fridayShort,
+      l10n.saturdayShort,
+      l10n.sundayShort,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,33 +57,43 @@ class DaySelector extends StatelessWidget {
                     ? Border.all(color: T.border, width: 1)
                     : null,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    // Completion indicator at top
-                    SizedBox(
-                      height: 10,
-                      child: isCompleted && !isSelected 
-                          ? Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: Colors.green,
-                                shape: BoxShape.circle,
-                              ),
-                            )
-                          : null,
+                    // Day content
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 14),
+                        // Day letter (localized)
+                        Text(
+                          getDayLabels(context)[index],
+                          style: TextStyle(
+                            color: isSelected ? T.text : T.textSec,
+                            fontSize: 16,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                     ),
-                    // Day letter
-                    Text(
-                      _dayLabels[index],
-                      style: TextStyle(
-                        color: isSelected ? T.text : T.textSec,
-                        fontSize: 16,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    // Golden checkmark ALWAYS visible when completed (above selection)
+                    if (isCompleted)
+                      Positioned(
+                        top: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(1),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.check_circle,
+                            size: 14,
+                            color: const Color(0xFFFFD700), // Golden checkmark
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
                   ],
                 ),
               ),

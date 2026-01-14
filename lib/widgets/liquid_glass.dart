@@ -1,18 +1,27 @@
 // =============================================================================
 // liquid_glass.dart — iOS 26 Liquid Glass Design System
 // =============================================================================
-// Premium glassmorphism components for iOS-native aesthetic:
+// Premium glassmorphism components with "Cyber Future Blue" aesthetic:
 // - GlassCard: Frosted glass cards with blur and inner glow
 // - GlassButton: Squircle buttons with scale-down animation
 // - GlassTabBar: Translucent bottom navigation
 // - GlassSheet: iOS-style bottom sheets with grabber
 // - GlassTextField: Rounded input fields without borders
+// COLOR PALETTE: Electric Blue (#2E5CFF) to Neon Cyan (#00F0FF)
 // =============================================================================
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+
+// =============================================================================
+// LIQUID GLASS COLOR ALIASES (from app_theme.dart)
+// =============================================================================
+// Electric Blue (#2E5CFF) - kElectricBlue
+// Neon Cyan (#00F0FF) - kNeonCyan
+// Deep Violet (#7B2FFF) - kDeepViolet
+// These are imported from app_theme.dart
 
 // =============================================================================
 // CONSTANTS
@@ -212,8 +221,8 @@ class _GlassButtonState extends State<GlassButton>
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        (widget.color ?? kElectricAmberStart).withOpacity(0.9),
-        (widget.color ?? kElectricAmberEnd).withOpacity(0.9),
+        (widget.color ?? kElectricBlue).withOpacity(0.9),
+        (widget.color ?? kNeonCyan).withOpacity(0.9),
       ],
     );
 
@@ -248,7 +257,7 @@ class _GlassButtonState extends State<GlassButton>
                 ),
                 boxShadow: widget.enabled ? [
                   BoxShadow(
-                    color: (widget.color ?? kElectricAmberStart).withOpacity(0.3),
+                    color: (widget.color ?? kElectricBlue).withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -381,13 +390,25 @@ class _GlassTabButton extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.all(8),
               decoration: isSelected ? BoxDecoration(
-                color: kElectricAmberStart.withOpacity(0.15),
+                gradient: LinearGradient(
+                  colors: [
+                    kElectricBlue.withOpacity(0.2),
+                    kNeonCyan.withOpacity(0.1),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(kGlassRadiusSM),
+                boxShadow: [
+                  BoxShadow(
+                    color: kNeonCyan.withOpacity(0.3),
+                    blurRadius: 12,
+                    spreadRadius: -4,
+                  ),
+                ],
               ) : null,
               child: Icon(
                 isSelected ? item.activeIcon : item.icon,
                 size: 24,
-                color: isSelected ? kElectricAmberStart : kTextSecondary,
+                color: isSelected ? kNeonCyan : kTextSecondary,
               ),
             ),
             const SizedBox(height: 4),
@@ -396,7 +417,7 @@ class _GlassTabButton extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? kElectricAmberStart : kTextSecondary,
+                color: isSelected ? kNeonCyan : kTextSecondary,
               ),
             ),
           ],
@@ -532,7 +553,7 @@ class GlassTextField extends StatelessWidget {
         maxLines: maxLines,
         autofocus: autofocus,
         style: kBodyText,
-        cursorColor: kElectricAmberStart,
+        cursorColor: kNeonCyan,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: kBodyText.copyWith(color: kTextTertiary),
@@ -597,7 +618,7 @@ class GlassSectionHeader extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: kElectricAmberStart,
+                  color: kNeonCyan,
                 ),
               ),
             ),
@@ -643,13 +664,13 @@ class GlassStatCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (iconColor ?? kElectricAmberStart).withOpacity(0.15),
+                  color: (iconColor ?? kElectricBlue).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(kGlassRadiusSM),
                 ),
                 child: Icon(
                   icon,
                   size: 20,
-                  color: iconColor ?? kElectricAmberStart,
+                  color: iconColor ?? kNeonCyan,
                 ),
               ),
               if (onInfoTap != null)
@@ -735,7 +756,7 @@ class GlassAvatar extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: kElectricAmberStart.withOpacity(0.2),
+                  color: kNeonCyan.withOpacity(0.2),
                   blurRadius: 20,
                   spreadRadius: -5,
                 ),
@@ -758,7 +779,7 @@ class GlassAvatar extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: kElectricAmberStart,
+                  color: kElectricBlue,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: kOledBlack,
@@ -961,7 +982,7 @@ class GlassCircularProgress extends StatelessWidget {
               backgroundColor: Colors.transparent,
               strokeCap: StrokeCap.round,
               valueColor: AlwaysStoppedAnimation(
-                valueColor ?? kElectricAmberStart,
+                valueColor ?? kNeonCyan,
               ),
             ),
           ),
@@ -995,19 +1016,19 @@ class GlassOfflineBanner extends StatelessWidget {
         horizontal: kSpaceMD,
         vertical: kSpaceSM,
       ),
-      borderColor: kWarningAmber.withOpacity(0.3),
+      borderColor: kNeonWarning.withOpacity(0.3),
       child: Row(
         children: [
           Icon(
             Icons.cloud_off,
             size: 18,
-            color: kWarningAmber,
+            color: kNeonWarning,
           ),
           const SizedBox(width: kSpaceSM),
           Expanded(
             child: Text(
               message,
-              style: kCaptionText.copyWith(color: kWarningAmber),
+              style: kCaptionText.copyWith(color: kNeonWarning),
             ),
           ),
           if (onRetry != null)
@@ -1018,7 +1039,7 @@ class GlassOfflineBanner extends StatelessWidget {
                 child: Icon(
                   Icons.refresh,
                   size: 18,
-                  color: kElectricAmberStart,
+                  color: kNeonCyan,
                 ),
               ),
             ),

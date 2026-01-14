@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
 import '../core/design_tokens.dart';
 import '../core/premium_components.dart';
+import '../services/noir_toast_service.dart';
 import 'workout_screen.dart';
 import 'ai_chat_screen.dart';
 import 'weekly_schedule_screen.dart';
@@ -282,13 +283,7 @@ class _ModernWorkoutScreenState extends State<ModernWorkoutScreen> {
       });
       
       // Показываем уведомление
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🎉 Тренировка записана в статистику!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      NoirToast.success(context, '🎉 Тренировка записана в статистику!');
     }
   }
 

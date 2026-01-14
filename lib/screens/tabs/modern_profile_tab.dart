@@ -12,6 +12,7 @@ import '../body_scan_screen.dart';
 import '../edit_profile_data_screen.dart';
 import '../settings_screen.dart';
 import '../about_screen.dart';
+import '../../services/noir_toast_service.dart';
 
 import '../../l10n/app_localizations.dart';
 
@@ -682,30 +683,12 @@ class _ModernProfileTabState extends ConsumerState<ModernProfileTab> {
         await ref.read(userProvider.notifier).setAvatarPath(image.path);
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Avatar updated successfully!'),
-              backgroundColor: const Color(0xFF00D4AA),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
+          NoirToast.success(context, 'Аватар обновлён!');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating avatar: $e'),
-            backgroundColor: const Color(0xFFFF6B6B),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
+        NoirToast.error(context, 'Ошибка обновления аватара: $e');
       }
     }
   }

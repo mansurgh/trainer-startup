@@ -12,6 +12,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 // =============================================================================
 // DISCIPLINE RANKS — Gamification Tiers
@@ -20,8 +21,7 @@ import '../theme/app_theme.dart';
 /// Represents a discipline rank tier with score range and styling.
 class DisciplineRank {
   const DisciplineRank({
-    required this.name,
-    required this.localizedName,
+    required this.nameKey,
     required this.minScore,
     required this.maxScore,
     required this.color,
@@ -29,8 +29,7 @@ class DisciplineRank {
     this.glowIntensity = 0.3,
   });
 
-  final String name;
-  final String localizedName;
+  final String nameKey; // Key for localization (e.g. 'novice', 'apprentice')
   final int minScore;
   final int maxScore;
   final Color color;
@@ -39,14 +38,29 @@ class DisciplineRank {
 
   /// Check if a score falls within this rank
   bool contains(int score) => score >= minScore && score < maxScore;
+  
+  /// Get localized name using BuildContext
+  String getLocalizedName(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return nameKey.toUpperCase();
+    
+    switch (nameKey) {
+      case 'novice': return l10n.rankNovice;
+      case 'apprentice': return l10n.rankApprentice;
+      case 'warrior': return l10n.rankWarrior;
+      case 'champion': return l10n.rankChampion;
+      case 'machine': return l10n.rankMachine;
+      case 'legend': return l10n.rankLegend;
+      default: return nameKey.toUpperCase();
+    }
+  }
 }
 
 /// Predefined discipline ranks (RPG-style progression)
 class DisciplineRanks {
   static const List<DisciplineRank> all = [
     DisciplineRank(
-      name: 'Novice',
-      localizedName: 'НОВИЧОК',
+      nameKey: 'novice',
       minScore: 0,
       maxScore: 200,
       color: Color(0xFF6B7280), // Gray
@@ -54,8 +68,7 @@ class DisciplineRanks {
       glowIntensity: 0.1,
     ),
     DisciplineRank(
-      name: 'Apprentice',
-      localizedName: 'УЧЕНИК',
+      nameKey: 'apprentice',
       minScore: 200,
       maxScore: 400,
       color: Color(0xFF10B981), // Green
@@ -63,8 +76,7 @@ class DisciplineRanks {
       glowIntensity: 0.2,
     ),
     DisciplineRank(
-      name: 'Warrior',
-      localizedName: 'ВОИН',
+      nameKey: 'warrior',
       minScore: 400,
       maxScore: 600,
       color: Color(0xFF3B82F6), // Blue
@@ -72,8 +84,7 @@ class DisciplineRanks {
       glowIntensity: 0.3,
     ),
     DisciplineRank(
-      name: 'Champion',
-      localizedName: 'ЧЕМПИОН',
+      nameKey: 'champion',
       minScore: 600,
       maxScore: 800,
       color: Color(0xFF8B5CF6), // Purple
@@ -81,8 +92,7 @@ class DisciplineRanks {
       glowIntensity: 0.4,
     ),
     DisciplineRank(
-      name: 'Machine',
-      localizedName: 'МАШИНА',
+      nameKey: 'machine',
       minScore: 800,
       maxScore: 950,
       color: kElectricAmberStart, // Gold
@@ -90,8 +100,7 @@ class DisciplineRanks {
       glowIntensity: 0.5,
     ),
     DisciplineRank(
-      name: 'Legend',
-      localizedName: 'ЛЕГЕНДА',
+      nameKey: 'legend',
       minScore: 950,
       maxScore: 1001,
       color: Color(0xFFFF6B6B), // Red/Fire
@@ -307,7 +316,7 @@ class _DisciplineRatingWidgetState extends State<DisciplineRatingWidget>
                       if (widget.showRankLabel) ...[
                         const SizedBox(height: 4),
                         GlowingText(
-                          rank.localizedName,
+                          rank.getLocalizedName(context),
                           style: kOverlineText.copyWith(
                             fontSize: widget.size * 0.06,
                             fontWeight: FontWeight.w800,
@@ -494,7 +503,7 @@ class DisciplineScoreCard extends StatelessWidget {
                   ],
                 ),
                 GlowingText(
-                  rank.localizedName,
+                  rank.getLocalizedName(context),
                   style: kOverlineText.copyWith(
                     color: rank.color,
                     fontWeight: FontWeight.w700,

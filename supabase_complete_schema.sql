@@ -317,11 +317,15 @@ create policy "Users can delete own progress photos"
 create index progress_photos_user_date_idx on public.progress_photos(user_id, created_at desc);
 
 -- ============================================
--- 11. VIEWS FOR COMMON QUERIES
+-- 11. VIEWS FOR COMMON QUERIES (SECURITY HARDENED)
 -- ============================================
+-- IMPORTANT: All views use security_invoker = true to enforce RLS
+-- This ensures users can only see their own aggregated data
 
 -- Daily workout stats
-create or replace view public.daily_workout_stats as
+create or replace view public.daily_workout_stats 
+with (security_invoker = true) 
+as
 select
   user_id,
   workout_date,
@@ -334,7 +338,9 @@ where status = 'completed'
 group by user_id, workout_date;
 
 -- Weekly workout summary
-create or replace view public.weekly_workout_summary as
+create or replace view public.weekly_workout_summary 
+with (security_invoker = true) 
+as
 select
   user_id,
   date_trunc('week', workout_date) as week_start,
@@ -346,7 +352,9 @@ where status = 'completed'
 group by user_id, week_start;
 
 -- Daily nutrition totals
-create or replace view public.daily_nutrition_totals as
+create or replace view public.daily_nutrition_totals 
+with (security_invoker = true) 
+as
 select
   user_id,
   meal_date,

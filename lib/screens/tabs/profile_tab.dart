@@ -10,6 +10,8 @@ import '../../core/modern_components.dart';
 import '../../core/sexy_components.dart';
 import '../../state/user_state.dart';
 import '../../models/user_model.dart';
+import '../../services/noir_toast_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../body_scan_screen.dart';
 import '../edit_profile_data_screen.dart';
 import '../settings_screen.dart';
@@ -1059,12 +1061,8 @@ class ProfileTab extends ConsumerWidget {
 
   void _shareProgress(BuildContext context) {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Функция поделиться скоро будет доступна! 🔥'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    final l10n = AppLocalizations.of(context)!;
+    NoirToast.info(context, l10n.comingSoon);
   }
 
   void _showStatsModal(BuildContext context) {
@@ -1099,12 +1097,8 @@ class ProfileTab extends ConsumerWidget {
 
   void _exportData(BuildContext context) {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Экспорт данных скоро будет доступен! 📊'),
-        backgroundColor: Colors.blue,
-      ),
-    );
+    final l10n = AppLocalizations.of(context)!;
+    NoirToast.info(context, l10n.comingSoon);
   }
 
   void _showResetDialog(BuildContext context) {
@@ -1150,9 +1144,8 @@ class ProfileTab extends ConsumerWidget {
                     child: ModernComponents.animatedButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Функция сброса скоро! 🔄')),
-                        );
+                        final l10n = AppLocalizations.of(context)!;
+                        NoirToast.info(context, l10n.comingSoon);
                       },
                       backgroundColor: Colors.red,
                       child: const Text('Сбросить'),
@@ -1393,22 +1386,14 @@ class ProfileTab extends ConsumerWidget {
         await userNotifier.setAvatarPath(image.path);
         
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Аватарка успешно изменена! 📸'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          final l10n = AppLocalizations.of(context)!;
+          NoirToast.success(context, l10n.avatarUpdated);
         }
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при выборе аватарки: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        final l10n = AppLocalizations.of(context)!;
+        NoirToast.error(context, l10n.error);
       }
     }
   }

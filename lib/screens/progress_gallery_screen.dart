@@ -6,6 +6,7 @@ import '../core/theme.dart';
 import '../core/modern_components.dart';
 import '../l10n/app_localizations.dart';
 import '../services/storage_service.dart';
+import '../services/noir_toast_service.dart';
 
 class ProgressGalleryScreen extends ConsumerStatefulWidget {
   const ProgressGalleryScreen({super.key});
@@ -53,22 +54,12 @@ class _ProgressGalleryScreenState extends ConsumerState<ProgressGalleryScreen> {
         });
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.photoAdded),
-              backgroundColor: const Color(0xFF00D4AA),
-            ),
-          );
+          NoirToast.success(context, AppLocalizations.of(context)!.photoAdded);
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.error),
-            backgroundColor: const Color(0xFFFF6B6B),
-          ),
-        );
+        NoirToast.error(context, AppLocalizations.of(context)!.error);
       }
     }
   }
@@ -82,21 +73,11 @@ class _ProgressGalleryScreenState extends ConsumerState<ProgressGalleryScreen> {
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.photoDeleted),
-            backgroundColor: const Color(0xFF00D4AA),
-          ),
-        );
+        NoirToast.success(context, AppLocalizations.of(context)!.photoDeleted);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.error),
-            backgroundColor: const Color(0xFFFF6B6B),
-          ),
-        );
+        NoirToast.error(context, AppLocalizations.of(context)!.error);
       }
     }
   }

@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme.dart';
+import '../widgets/noir_glass_components.dart';
+import '../theme/noir_theme.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -363,44 +366,19 @@ class AboutScreen extends StatelessWidget {
   void _showPrivacyPolicy(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        content: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Политика конфиденциальности',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              const SingleChildScrollView(
-                child: Text(
-                  '''1. Сбор данных
-Мы собираем только необходимые данные для работы приложения: параметры тела, цели тренировок, фотографии прогресса.
-
-2. Хранение данных
-Все ваши данные хранятся локально на вашем устройстве. Мы не передаем их третьим лицам без вашего согласия.
-
-3. Использование AI
-Для анализа изображений мы используем OpenAI API. Изображения передаются в зашифрованном виде и не сохраняются.
-
-4. Ваши права
-Вы можете в любое время удалить все данные через настройки приложения.
-
-5. Контакты
-По вопросам конфиденциальности: privacy@pulsefit.pro''',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
-              ),
-            ],
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) => NoirGlassDialog(
+        title: 'Политика конфиденциальности',
+        icon: Icons.privacy_tip_rounded,
+        contentWidget: const SingleChildScrollView(
+          child: Text(
+            '1. Сбор данных\nМы собираем только необходимые данные для работы приложения: параметры тела, цели тренировок, фотографии прогресса.\n\n2. Хранение данных\nВсе ваши данные хранятся локально на вашем устройстве. Мы не передаем их третьим лицам без вашего согласия.\n\n3. Использование AI\nДля анализа изображений мы используем OpenAI API. Изображения передаются в зашифрованном виде и не сохраняются.\n\n4. Ваши права\nВы можете в любое время удалить все данные через настройки приложения.\n\n5. Контакты\nПо вопросам конфиденциальности: privacy@pulsefit.pro',
+            style: TextStyle(color: kContentMedium, fontSize: 14),
+            textAlign: TextAlign.left,
           ),
         ),
+        confirmText: 'Закрыть',
+        onConfirm: () => Navigator.pop(ctx),
       ),
     );
   }
@@ -408,44 +386,19 @@ class AboutScreen extends StatelessWidget {
   void _showTermsOfService(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        content: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Условия использования',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              const SingleChildScrollView(
-                child: Text(
-                  '''1. Принятие условий
-Используя PulseFit Pro, вы соглашаетесь с данными условиями.
-
-2. Использование приложения
-Приложение предназначено для информационных целей и не заменяет консультацию с врачом или тренером.
-
-3. Ответственность
-Мы не несем ответственности за результаты использования приложения. Тренируйтесь с осторожностью.
-
-4. Изменения
-Мы можем изменять условия использования. Продолжение использования означает согласие с новыми условиями.
-
-5. Контакты
-По вопросам: legal@pulsefit.pro''',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
-              ),
-            ],
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) => NoirGlassDialog(
+        title: 'Условия использования',
+        icon: Icons.description_rounded,
+        contentWidget: const SingleChildScrollView(
+          child: Text(
+            '1. Принятие условий\nИспользуя PulseFit Pro, вы соглашаетесь с данными условиями.\n\n2. Использование приложения\nПриложение предназначено для информационных целей и не заменяет консультацию с врачом или тренером.\n\n3. Ответственность\nМы не несем ответственности за результаты использования приложения. Тренируйтесь с осторожностью.\n\n4. Изменения\nМы можем изменять условия использования. Продолжение использования означает согласие с новыми условиями.\n\n5. Контакты\nПо вопросам: legal@pulsefit.pro',
+            style: TextStyle(color: kContentMedium, fontSize: 14),
+            textAlign: TextAlign.left,
           ),
         ),
+        confirmText: 'Закрыть',
+        onConfirm: () => Navigator.pop(ctx),
       ),
     );
   }
@@ -453,37 +406,13 @@ class AboutScreen extends StatelessWidget {
   void _showLicenses(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        content: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Лицензии',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Приложение использует следующие библиотеки:\n\n'
-                '• Flutter SDK\n'
-                '• Riverpod\n'
-                '• OpenAI API\n'
-                '• Flutter Local Notifications\n'
-                '• Image Picker\n'
-                '• Shared Preferences\n'
-                '• SQLite\n\n'
-                'Полный список лицензий доступен в исходном коде.',
-                textAlign: TextAlign.left,
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Закрыть'),
-              ),
-            ],
-          ),
-        ),
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) => NoirGlassDialog(
+        title: 'Лицензии',
+        icon: Icons.article_rounded,
+        content: 'Приложение использует следующие библиотеки:\n\n• Flutter SDK\n• Riverpod\n• OpenAI API\n• Flutter Local Notifications\n• Image Picker\n• Shared Preferences\n• SQLite\n\nПолный список лицензий доступен в исходном коде.',
+        confirmText: 'Закрыть',
+        onConfirm: () => Navigator.pop(ctx),
       ),
     );
   }

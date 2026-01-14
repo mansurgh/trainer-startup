@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'noir_toast_service.dart';
 
 class AppError {
   final String message;
@@ -18,74 +19,19 @@ class AppError {
 }
 
 class ErrorService {
+  /// Shows error notification using Noir Glass style
   static void showErrorSnackBar(BuildContext context, AppError error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                error.message,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Закрыть',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
-        ),
-      ),
-    );
+    NoirToast.error(context, error.message, subtitle: error.code);
   }
 
+  /// Shows success notification using Noir Glass style
   static void showSuccessSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    NoirToast.success(context, message);
   }
 
+  /// Shows info notification using Noir Glass style
   static void showInfoSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.info, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blue,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    NoirToast.info(context, message);
   }
 
   static AppError handleException(dynamic exception, [StackTrace? stackTrace]) {

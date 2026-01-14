@@ -1,11 +1,37 @@
 import 'dart:io';
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../theme/app_theme.dart';
+import '../theme/app_theme.dart' hide kSpaceXS, kSpaceSM, kSpaceMD, kSpaceLG, kSpaceXL, kSpaceXXL, kRadiusSM, kRadiusMD, kRadiusLG, kRadiusXL, kRadiusXXL, kRadiusFull;
+import '../theme/noir_theme.dart';
+import '../widgets/noir_glass_components.dart';
+import '../services/noir_toast_service.dart';
+import '../l10n/app_localizations.dart';
+
+/// Helper function to format dates with localized month names (short)
+String _formatDateShort(BuildContext context, DateTime date) {
+  final l10n = AppLocalizations.of(context)!;
+  final months = [
+    l10n.janShort, l10n.febShort, l10n.marShort, l10n.aprShort, l10n.mayShort, l10n.junShort,
+    l10n.julShort, l10n.augShort, l10n.sepShort, l10n.octShort, l10n.novShort, l10n.decShort
+  ];
+  return '${date.day} ${months[date.month - 1]} ${date.year}';
+}
+
+/// Helper function to format dates with localized month names (full)
+String _formatDateFull(BuildContext context, DateTime date) {
+  final l10n = AppLocalizations.of(context)!;
+  final months = [
+    l10n.january, l10n.february, l10n.march, l10n.april, l10n.may, l10n.june,
+    l10n.july, l10n.august, l10n.september, l10n.october, l10n.november, l10n.december
+  ];
+  return '${date.day} ${months[date.month - 1]} ${date.year}';
+}
 
 /// Progress Photo Gallery Screen - галерея прогресс-фото
 class ProgressPhotoGalleryScreen extends ConsumerStatefulWidget {
@@ -20,14 +46,25 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
   List<ProgressPhoto> _photos = [];
   bool _isLoading = true;
   String? _error;
+  bool _didLoadPhotos = false;
   
   @override
   void initState() {
     super.initState();
-    _loadPhotos();
+    // Note: _loadPhotos is called in didChangeDependencies to avoid l10n access before build
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didLoadPhotos) {
+      _didLoadPhotos = true;
+      _loadPhotos();
+    }
   }
 
   Future<void> _loadPhotos() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isLoading = true;
       _error = null;
@@ -36,31 +73,57 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
-        throw Exception('Пользователь не авторизован');
+        setState(() {
+          _photos = [];
+          _isLoading = false;
+        });
+        return;
       }
 
-      final response = await _supabase
-          .from('progress_photos')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
+      // Check if table exists and has data
+      try {
+        final response = await _supabase
+            .from('progress_photos')
+            .select()
+            .eq('user_id', userId)
+            .order('created_at', ascending: false);
 
-      final List<dynamic> data = response as List<dynamic>;
-      
-      setState(() {
-        _photos = data.map((json) => ProgressPhoto.fromJson(json)).toList();
-        _isLoading = false;
-      });
+        final List<dynamic> data = response as List<dynamic>;
+        
+        setState(() {
+          _photos = data.map((json) => ProgressPhoto.fromJson(json)).toList();
+          _isLoading = false;
+        });
+      } on PostgrestException catch (e) {
+        // Table might not exist or RLS policy issue or any Supabase error
+        // Common codes: 42P01 (table doesn't exist), PGRST (various)
+        debugPrint('[ProgressPhotos] PostgrestException: ${e.code} - ${e.message}');
+        setState(() {
+          _photos = [];
+          _isLoading = false;
+          // Don't show error for empty tables or missing relations
+          if (e.message.contains('Could not find') || 
+              e.code == '42P01' || 
+              e.code == 'PGRST116') {
+            _error = null;
+          } else {
+            _error = null; // Silently fail - table may not exist yet
+          }
+        });
+      }
     } catch (e) {
+      debugPrint('[ProgressPhotos] Error: $e');
       setState(() {
-        _error = 'Ошибка загрузки фото: $e';
+        _photos = [];
         _isLoading = false;
+        _error = null; // Don't show error, just empty state
       });
     }
   }
 
   Future<void> _addPhoto() async {
     HapticFeedback.lightImpact();
+    final l10n = AppLocalizations.of(context)!;
     
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -82,7 +145,7 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
               ),
             ),
             const SizedBox(height: kSpaceLG),
-            Text('Добавить фото', style: kDenseHeading),
+            Text(l10n.addPhoto, style: kDenseHeading),
             const SizedBox(height: kSpaceLG),
             ListTile(
               leading: Container(
@@ -93,7 +156,7 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
                 ),
                 child: const Icon(Icons.camera_alt, color: kElectricAmberStart),
               ),
-              title: Text('Сделать фото', style: kBodyText),
+              title: Text(l10n.takePhotoCamera, style: kBodyText),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
@@ -105,7 +168,7 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
                 ),
                 child: const Icon(Icons.photo_library, color: kInfoCyan),
               ),
-              title: Text('Выбрать из галереи', style: kBodyText),
+              title: Text(l10n.chooseFromGallery, style: kBodyText),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             SizedBox(height: MediaQuery.of(ctx).padding.bottom),
@@ -135,124 +198,154 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
       final userId = _supabase.auth.currentUser!.id;
       final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       
-      // Загружаем в Storage
-      final fileBytes = await pickedFile.readAsBytes();
-      await _supabase.storage
-          .from('progress_photos')
-          .uploadBinary(fileName, fileBytes);
+      try {
+        // Загружаем в Storage
+        final fileBytes = await pickedFile.readAsBytes();
+        await _supabase.storage
+            .from('progress_photos')
+            .uploadBinary(fileName, fileBytes);
 
-      final publicUrl = _supabase.storage
-          .from('progress_photos')
-          .getPublicUrl(fileName);
+        final publicUrl = _supabase.storage
+            .from('progress_photos')
+            .getPublicUrl(fileName);
 
-      // Сохраняем в базу
-      await _supabase.from('progress_photos').insert({
-        'user_id': userId,
-        'photo_url': publicUrl,
-        'note': note,
-        'weight': null, // Можно добавить текущий вес
-        'created_at': DateTime.now().toIso8601String(),
-      });
+        // Сохраняем в базу
+        await _supabase.from('progress_photos').insert({
+          'user_id': userId,
+          'photo_url': publicUrl,
+          'note': note,
+          'weight': null, // Можно добавить текущий вес
+          'created_at': DateTime.now().toIso8601String(),
+        });
 
-      await _loadPhotos();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('📸 Фото добавлено!'),
-            backgroundColor: kSuccessGreen,
-          ),
-        );
+        await _loadPhotos();
+        
+        if (mounted) {
+          NoirToast.success(context, '📸 ${AppLocalizations.of(context)!.photoAdded}');
+        }
+      } on PostgrestException catch (e) {
+        debugPrint('[ProgressPhotos] Upload error: ${e.code} - ${e.message}');
+        setState(() => _isLoading = false);
+        if (mounted) {
+          // More user-friendly error message
+          final l10n = AppLocalizations.of(context)!;
+          if (e.message.contains('Could not find') || e.code == '42P01') {
+            NoirToast.error(context, l10n.featureNotAvailable);
+          } else {
+            NoirToast.error(context, l10n.uploadFailed);
+          }
+        }
+      } on StorageException catch (e) {
+        debugPrint('[ProgressPhotos] Storage error: ${e.message}');
+        setState(() => _isLoading = false);
+        if (mounted) {
+          NoirToast.error(context, AppLocalizations.of(context)!.uploadFailed);
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка: $e'),
-            backgroundColor: kErrorRed,
-          ),
-        );
+        debugPrint('[ProgressPhotos] General error: $e');
+        NoirToast.error(context, AppLocalizations.of(context)!.somethingWentWrong);
       }
     }
   }
 
   Future<String?> _showNoteDialog() async {
     final controller = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
     
     return showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: kObsidianSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(kRadiusLG),
-        ),
-        title: Text('Заметка к фото', style: kDenseHeading),
-        content: TextField(
-          controller: controller,
-          style: kBodyText,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Опишите свой прогресс...',
-            hintStyle: kBodyText.copyWith(color: kTextTertiary),
-            filled: true,
-            fillColor: kOledBlack,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(kRadiusMD),
-              borderSide: BorderSide(color: kObsidianBorder),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(kRadiusMD),
-              borderSide: BorderSide(color: kObsidianBorder),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(kRadiusMD),
-              borderSide: BorderSide(color: kElectricAmberStart),
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) => Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(kRadiusXL),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.85,
+              padding: const EdgeInsets.all(kSpaceLG),
+              decoration: BoxDecoration(
+                color: kNoirGraphite.withOpacity(0.95),
+                borderRadius: BorderRadius.circular(kRadiusXL),
+                border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.photoNoteTitle, style: kNoirTitleMedium.copyWith(color: kContentHigh)),
+                    const SizedBox(height: kSpaceMD),
+                    TextField(
+                      controller: controller,
+                      style: kNoirBodyMedium.copyWith(color: kContentHigh),
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: l10n.describeProgress,
+                        hintStyle: kNoirBodyMedium.copyWith(color: kContentLow),
+                        filled: true,
+                        fillColor: kNoirBlack,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: BorderSide(color: kBorderLight),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: BorderSide(color: kBorderLight),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: const BorderSide(color: kContentHigh),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: kSpaceLG),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            style: TextButton.styleFrom(foregroundColor: kContentMedium),
+                            child: Text(l10n.skip),
+                          ),
+                        ),
+                        const SizedBox(width: kSpaceMD),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx, controller.text),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kContentHigh,
+                              foregroundColor: kNoirBlack,
+                              padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMD)),
+                            ),
+                            child: Text(l10n.save),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Пропустить', style: kCaptionText.copyWith(color: kTextTertiary)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kElectricAmberStart,
-              foregroundColor: kOledBlack,
-            ),
-            child: const Text('Сохранить'),
-          ),
-        ],
       ),
     );
   }
 
   Future<void> _deletePhoto(ProgressPhoto photo) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: kObsidianSurface,
-        title: Text('Удалить фото?', style: kDenseHeading),
-        content: Text(
-          'Это действие нельзя отменить.',
-          style: kBodyText.copyWith(color: kTextSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Отмена', style: kCaptionText),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kErrorRed,
-            ),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await NoirGlassDialog.showConfirmation(
+      context,
+      title: l10n.deletePhotoConfirm,
+      content: l10n.actionCannotBeUndone,
+      icon: Icons.delete_rounded,
+      confirmText: l10n.delete,
+      cancelText: l10n.cancel,
+      isDestructive: true,
     );
 
     if (confirmed != true) return;
@@ -262,21 +355,11 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
       await _loadPhotos();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Фото удалено'),
-            backgroundColor: kWarningAmber,
-          ),
-        );
+        NoirToast.info(context, l10n.photoDeleted);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка удаления: $e'),
-            backgroundColor: kErrorRed,
-          ),
-        );
+        NoirToast.error(context, '${l10n.deleteError}: $e');
       }
     }
   }
@@ -295,13 +378,9 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
   }
 
   void _openCompareMode() {
+    final l10n = AppLocalizations.of(context)!;
     if (_photos.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Нужно минимум 2 фото для сравнения'),
-          backgroundColor: kWarningAmber,
-        ),
-      );
+      NoirToast.warning(context, l10n.needMinPhotosForCompare);
       return;
     }
 
@@ -315,17 +394,18 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: kOledBlack,
       appBar: AppBar(
         backgroundColor: kOledBlack,
-        title: Text('Прогресс фото', style: kDenseHeading),
+        title: Text(l10n.progressPhotos, style: kDenseHeading),
         actions: [
           if (_photos.length >= 2)
             IconButton(
               onPressed: _openCompareMode,
               icon: const Icon(Icons.compare),
-              tooltip: 'Сравнить фото',
+              tooltip: l10n.comparePhotos,
             ),
         ],
       ),
@@ -335,12 +415,13 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
         backgroundColor: kElectricAmberStart,
         foregroundColor: kOledBlack,
         icon: const Icon(Icons.add_a_photo),
-        label: const Text('Добавить'),
+        label: Text(l10n.addPhotoShort),
       ),
     );
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: kElectricAmberStart),
@@ -358,7 +439,7 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
             const SizedBox(height: kSpaceMD),
             ElevatedButton(
               onPressed: _loadPhotos,
-              child: const Text('Повторить'),
+              child: Text(l10n.repeatAction),
             ),
           ],
         ),
@@ -385,12 +466,12 @@ class _ProgressPhotoGalleryScreenState extends ConsumerState<ProgressPhotoGaller
             ),
             const SizedBox(height: kSpaceLG),
             Text(
-              'Нет фото прогресса',
+              l10n.noProgressPhotos,
               style: kDenseHeading.copyWith(color: kTextSecondary),
             ),
             const SizedBox(height: kSpaceSM),
             Text(
-              'Добавьте первое фото,\nчтобы отслеживать свои изменения',
+              l10n.addFirstPhotoHint,
               style: kBodyText.copyWith(color: kTextTertiary),
               textAlign: TextAlign.center,
             ),
@@ -497,7 +578,7 @@ class _PhotoCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _formatDate(photo.createdAt),
+                      _formatDateShort(context, photo.createdAt),
                       style: kCaptionText.copyWith(
                         color: kTextPrimary,
                         fontWeight: FontWeight.w600,
@@ -521,14 +602,6 @@ class _PhotoCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    final months = [
-      'янв', 'фев', 'мар', 'апр', 'май', 'июн',
-      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
 
@@ -578,7 +651,7 @@ class _PhotoViewerScreenState extends State<_PhotoViewerScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          _formatDate(photo.createdAt),
+          _formatDateFull(context, photo.createdAt),
           style: kBodyText,
         ),
         actions: [
@@ -670,14 +743,6 @@ class _PhotoViewerScreenState extends State<_PhotoViewerScreen> {
       ),
     );
   }
-
-  String _formatDate(DateTime date) {
-    final months = [
-      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
 }
 
 // =============================================================================
@@ -712,66 +777,69 @@ class _ComparePhotosScreenState extends State<_ComparePhotosScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(kRadiusLG)),
       ),
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        minChildSize: 0.4,
-        expand: false,
-        builder: (_, controller) => Column(
-          children: [
-            const SizedBox(height: kSpaceSM),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: kTextTertiary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: kSpaceMD),
-            Text(
-              isLeft ? 'Выберите "До"' : 'Выберите "После"',
-              style: kDenseHeading,
-            ),
-            const SizedBox(height: kSpaceMD),
-            Expanded(
-              child: GridView.builder(
-                controller: controller,
-                padding: const EdgeInsets.all(kSpaceMD),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: kSpaceSM,
-                  mainAxisSpacing: kSpaceSM,
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          maxChildSize: 0.9,
+          minChildSize: 0.4,
+          expand: false,
+          builder: (_, controller) => Column(
+            children: [
+              const SizedBox(height: kSpaceSM),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: kTextTertiary,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                itemCount: widget.photos.length,
-                itemBuilder: (context, index) {
-                  final photo = widget.photos[index];
-                  return GestureDetector(
-                    onTap: () => Navigator.pop(ctx, photo),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(kRadiusSM),
-                        border: Border.all(
-                          color: (isLeft && photo == _leftPhoto) ||
-                                  (!isLeft && photo == _rightPhoto)
-                              ? kElectricAmberStart
-                              : Colors.transparent,
-                          width: 2,
+              ),
+              const SizedBox(height: kSpaceMD),
+              Text(
+                isLeft ? l10n.selectBefore : l10n.selectAfter,
+                style: kDenseHeading,
+              ),
+              const SizedBox(height: kSpaceMD),
+              Expanded(
+                child: GridView.builder(
+                  controller: controller,
+                  padding: const EdgeInsets.all(kSpaceMD),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: kSpaceSM,
+                    mainAxisSpacing: kSpaceSM,
+                  ),
+                  itemCount: widget.photos.length,
+                  itemBuilder: (context, index) {
+                    final photo = widget.photos[index];
+                    return GestureDetector(
+                      onTap: () => Navigator.pop(ctx, photo),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(kRadiusSM),
+                          border: Border.all(
+                            color: (isLeft && photo == _leftPhoto) ||
+                                    (!isLeft && photo == _rightPhoto)
+                                ? kElectricAmberStart
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Image.network(
+                          photo.photoUrl,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Image.network(
-                        photo.photoUrl,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
 
     if (selected != null) {
@@ -787,11 +855,12 @@ class _ComparePhotosScreenState extends State<_ComparePhotosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: kOledBlack,
       appBar: AppBar(
         backgroundColor: kOledBlack,
-        title: Text('Сравнение', style: kDenseHeading),
+        title: Text(l10n.comparison, style: kDenseHeading),
       ),
       body: Column(
         children: [
@@ -803,7 +872,7 @@ class _ComparePhotosScreenState extends State<_ComparePhotosScreen> {
                 Expanded(
                   child: _ComparePhotoCard(
                     photo: _leftPhoto,
-                    label: 'До',
+                    label: l10n.before,
                     onTap: () => _selectPhoto(true),
                   ),
                 ),
@@ -812,7 +881,7 @@ class _ComparePhotosScreenState extends State<_ComparePhotosScreen> {
                 Expanded(
                   child: _ComparePhotoCard(
                     photo: _rightPhoto,
-                    label: 'После',
+                    label: l10n.after,
                     onTap: () => _selectPhoto(false),
                   ),
                 ),
@@ -835,7 +904,7 @@ class _ComparePhotosScreenState extends State<_ComparePhotosScreen> {
                 Icon(Icons.access_time, size: 16, color: kTextTertiary),
                 const SizedBox(width: kSpaceSM),
                 Text(
-                  'Разница: ${_getDifferenceText()}',
+                  '${l10n.difference}: ${_getDifferenceText(context)}',
                   style: kBodyText.copyWith(color: kTextSecondary),
                 ),
               ],
@@ -846,16 +915,17 @@ class _ComparePhotosScreenState extends State<_ComparePhotosScreen> {
     );
   }
 
-  String _getDifferenceText() {
+  String _getDifferenceText(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final diff = _rightPhoto.createdAt.difference(_leftPhoto.createdAt);
     final days = diff.inDays.abs();
     
-    if (days == 0) return 'Менее 1 дня';
-    if (days == 1) return '1 день';
-    if (days < 7) return '$days дней';
-    if (days < 30) return '${(days / 7).round()} нед.';
-    if (days < 365) return '${(days / 30).round()} мес.';
-    return '${(days / 365).round()} год(а)';
+    if (days == 0) return l10n.lessThanOneDay;
+    if (days == 1) return l10n.oneDay;
+    if (days < 7) return l10n.daysPlural(days);
+    if (days < 30) return l10n.weeksPlural((days / 7).round());
+    if (days < 365) return l10n.monthsPlural((days / 30).round());
+    return l10n.yearsPlural((days / 365).round());
   }
 }
 
@@ -920,7 +990,7 @@ class _ComparePhotoCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                _formatDate(photo.createdAt),
+                _formatDateShort(context, photo.createdAt),
                 style: kCaptionText.copyWith(color: kTextPrimary),
                 textAlign: TextAlign.center,
               ),
@@ -947,14 +1017,6 @@ class _ComparePhotoCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    final months = [
-      'янв', 'фев', 'мар', 'апр', 'май', 'июн',
-      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
 

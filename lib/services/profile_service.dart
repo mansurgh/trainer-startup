@@ -40,6 +40,12 @@ class ProfileService {
       // Ensure id is set
       profileData['id'] = userId;
       profileData['updated_at'] = DateTime.now().toIso8601String();
+      
+      // CRITICAL: Ensure email is always included (NOT NULL constraint in DB)
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser?.email != null && !profileData.containsKey('email')) {
+        profileData['email'] = currentUser!.email;
+      }
 
       await _client
           .from('profiles')

@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import '../core/design_tokens.dart';
 import '../core/premium_components.dart';
 import '../core/theme.dart';
 import '../services/workout_media_service.dart';
+import '../services/storage_service.dart';
+import '../providers/stats_provider.dart';
+import '../state/activity_state.dart' show activityDataProvider, workoutCountProvider;
 import '../widgets/workout_media.dart';
+import '../l10n/app_localizations.dart';
 
 /// Premium Workout Screen с muscle map и таймером
 class PremiumWorkoutScreen extends ConsumerStatefulWidget {
@@ -176,11 +182,42 @@ class _PremiumWorkoutScreenState extends ConsumerState<PremiumWorkoutScreen>
     }
   }
   
-  void _finishWorkout() {
+  Future<void> _finishWorkout() async {
     _resetTimer();
+    
+    // Сохраняем тренировку в историю
+    try {
+      await StorageService.saveWorkoutSession(
+        date: DateTime.now(),
+        exerciseName: _exercises.join(', '),
+        sets: 3,
+        reps: 10,
+        weight: 0,
+        duration: (_totalSeconds * _exercises.length * 2), // Примерная длительность
+        completed: true,
+      );
+      
+      // Обновляем активность за сегодня
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('user_id') ?? 'anonymous';
+      final now = DateTime.now();
+      final dateKey = '${now.year}-${now.month}-${now.day}';
+      await prefs.setBool('workout_completed_${userId}_$dateKey', true);
+      
+      // Инвалидируем провайдеры для обновления статистики
+      ref.invalidate(activityDataProvider);
+      ref.invalidate(workoutCountProvider);
+      
+      if (kDebugMode) print('[PremiumWorkout] Workout saved and activity updated');
+    } catch (e) {
+      if (kDebugMode) print('[PremiumWorkout] Error saving workout: $e');
+    }
+    
+    if (!mounted) return;
+    
     showDialog(
       context: context,
-      builder: (context) => _WorkoutCompleteDialog(),
+      builder: (context) => _WorkoutCompleteDialog(ref: ref),
     );
   }
   
@@ -585,8 +622,14 @@ class _PremiumWorkoutScreenState extends ConsumerState<PremiumWorkoutScreen>
 }
 
 class _WorkoutCompleteDialog extends StatelessWidget {
+  final WidgetRef ref;
+  
+  const _WorkoutCompleteDialog({required this.ref});
+  
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Dialog(
       backgroundColor: Colors.transparent,
       child: PremiumComponents.glassCard(
@@ -603,13 +646,13 @@ class _WorkoutCompleteDialog extends StatelessWidget {
             ),
             const SizedBox(height: DesignTokens.space16),
             Text(
-              'Тренировка завершена!',
+              l10n.workoutCompleted,
               style: DesignTokens.h2,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DesignTokens.space8),
             Text(
-              'Отличная работа! Продолжайте в том же духе.',
+              l10n.workoutCompletedDesc,
               style: DesignTokens.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -622,7 +665,7 @@ class _WorkoutCompleteDialog extends StatelessWidget {
                       Navigator.of(context).pop();
                       Navigator.of(context).pop();
                     },
-                    child: const Text('Завершить'),
+                    child: Text(l10n.doneButton),
                   ),
                 ),
                 const SizedBox(width: DesignTokens.space12),
@@ -640,7 +683,7 @@ class _WorkoutCompleteDialog extends StatelessWidget {
                       }
                     },
                     isPrimary: true,
-                    child: const Text('Поделиться'),
+                    child: Text(l10n.share),
                   ),
                 ),
               ],

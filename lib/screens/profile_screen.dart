@@ -17,19 +17,27 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import '../theme/noir_theme.dart' as noir;
 import '../providers/profile_provider.dart';
 import '../providers/stats_provider.dart';
+import '../providers/locale_provider.dart';
 import '../models/user_model.dart';
 import '../widgets/discipline_rating_widget.dart';
 import '../widgets/muscle_map_svg_widget.dart';
 import '../widgets/muscle_map_widget.dart' show MuscleData, generateSampleMuscleData;
 import '../widgets/rpg_radar_chart_widget.dart';
-import '../widgets/weight_input_sheet.dart';
+import '../widgets/noir_weight_picker.dart';
 import '../widgets/liquid_glass.dart' show GlassOfflineBanner, LiquidGlassCard;
+import '../widgets/navigation/navigation.dart';
+import '../widgets/history_row_widget.dart';
+import '../services/noir_toast_service.dart';
+import '../services/stats_service.dart';
+import '../l10n/app_localizations.dart';
 import 'edit_profile_data_screen.dart';
 import 'settings_screen.dart';
 import 'progress_photo_gallery_screen.dart';
 import 'workout_history_screen.dart';
+import 'nutrition_history_screen.dart';
 
 // =============================================================================
 // PROFILE SCREEN — Main Component
@@ -91,13 +99,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   List<RadarStat> _generateUserStats() {
-    // In production, calculate from actual user data
+    // Start with zeros for new users - real values come from provider
     return [
-      FitnessStats.discipline.copyWith(value: 85),
-      FitnessStats.nutrition.copyWith(value: 72),
-      FitnessStats.strength.copyWith(value: 68),
-      FitnessStats.endurance.copyWith(value: 65),
-      FitnessStats.balance.copyWith(value: 58),
+      FitnessStats.discipline.copyWith(value: 0),
+      FitnessStats.nutrition.copyWith(value: 0),
+      FitnessStats.strength.copyWith(value: 0),
+      FitnessStats.endurance.copyWith(value: 0),
+      FitnessStats.balance.copyWith(value: 0),
     ];
   }
 
@@ -123,15 +131,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   void _openWeightPicker(UserModel? profile) async {
+    final l10n = AppLocalizations.of(context)!;
     final currentWeight = profile?.weight ?? 70.0;
-    final result = await showWeightInputSheet(
+    final statsState = ref.read(statsProvider);
+    
+    // Calculate previous weight from weight change
+    double? previousWeight;
+    if (statsState.weightChange != null) {
+      previousWeight = currentWeight - statsState.weightChange!;
+    }
+    
+    final result = await NoirWeightPicker.show(
       context,
-      initialWeight: currentWeight,
-      title: 'Обновить вес',
+      initialWeightKg: currentWeight,
+      previousWeightKg: previousWeight,
+      targetWeightKg: profile?.targetWeight,
+      goal: profile?.goal,
     );
     
     if (result != null && mounted) {
-      ref.read(profileProvider.notifier).updateWeight(result);
+      await ref.read(profileProvider.notifier).updateWeight(result);
+      // Refresh stats to get updated weight change
+      await ref.read(statsProvider.notifier).refresh();
+      // Show toast
+      if (mounted) {
+        NoirToast.success(context, l10n.dataSaved);
+      }
     }
   }
 
@@ -146,6 +171,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   
   Future<void> _changeAvatar() async {
     HapticFeedback.lightImpact();
+    final l10n = AppLocalizations.of(context)!;
     
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -167,7 +193,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
             const SizedBox(height: kSpaceLG),
-            Text('Сменить аватар', style: kDenseHeading),
+            Text(l10n.changeAvatar, style: kDenseHeading),
             const SizedBox(height: kSpaceLG),
             ListTile(
               leading: Container(
@@ -178,7 +204,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
                 child: const Icon(Icons.camera_alt, color: kElectricAmberStart),
               ),
-              title: Text('Сделать фото', style: kBodyText),
+              title: Text(l10n.takePhotoCamera, style: kBodyText),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
@@ -190,7 +216,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
                 child: const Icon(Icons.photo_library, color: kInfoCyan),
               ),
-              title: Text('Выбрать из галереи', style: kBodyText),
+              title: Text(l10n.chooseFromGallery, style: kBodyText),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             SizedBox(height: MediaQuery.of(ctx).padding.bottom),
@@ -213,48 +239,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       if (pickedFile == null || !mounted) return;
 
       // Показываем загрузку
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: kTextPrimary,
-                ),
-              ),
-              SizedBox(width: 12),
-              Text('Загрузка аватара...'),
-            ],
-          ),
-          duration: Duration(seconds: 30),
-        ),
-      );
+      NoirToast.info(context, l10n.loading);
 
       // Загружаем аватар через провайдер
       await ref.read(profileProvider.notifier).updateAvatar(pickedFile.path);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Аватар обновлён!'),
-            backgroundColor: kSuccessGreen,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        NoirToast.success(context, l10n.avatarUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка: $e'),
-            backgroundColor: kErrorRed,
-          ),
-        );
+        final l10n = AppLocalizations.of(context)!;
+        NoirToast.error(context, l10n.error);
       }
     }
   }
@@ -270,6 +266,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final profileState = ref.watch(profileProvider);
     final profile = profileState.profile;
     final statsState = ref.watch(statsProvider);
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       backgroundColor: kOledBlack,
@@ -294,7 +291,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
               slivers: [
                 // Premium SliverAppBar with parallax avatar
-                _buildSliverAppBar(profile),
+                _buildSliverAppBar(profile, l10n.athlete),
                 
                 // Loading indicator
                 if (profileState.isLoading && !profileState.hasProfile)
@@ -315,9 +312,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     sliver: _buildQuickStatsGrid(profile, statsState),
                   ),
                   
-                  // Muscle Fatigue Map
+                  // Nutrition History (Last 7 Days)
+                  const SliverToBoxAdapter(
+                    child: _NutritionHistoryWidget(),
+                  ),
+                  
+                  // Progress Photos Gallery
                   SliverToBoxAdapter(
-                    child: _buildMuscleFatigueSection(statsState),
+                    child: _ProgressPhotosSection(
+                      onViewAll: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ProgressPhotoGalleryScreen()),
+                        );
+                      },
+                    ),
                   ),
                   
                   // RPG Stats Radar
@@ -325,16 +335,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     child: _buildRpgStatsSection(statsState),
                   ),
                   
-                  // Action Cards Grid
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: kSpaceMD),
-                    sliver: _buildActionCardsGrid(),
+                  // Action Cards Row
+                  SliverToBoxAdapter(
+                    child: _buildActionCardsSection(),
                   ),
                   
-                  // Bottom spacing
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 100),
-                  ),
+                  // Bottom spacing for floating nav bar
+                  const SliverNavBarSpacer(),
                 ],
               ],
             ),
@@ -378,7 +385,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       Icon(Icons.cloud_off, size: 14, color: kWarningAmber),
                       const SizedBox(width: kSpaceXS),
                       Text(
-                        'Офлайн режим',
+                        AppLocalizations.of(context)!.offlineMode,
                         style: kCaptionText.copyWith(color: kWarningAmber, fontSize: 11),
                       ),
                     ],
@@ -395,7 +402,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // SLIVER APP BAR — Premium Header
   // ===========================================================================
 
-  Widget _buildSliverAppBar(UserModel? profile) {
+  Widget _buildSliverAppBar(UserModel? profile, String athleteFallback) {
     return SliverAppBar(
       expandedHeight: 280,
       floating: false,
@@ -429,12 +436,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ],
         background: _ProfileHeaderBackground(
           profile: profile,
+          athleteFallback: athleteFallback,
           onEditTap: _changeAvatar,
         ),
       ),
       title: _isScrolled
           ? Text(
-              profile?.name ?? 'Профиль',
+              profile?.name ?? athleteFallback,
               style: kDenseSubheading.copyWith(fontSize: 18),
             )
           : null,
@@ -448,42 +456,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget _buildDisciplineSection(StatsState statsState) {
     // Calculate discipline score from real characteristics
     final chars = statsState.characteristics;
-    final hasRealData = chars.isNotEmpty && chars.values.any((v) => v > 10);
+    final hasRealData = chars.isNotEmpty && chars.values.any((v) => v > 0);
     
     int disciplineScore;
     Map<String, int> breakdown;
+    final l10n = AppLocalizations.of(context)!;
     
-    if (hasRealData) {
-      // Real score calculation based on characteristics
-      final discipline = chars['discipline'] ?? 10.0;
-      final nutrition = chars['nutrition'] ?? 10.0;
-      final strength = chars['strength'] ?? 10.0;
-      final endurance = chars['endurance'] ?? 10.0;
-      final balance = chars['balance'] ?? 10.0;
-      
-      // Formula: discipline * 4 + others * 1.5 = max 1000
-      disciplineScore = ((discipline * 4) + 
-                         (nutrition * 1.5) + 
-                         (strength * 1.5) + 
-                         (endurance * 1.5) + 
-                         (balance * 1.5)).toInt();
-      
-      breakdown = {
-        'Постоянство': (discipline * 4).toInt(),
-        'Питание': (nutrition * 1.5).toInt(),
-        'Сила': (strength * 1.5).toInt(),
-        'Выносливость': (endurance * 1.5).toInt(),
-        'Баланс': (balance * 1.5).toInt(),
-      };
-    } else {
-      disciplineScore = _disciplineScore;
-      breakdown = {
-        'Тренировки': 350,
-        'Питание': 200,
-        'Сон': 180,
-        'Консистентность': 120,
-      };
-    }
+    // Real score calculation based on characteristics (zeros for new users)
+    final discipline = chars['discipline'] ?? 0.0;
+    final nutrition = chars['nutrition'] ?? 0.0;
+    final strength = chars['strength'] ?? 0.0;
+    final endurance = chars['endurance'] ?? 0.0;
+    final balance = chars['balance'] ?? 0.0;
+    
+    // Formula: discipline * 4 + others * 1.5 = max 1000
+    disciplineScore = ((discipline * 4) + 
+                       (nutrition * 1.5) + 
+                       (strength * 1.5) + 
+                       (endurance * 1.5) + 
+                       (balance * 1.5)).toInt();
+    
+    breakdown = {
+      l10n.consistencyLabel: (discipline * 4).toInt(),
+      l10n.nutritionLabel: (nutrition * 1.5).toInt(),
+      l10n.strengthLabel: (strength * 1.5).toInt(),
+      l10n.enduranceLabel: (endurance * 1.5).toInt(),
+      l10n.balanceLabel: (balance * 1.5).toInt(),
+    };
     
     return Padding(
       padding: const EdgeInsets.all(kSpaceMD),
@@ -497,7 +496,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 const Icon(Icons.military_tech, color: kElectricAmberStart, size: 24),
                 const SizedBox(width: kSpaceSM),
                 Text(
-                  'Рейтинг Дисциплины',
+                  l10n.disciplineRating,
                   style: kDenseSubheading.copyWith(fontSize: 18),
                 ),
                 const Spacer(),
@@ -552,14 +551,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
             const SizedBox(height: kSpaceLG),
-            Text('Как рассчитывается рейтинг?', style: kDenseHeading),
+            Text(AppLocalizations.of(context)!.howRatingCalculated, style: kDenseHeading),
             const SizedBox(height: kSpaceMD),
             Text(
-              'Рейтинг дисциплины — это показатель вашей последовательности и приверженности тренировкам.\n\n'
-              '• Тренировки: до 400 очков за регулярные занятия\n'
-              '• Питание: до 250 очков за соблюдение режима\n'
-              '• Сон: до 200 очков за качественный отдых\n'
-              '• Консистентность: до 150 очков за серии дней',
+              AppLocalizations.of(context)!.ratingExplanation,
               style: kBodyText,
             ),
             const SizedBox(height: kSpaceLG),
@@ -577,13 +572,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     // Format weight change text
     String weightChangeText = '—';
     bool isWeightChangePositive = false;
+    bool showTrendIcon = false;
+    
     if (statsState.weightChange != null) {
       final change = statsState.weightChange!;
-      final sign = change >= 0 ? '+' : '';
-      weightChangeText = '$sign${change.toStringAsFixed(1)}';
-      // For most goals, losing weight is positive
-      isWeightChangePositive = profile?.goal == 'gain_muscle' ? change > 0 : change < 0;
+      // Only show trend if there's actual change (not 0.0)
+      if (change.abs() >= 0.1) {
+        final sign = change >= 0 ? '+' : '';
+        weightChangeText = '$sign${change.toStringAsFixed(1)}';
+        // For most goals, losing weight is positive
+        isWeightChangePositive = profile?.goal == 'gain_muscle' ? change > 0 : change < 0;
+        showTrendIcon = true;
+      } else {
+        // Change is negligible (~0), show no change indicator
+        weightChangeText = '±0';
+      }
     }
+    
+    final l10n = AppLocalizations.of(context)!;
 
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -596,18 +602,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         // Weight card
         _QuickStatCard(
           icon: Icons.monitor_weight_outlined,
-          label: 'Вес',
+          label: l10n.weight,
           value: profile?.weight?.toStringAsFixed(1) ?? '—',
-          unit: 'кг',
+          unit: l10n.kg,
           trend: weightChangeText,
           trendPositive: isWeightChangePositive,
+          showTrendIcon: showTrendIcon,
           onTap: () => _openWeightPicker(profile),
         ),
         
         // Today's Win card with percentage
         _QuickStatCard(
           icon: Icons.star_outlined,
-          label: 'Успех дня',
+          label: l10n.todaysWin,
           value: '${statsState.successDayPercentage}',
           unit: '%',
           accentColor: statsState.successDayPercentage >= 70 
@@ -622,7 +629,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         // Workouts this month
         _QuickStatCard(
           icon: Icons.fitness_center,
-          label: 'Тренировки',
+          label: l10n.workouts,
           value: '${statsState.workoutsThisMonth}',
           unit: '/ ${statsState.workoutsTarget}',
           accentColor: kSuccessGreen,
@@ -633,9 +640,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         // Streak
         _QuickStatCard(
           icon: Icons.local_fire_department,
-          label: 'Серия',
+          label: l10n.streak,
           value: '${statsState.streak}',
-          unit: 'дн',
+          unit: l10n.days,
           accentColor: statsState.streak > 0 ? kElectricAmberStart : kTextTertiary,
           onTap: () => _showStreakInfo(context, statsState),
           showInfoBadge: true,
@@ -668,15 +675,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
             const SizedBox(height: kSpaceLG),
-            Text('Успех дня — ${statsState.successDayPercentage}%', style: kDenseHeading),
+            Text(AppLocalizations.of(context)!.successDayTitle(statsState.successDayPercentage), style: kDenseHeading),
             const SizedBox(height: kSpaceMD),
-            _buildSuccessRow('Вход в приложение', 10, statsState.successDayBreakdown['login'] ?? 0),
-            _buildSuccessRow('Серия дней', 20, statsState.successDayBreakdown['streak'] ?? 0),
-            _buildSuccessRow('Питание', 40, statsState.successDayBreakdown['nutrition'] ?? 0),
-            _buildSuccessRow('Тренировка', 30, statsState.successDayBreakdown['workout'] ?? 0),
+            _buildSuccessRow(AppLocalizations.of(context)!.appLogin, 10, statsState.successDayBreakdown['login'] ?? 0),
+            _buildSuccessRow(AppLocalizations.of(context)!.streakDays, 20, statsState.successDayBreakdown['streak'] ?? 0),
+            _buildSuccessRow(AppLocalizations.of(context)!.nutritionLabel, 40, statsState.successDayBreakdown['nutrition'] ?? 0),
+            _buildSuccessRow(AppLocalizations.of(context)!.workoutActivity, 30, statsState.successDayBreakdown['workout'] ?? 0),
             const SizedBox(height: kSpaceMD),
             Text(
-              'Выполняйте все активности, чтобы достичь 100%!',
+              AppLocalizations.of(context)!.completeAllForHundred,
               style: kCaptionText.copyWith(color: kTextTertiary),
             ),
             const SizedBox(height: kSpaceLG),
@@ -733,7 +740,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
             const SizedBox(height: kSpaceLG),
-            Text('Тренировки за месяц', style: kDenseHeading),
+            Text(AppLocalizations.of(context)!.workoutsThisMonth, style: kDenseHeading),
             const SizedBox(height: kSpaceMD),
             Row(
               children: [
@@ -755,8 +762,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
             const SizedBox(height: kSpaceMD),
             Text(
-              'Цель: ${statsState.workoutsTarget} тренировок в месяц.\n'
-              'Осталось: ${(statsState.workoutsTarget - statsState.workoutsThisMonth).clamp(0, statsState.workoutsTarget)} тренировок.',
+              '${AppLocalizations.of(context)!.monthlyGoal(statsState.workoutsTarget)}\n'
+              '${AppLocalizations.of(context)!.workoutsRemaining((statsState.workoutsTarget - statsState.workoutsThisMonth).clamp(0, statsState.workoutsTarget))}',
               style: kBodyText.copyWith(color: kTextSecondary),
             ),
             const SizedBox(height: kSpaceLG),
@@ -789,7 +796,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
             const SizedBox(height: kSpaceLG),
-            Text('Серия активности', style: kDenseHeading),
+            Text(AppLocalizations.of(context)!.activityStreak, style: kDenseHeading),
             const SizedBox(height: kSpaceMD),
             Row(
               children: [
@@ -800,17 +807,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '${statsState.streak} дней подряд',
+                  AppLocalizations.of(context)!.daysInRow(statsState.streak),
                   style: kDenseSubheading.copyWith(fontSize: 22),
                 ),
               ],
             ),
             const SizedBox(height: kSpaceMD),
             Text(
-              'Серия засчитывается за каждый день, когда вы:\n'
-              '• Завершили тренировку\n'
-              '• Или записали приём пищи\n\n'
-              'Поддерживайте серию, чтобы получить бонусы!',
+              AppLocalizations.of(context)!.streakExplanation,
               style: kBodyText.copyWith(color: kTextSecondary),
             ),
             const SizedBox(height: kSpaceLG),
@@ -830,98 +834,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return ((initial - current) / (initial - target)).clamp(0.0, 1.0);
   }
 
-  // ===========================================================================
-  // MUSCLE FATIGUE MAP SECTION
-  // ===========================================================================
-
-  Widget _buildMuscleFatigueSection(StatsState statsState) {
-    // Map muscle group names from DB to widget keys
-    final fatigueLevels = <String, double>{
-      'chest': statsState.muscleFatigue['chest'] ?? 0.0,
-      'abs': statsState.muscleFatigue['abs'] ?? statsState.muscleFatigue['core'] ?? 0.0,
-      'shoulders': statsState.muscleFatigue['shoulders'] ?? 0.0,
-      'arms': statsState.muscleFatigue['biceps'] ?? statsState.muscleFatigue['arms'] ?? 0.0,
-      'legs': statsState.muscleFatigue['quadriceps'] ?? statsState.muscleFatigue['legs'] ?? 0.0,
-    };
+  /// Calculate goal progress as integer percentage
+  int _calculateGoalProgressPercent(UserModel? profile) {
+    if (profile?.weight == null || profile?.targetWeight == null) return 0;
+    final initial = profile!.initialWeight ?? profile.weight!;
+    final current = profile.weight!;
+    final target = profile.targetWeight!;
     
-    // If no real data, use sample data
-    final hasFatigueData = fatigueLevels.values.any((v) => v > 0);
-    final displayLevels = hasFatigueData ? fatigueLevels : {
-      'chest': _muscleData['chest']?.fatigueLevel ?? 0.0,
-      'abs': _muscleData['abs']?.fatigueLevel ?? 0.0,
-      'shoulders': _muscleData['shoulders']?.fatigueLevel ?? 0.0,
-      'arms': _muscleData['biceps']?.fatigueLevel ?? 0.0,
-      'legs': _muscleData['quadriceps']?.fatigueLevel ?? 0.0,
-    };
-    
-    return Padding(
-      padding: const EdgeInsets.all(kSpaceMD),
-      child: GlassCard(
-        padding: const EdgeInsets.all(kSpaceLG),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with toggle
-            Row(
-              children: [
-                const Icon(Icons.accessibility_new, color: kElectricAmberStart, size: 24),
-                const SizedBox(width: kSpaceSM),
-                Expanded(
-                  child: Text(
-                    'Карта Усталости',
-                    style: kDenseSubheading.copyWith(fontSize: 16),
-                  ),
-                ),
-                // Front/Back toggle
-                _ToggleChip(
-                  selected: _showFrontBody,
-                  leftLabel: 'Перед',
-                  rightLabel: 'Спина',
-                  onToggle: _toggleBodyView,
-                ),
-              ],
-            ),
-            const SizedBox(height: kSpaceSM),
-            
-            // Data source indicator
-            if (!hasFatigueData)
-              Padding(
-                padding: const EdgeInsets.only(bottom: kSpaceSM),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 14, color: kTextTertiary),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Начните тренировки для отображения реальных данных',
-                      style: kCaptionText.copyWith(color: kTextTertiary, fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-            
-            // Body map (SVG-based)
-            AnimatedSwitcher(
-              duration: kDurationMedium,
-              child: MuscleMapWidget(
-                key: ValueKey(_showFrontBody),
-                fatigueLevels: displayLevels,
-                showFront: _showFrontBody,
-                height: 350,
-                onMuscleTap: (muscleId) {
-                  HapticFeedback.selectionClick();
-                  final muscle = _muscleData[muscleId];
-                  if (muscle != null) {
-                    _showMuscleDetail(context, muscle);
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    if (initial == target) return 100;
+    final progress = ((initial - current) / (initial - target)).clamp(0.0, 1.0);
+    return (progress * 100).toInt();
   }
 
+  // Legacy method for backward compatibility
   void _showMuscleDetail(BuildContext context, MuscleData muscle) {
     showModalBottomSheet(
       context: context,
@@ -938,26 +863,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ===========================================================================
 
   Widget _buildRpgStatsSection(StatsState statsState) {
-    // Build stats from real data
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Build stats from real data - start at 0 for new users
     final characteristics = statsState.characteristics;
     final hasRealData = characteristics.isNotEmpty && 
-        characteristics.values.any((v) => v > 10);
+        characteristics.values.any((v) => v > 0);
     
+    // For new users, show zeros (not fake 10s)
+    // Use localized names and descriptions
     final realStats = [
-      FitnessStats.discipline.copyWith(
-        value: (characteristics['discipline'] ?? 10).toDouble(),
+      RadarStat(
+        name: 'discipline',
+        localizedName: l10n.discipline,
+        value: (characteristics['discipline'] ?? 0).toDouble(),
+        maxValue: 100,
+        icon: Icons.psychology,
+        description: l10n.disciplineDesc,
       ),
-      FitnessStats.nutrition.copyWith(
-        value: (characteristics['nutrition'] ?? 10).toDouble(),
+      RadarStat(
+        name: 'nutrition',
+        localizedName: l10n.nutritionLabel,
+        value: (characteristics['nutrition'] ?? 0).toDouble(),
+        maxValue: 100,
+        icon: Icons.restaurant,
+        description: l10n.nutritionDesc,
       ),
-      FitnessStats.strength.copyWith(
-        value: (characteristics['strength'] ?? 10).toDouble(),
+      RadarStat(
+        name: 'strength',
+        localizedName: l10n.strengthLabel,
+        value: (characteristics['strength'] ?? 0).toDouble(),
+        maxValue: 100,
+        icon: Icons.fitness_center,
+        description: l10n.strengthDesc,
       ),
-      FitnessStats.endurance.copyWith(
-        value: (characteristics['endurance'] ?? 10).toDouble(),
+      RadarStat(
+        name: 'endurance',
+        localizedName: l10n.enduranceLabel,
+        value: (characteristics['endurance'] ?? 0).toDouble(),
+        maxValue: 100,
+        icon: Icons.directions_run,
+        description: l10n.enduranceDesc,
       ),
-      FitnessStats.balance.copyWith(
-        value: (characteristics['balance'] ?? 10).toDouble(),
+      RadarStat(
+        name: 'balance',
+        localizedName: l10n.balanceLabel,
+        value: (characteristics['balance'] ?? 0).toDouble(),
+        maxValue: 100,
+        icon: Icons.balance,
+        description: l10n.balanceDesc,
       ),
     ];
     
@@ -974,15 +928,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   Icon(Icons.info_outline, size: 14, color: kTextTertiary),
                   const SizedBox(width: 4),
                   Text(
-                    'Тренируйтесь для отображения реальных показателей',
+                    l10n.trainToSeeStats,
                     style: kCaptionText.copyWith(color: kTextTertiary, fontSize: 11),
                   ),
                 ],
               ),
             ),
           RpgRadarChartCard(
-            stats: hasRealData ? realStats : _stats,
-            title: 'Характеристики',
+            stats: realStats, // Always show real stats (zeros for new users)
+            title: l10n.characteristics,
             onStatTap: (stat) {
               showStatDetailSheet(context, stat);
             },
@@ -993,49 +947,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   // ===========================================================================
-  // ACTION CARDS GRID
+  // ACTION CARDS GRID — Now Rectangular History Rows
   // ===========================================================================
 
-  SliverGrid _buildActionCardsGrid() {
-    return SliverGrid(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: kSpaceMD,
-        mainAxisSpacing: kSpaceMD,
-        childAspectRatio: 1.2,
+  Widget _buildActionCardsSection() {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: kSpaceMD, vertical: kSpaceSM),
+      child: Column(
+        children: [
+          // Workout History Row
+          _WorkoutHistoryRow(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WorkoutHistoryScreen()),
+              );
+            },
+          ),
+          const SizedBox(height: kSpaceMD),
+        ],
       ),
-      delegate: SliverChildListDelegate([
-        _ActionCard(
-          icon: Icons.camera_alt_outlined,
-          label: 'Прогресс фото',
-          subtitle: '12 фото',
-          gradient: LinearGradient(
-            colors: [Colors.purple.withOpacity(0.3), Colors.transparent],
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProgressPhotoGalleryScreen()),
-            );
-          },
-        ),
-        _ActionCard(
-          icon: Icons.history,
-          label: 'История',
-          subtitle: '48 тренировок',
-          gradient: LinearGradient(
-            colors: [kInfoCyan.withOpacity(0.3), Colors.transparent],
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WorkoutHistoryScreen()),
-            );
-          },
-        ),
-      ]),
     );
   }
 }
@@ -1048,10 +982,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 class _ProfileHeaderBackground extends StatelessWidget {
   const _ProfileHeaderBackground({
     required this.profile,
+    required this.athleteFallback,
     required this.onEditTap,
   });
 
   final UserModel? profile;
+  final String athleteFallback;
   final VoidCallback onEditTap;
 
   @override
@@ -1118,30 +1054,35 @@ class _ProfileHeaderBackground extends StatelessWidget {
               
               // Name
               Text(
-                profile?.name ?? 'Атлет',
+                profile?.name ?? athleteFallback,
                 style: kDenseHeading,
               ),
               const SizedBox(height: kSpaceMD),
               
-              // Quick badges
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _ProfileBadge(
-                    icon: Icons.straighten,
-                    value: '${profile?.height ?? '—'} см',
-                  ),
-                  const SizedBox(width: kSpaceMD),
-                  _ProfileBadge(
-                    icon: Icons.monitor_weight_outlined,
-                    value: '${profile?.weight?.toStringAsFixed(1) ?? '—'} кг',
-                  ),
-                  const SizedBox(width: kSpaceMD),
-                  _ProfileBadge(
-                    icon: Icons.cake_outlined,
-                    value: '${profile?.age ?? '—'} лет',
-                  ),
-                ],
+              // Quick badges (localized units)
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _ProfileBadge(
+                        icon: Icons.straighten,
+                        value: '${profile?.height ?? '—'} ${l10n.cmUnit}',
+                      ),
+                      const SizedBox(width: kSpaceMD),
+                      _ProfileBadge(
+                        icon: Icons.monitor_weight_outlined,
+                        value: '${profile?.weight?.toStringAsFixed(1) ?? '—'} ${l10n.kgUnit}',
+                      ),
+                      const SizedBox(width: kSpaceMD),
+                      _ProfileBadge(
+                        icon: Icons.cake_outlined,
+                        value: '${profile?.age ?? '—'} ${l10n.yearsUnit}',
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -1190,6 +1131,7 @@ class _QuickStatCard extends StatelessWidget {
     this.unit,
     this.trend,
     this.trendPositive,
+    this.showTrendIcon = true,
     this.progress,
     this.accentColor,
     this.onTap,
@@ -1202,6 +1144,7 @@ class _QuickStatCard extends StatelessWidget {
   final String? unit;
   final String? trend;
   final bool? trendPositive;
+  final bool showTrendIcon;
   final double? progress;
   final Color? accentColor;
   final VoidCallback? onTap;
@@ -1262,26 +1205,38 @@ class _QuickStatCard extends StatelessWidget {
           ),
           
           // Trend or progress
-          if (trend != null)
+          if (trend != null && trend != '—')
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    trendPositive == true ? Icons.trending_down : Icons.trending_up,
-                    size: 12,
-                    color: trendPositive == true ? kSuccessGreen : kErrorRed,
-                  ),
-                  const SizedBox(width: 2),
+                  if (showTrendIcon) ...[
+                    Icon(
+                      trendPositive == true ? Icons.trending_down : Icons.trending_up,
+                      size: 12,
+                      color: trendPositive == true ? kSuccessGreen : kErrorRed,
+                    ),
+                    const SizedBox(width: 2),
+                  ],
                   Text(
                     trend!,
                     style: kCaptionText.copyWith(
-                      color: trendPositive == true ? kSuccessGreen : kErrorRed,
+                      color: showTrendIcon 
+                          ? (trendPositive == true ? kSuccessGreen : kErrorRed)
+                          : kTextTertiary,
                       fontSize: 10,
                     ),
                   ),
                 ],
+              ),
+            )
+          else if (trend == '—')
+            Text(
+              '—',
+              style: kCaptionText.copyWith(
+                color: kTextTertiary,
+                fontSize: 10,
               ),
             )
           else if (progress != null)
@@ -1575,3 +1530,530 @@ class _MuscleDetailSheet extends StatelessWidget {
     return kErrorRed;
   }
 }
+
+// =============================================================================
+// _NutritionHistoryWidget — Clickable Row with 7-Day Bar Chart
+// =============================================================================
+
+class _NutritionHistoryWidget extends ConsumerStatefulWidget {
+  const _NutritionHistoryWidget();
+
+  @override
+  ConsumerState<_NutritionHistoryWidget> createState() => _NutritionHistoryWidgetState();
+}
+
+class _NutritionHistoryWidgetState extends ConsumerState<_NutritionHistoryWidget> {
+  List<HistoryDayData> _days = [];
+  bool _isLoading = true;
+  String? _error;
+  final _statsService = StatsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNutritionHistory();
+  }
+
+  Future<void> _loadNutritionHistory() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final data = await _statsService.getLast7DaysNutrition();
+      if (mounted) {
+        setState(() {
+          _days = data.map((item) {
+            final map = item as Map<String, dynamic>;
+            return HistoryDayData(
+              date: DateTime(map['year'] as int, map['month'] as int, map['day'] as int),
+              value: (map['calories'] as int).toDouble(),
+              target: (map['target'] as int).toDouble(),
+            );
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+          _days = _generateEmptyDays();
+        });
+      }
+    }
+  }
+
+  List<HistoryDayData> _generateEmptyDays() {
+    final now = DateTime.now();
+    return List.generate(7, (i) {
+      final date = now.subtract(Duration(days: 6 - i));
+      return HistoryDayData(date: date, value: 0, target: 2000);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: noir.kSpaceMD, vertical: noir.kSpaceSM),
+      child: HistoryRowWidget(
+        title: l10n.nutritionHistory,
+        subtitle: l10n.last7Days,
+        icon: Icons.restaurant_menu_rounded,
+        days: _days,
+        isLoading: _isLoading,
+        barColor: const Color(0xFF4ADE80), // Green for nutrition
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NutritionHistoryScreen()),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// _WorkoutHistoryRow — Clickable Row with 7-Day Workout Chart
+// =============================================================================
+
+class _WorkoutHistoryRow extends ConsumerStatefulWidget {
+  final VoidCallback onTap;
+  
+  const _WorkoutHistoryRow({required this.onTap});
+
+  @override
+  ConsumerState<_WorkoutHistoryRow> createState() => _WorkoutHistoryRowState();
+}
+
+class _WorkoutHistoryRowState extends ConsumerState<_WorkoutHistoryRow> {
+  List<HistoryDayData> _days = [];
+  bool _isLoading = true;
+  final _statsService = StatsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWorkoutHistory();
+  }
+
+  Future<void> _loadWorkoutHistory() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final data = await _statsService.getLast7DaysWorkouts();
+      if (mounted) {
+        setState(() {
+          _days = data.map((item) {
+            final map = item as Map<String, dynamic>;
+            return HistoryDayData(
+              date: DateTime(map['year'] as int, map['month'] as int, map['day'] as int),
+              value: (map['workouts'] as int).toDouble(),
+              target: 1.0, // 1 workout per day is 100%
+            );
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _days = _generateEmptyDays();
+        });
+      }
+    }
+  }
+
+  List<HistoryDayData> _generateEmptyDays() {
+    final now = DateTime.now();
+    return List.generate(7, (i) {
+      final date = now.subtract(Duration(days: 6 - i));
+      return HistoryDayData(date: date, value: 0, target: 1);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return HistoryRowWidget(
+      title: l10n.workoutHistory,
+      subtitle: l10n.last7Days,
+      icon: Icons.fitness_center_rounded,
+      days: _days,
+      isLoading: _isLoading,
+      barColor: kInfoCyan, // Cyan for workouts
+      onTap: widget.onTap,
+    );
+  }
+}
+
+// =============================================================================
+// _ProgressPhotosSection — Inline Noir Glass Horizontal Gallery
+// =============================================================================
+
+class _ProgressPhotosSection extends ConsumerStatefulWidget {
+  final VoidCallback onViewAll;
+  
+  const _ProgressPhotosSection({required this.onViewAll});
+
+  @override
+  ConsumerState<_ProgressPhotosSection> createState() => _ProgressPhotosSectionState();
+}
+
+class _ProgressPhotosSectionState extends ConsumerState<_ProgressPhotosSection> {
+  List<ProgressPhoto> _photos = [];
+  bool _isLoading = true;
+  String? _error;
+  final _statsService = StatsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhotos();
+  }
+
+  Future<void> _loadPhotos() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    
+    try {
+      final photosData = await _statsService.getProgressPhotos(limit: 10);
+      if (mounted) {
+        setState(() {
+          _photos = photosData
+              .map((json) {
+                try {
+                  return ProgressPhoto.fromJson(json);
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<ProgressPhoto>()
+              .toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      // Handle missing table or other DB errors gracefully
+      if (mounted) {
+        setState(() {
+          _photos = []; // Show empty state instead of error
+          _error = null; // Don't show error, just empty
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: noir.kSpaceMD, vertical: noir.kSpaceSM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.photo_library_outlined, color: noir.kContentMedium, size: 20),
+                  const SizedBox(width: noir.kSpaceSM),
+                  Text(
+                    l10n.progressPhotos,
+                    style: noir.kNoirHeadline.copyWith(fontSize: 18),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: widget.onViewAll,
+                child: Text(
+                  l10n.viewAll,
+                  style: const TextStyle(color: noir.kContentMedium, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: noir.kSpaceSM),
+          
+          // Horizontal gallery - fixed 180px height
+          SizedBox(
+            height: 180,
+            child: _buildGalleryContent(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGalleryContent() {
+    final l10n = AppLocalizations.of(context)!;
+    
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation(noir.kContentMedium.withOpacity(0.5)),
+        ),
+      );
+    }
+    
+    if (_error != null) {
+      return _buildEmptyState(l10n.errorLoadingPhotos);
+    }
+    
+    if (_photos.isEmpty) {
+      return _buildEmptyState(l10n.noProgressPhotosYet);
+    }
+    
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: _photos.length + 1, // +1 for add button
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _buildAddButton();
+        }
+        return _buildPhotoItem(_photos[index - 1]);
+      },
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return GestureDetector(
+      onTap: widget.onViewAll,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(noir.kRadiusMD),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: noir.kNoirGraphite.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(noir.kRadiusMD),
+              border: Border.all(color: noir.kNoirSteel.withOpacity(0.3)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_a_photo_outlined,
+                  color: noir.kContentLow,
+                  size: 40,
+                ),
+                const SizedBox(height: noir.kSpaceSM),
+                Text(
+                  message,
+                  style: const TextStyle(color: noir.kContentLow, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: noir.kSpaceXS),
+                Text(
+                  AppLocalizations.of(context)!.tapToAdd,
+                  style: TextStyle(color: noir.kContentLow.withOpacity(0.6), fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return GestureDetector(
+      onTap: widget.onViewAll,
+      child: Container(
+        width: 110,
+        margin: const EdgeInsets.only(right: noir.kSpaceSM),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(noir.kRadiusMD),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: noir.kNoirGraphite.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(noir.kRadiusMD),
+                border: Border.all(color: noir.kNoirSteel.withOpacity(0.3)),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add_rounded,
+                    color: noir.kContentMedium,
+                    size: 32,
+                  ),
+                  SizedBox(height: noir.kSpaceXS),
+                  Text(
+                    'Добавить',
+                    style: TextStyle(color: noir.kContentMedium, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoItem(ProgressPhoto photo) {
+    // Safety check for empty URL
+    final photoUrl = photo.photoUrl;
+    if (photoUrl.isEmpty) {
+      return _buildBrokenPhotoPlaceholder();
+    }
+    
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ProgressPhotoGalleryScreen()),
+        );
+      },
+      child: Container(
+        width: 110,
+        margin: const EdgeInsets.only(right: noir.kSpaceSM),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(noir.kRadiusMD),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Photo with error handling
+              Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    color: noir.kNoirGraphite,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: progress.expectedTotalBytes != null
+                            ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                            : null,
+                        valueColor: AlwaysStoppedAnimation(noir.kContentLow),
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stack) {
+                  return Container(
+                    color: noir.kNoirGraphite,
+                    child: const Icon(
+                      Icons.broken_image_outlined,
+                      color: noir.kContentLow,
+                      size: 32,
+                    ),
+                  );
+                },
+              ),
+              
+              // Gradient overlay
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        noir.kNoirBlack.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Date label
+              Positioned(
+                bottom: 8,
+                left: 8,
+                right: 8,
+                child: Text(
+                  _formatDate(photo.createdAt),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              
+              // Weight badge if available
+              if (photo.weight != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: noir.kNoirBlack.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${photo.weight!.toStringAsFixed(1)} кг',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildBrokenPhotoPlaceholder() {
+    return Container(
+      width: 110,
+      margin: const EdgeInsets.only(right: noir.kSpaceSM),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(noir.kRadiusMD),
+        child: Container(
+          color: noir.kNoirGraphite,
+          child: const Icon(
+            Icons.broken_image_outlined,
+            color: noir.kContentLow,
+            size: 32,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    return '${date.day} ${months[date.month - 1]}';
+  }
+}
+

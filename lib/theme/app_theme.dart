@@ -1,8 +1,9 @@
 // =============================================================================
-// app_theme.dart — Premium Dark Industrial Theme System
+// app_theme.dart — Obsidian Glass Theme System (Monochrome)
 // =============================================================================
-// Trainer#1 Design System: OLED Black, Obsidian Surfaces, Electric Amber Accents
-// With Glassmorphism 3.0 effects and ThemeExtensions for full customization.
+// "Liquid Noir" Design System: Pure Black & White
+// Zero color hues — only luminance and grey scale
+// Inspired by Dieter Rams, Apple Pro, Carbon Fiber aesthetics
 // =============================================================================
 
 import 'dart:ui';
@@ -10,156 +11,223 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // =============================================================================
-// CONSTANTS — Premium Dark Industrial Palette
+// CONSTANTS — Obsidian Noir Monochrome Palette (NO HUES!)
 // =============================================================================
 
 /// True OLED Black — saves battery on OLED screens, creates depth
 const Color kOledBlack = Color(0xFF000000);
 
-/// Obsidian — elevated surface with subtle warmth
-const Color kObsidianSurface = Color(0xFF121212);
+/// Charcoal — elevated background
+const Color kMidnightBlue = Color(0xFF0A0A0A);
 
-/// Obsidian Border — subtle separator, chrome-like edge
-const Color kObsidianBorder = Color(0xFF2C2C2E);
+/// Obsidian Surface — elevated dark
+const Color kDeepSpace = Color(0xFF121212);
 
-/// Electric Amber — primary gradient start (Gold)
-const Color kElectricAmberStart = Color(0xFFFFD700);
+/// Smoked Glass — card/container background
+const Color kNebulaSurface = Color(0xFF1A1A1A);
 
-/// Electric Amber — primary gradient end (Orange)
-const Color kElectricAmberEnd = Color(0xFFFF8C00);
+/// Grey Border — subtle edge
+const Color kLiquidBorder = Color(0xFF2A2A2A);
 
-/// Secondary accent — cool steel blue for contrast
-const Color kSteelBlue = Color(0xFF5E6E7E);
+/// Pure White — primary accent (was Electric Blue)
+const Color kElectricBlue = Color(0xFFFFFFFF);
 
-/// Success — vibrant green
-const Color kSuccessGreen = Color(0xFF32D74B);
+/// Light Grey — secondary (was Royal Blue)
+const Color kRoyalBlue = Color(0xFFCCCCCC);
 
-/// Error — vivid red
-const Color kErrorRed = Color(0xFFFF453A);
+/// Pure White — accent end (was Neon Cyan)
+const Color kNeonCyan = Color(0xFFFFFFFF);
 
-/// Warning — amber
-const Color kWarningAmber = Color(0xFFFFD60A);
+/// Soft White — glow (was Ice Cyan)
+const Color kIceCyan = Color(0xFFE0E0E0);
 
-/// Info — cyan
-const Color kInfoCyan = Color(0xFF64D2FF);
+/// Medium Grey — secondary accent (was Deep Violet)
+const Color kDeepViolet = Color(0xFF808080);
+
+/// Cool Chrome — metallic text
+const Color kCoolWhite = Color(0xFFE0E0E0);
+
+/// Success — White (luminance-based, not green)
+const Color kNeonSuccess = Color(0xFFFFFFFF);
+
+/// Error — Medium Grey (luminance-based, not red)
+const Color kNeonError = Color(0xFF909090);
+
+/// Warning — Light Grey
+const Color kNeonWarning = Color(0xFFB0B0B0);
+
+/// Info — White
+const Color kNeonInfo = Color(0xFFFFFFFF);
+
+// --- Legacy aliases for backward compatibility ---
+const Color kObsidianSurface = kDeepSpace;
+const Color kObsidianBorder = kLiquidBorder;
+const Color kElectricAmberStart = kElectricBlue;
+const Color kElectricAmberEnd = kNeonCyan;
+const Color kSteelBlue = kRoyalBlue;
+const Color kSuccessGreen = kNeonSuccess;
+const Color kErrorRed = kNeonError;
+const Color kWarningAmber = kNeonWarning;
+const Color kInfoCyan = kNeonCyan;
 
 // =============================================================================
-// TEXT COLORS
+// TEXT COLORS — Pure Grey Scale (No Warm/Cool Tint)
 // =============================================================================
 
 /// Primary text — pure white for maximum contrast
 const Color kTextPrimary = Color(0xFFFFFFFF);
 
-/// Secondary text — muted gray for less emphasis
-const Color kTextSecondary = Color(0xFF8E8E93);
+/// Secondary text — neutral grey for less emphasis
+const Color kTextSecondary = Color(0xFFB0B0B0);
 
-/// Tertiary text — subtle gray for hints/placeholders
-const Color kTextTertiary = Color(0xFF636366);
+/// Tertiary text — subtle grey for hints/placeholders
+const Color kTextTertiary = Color(0xFF707070);
 
-/// Disabled text — very low opacity
-const Color kTextDisabled = Color(0xFF48484A);
+/// Disabled text — very low opacity grey
+const Color kTextDisabled = Color(0xFF404040);
 
 // =============================================================================
-// GRADIENTS — Electric Amber Progression System
+// GRADIENTS — Monochrome Light System (White → Transparent)
 // =============================================================================
 
-/// Primary progress gradient — used for progress bars, indicators
+/// Primary gradient — White to White (monochrome)
 const LinearGradient kElectricAmberGradient = LinearGradient(
   begin: Alignment.centerLeft,
   end: Alignment.centerRight,
-  colors: [kElectricAmberStart, kElectricAmberEnd],
+  colors: [Color(0xFFFFFFFF), Color(0xFFCCCCCC)],
 );
 
-/// Radial glow gradient for emphasis
-const RadialGradient kAmberGlowGradient = RadialGradient(
+/// Primary gradient alias
+const LinearGradient kLiquidPrimaryGradient = kElectricAmberGradient;
+
+/// Secondary gradient — Grey scale
+const LinearGradient kLiquidSecondaryGradient = LinearGradient(
+  begin: Alignment.centerLeft,
+  end: Alignment.centerRight,
+  colors: [Color(0xFF808080), Color(0xFFFFFFFF)],
+);
+
+/// Holographic gradient — now monochrome spectrum
+const LinearGradient kHolographicGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [Color(0xFF404040), Color(0xFF808080), Color(0xFFFFFFFF)],
+  stops: [0.0, 0.5, 1.0],
+);
+
+/// Radial glow gradient — white glow
+RadialGradient kBlueGlowGradient({double opacity = 0.3}) => RadialGradient(
   center: Alignment.center,
   radius: 1.0,
   colors: [
-    Color(0x40FFD700), // 25% amber
-    Color(0x00FFD700), // transparent
+    Colors.white.withOpacity(opacity),
+    Colors.transparent,
   ],
 );
 
-/// Dark background gradient — subtle depth
+/// Radial glow gradient — same as above (monochrome)
+RadialGradient kCyanGlowGradient({double opacity = 0.3}) => RadialGradient(
+  center: Alignment.center,
+  radius: 1.0,
+  colors: [
+    Colors.white.withOpacity(opacity),
+    Colors.transparent,
+  ],
+);
+
+/// Legacy alias
+RadialGradient kAmberGlowGradient({double opacity = 0.25}) => kBlueGlowGradient(opacity: opacity);
+
+/// Dark background gradient — pure black
 const LinearGradient kDarkBackgroundGradient = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
   colors: [
     Color(0xFF0A0A0A),
     kOledBlack,
+    Color(0xFF050505),
   ],
+  stops: [0.0, 0.6, 1.0],
 );
 
 // =============================================================================
-// GLASSMORPHISM 3.0 — Advanced Frosted Glass Effects
+// GLASSMORPHISM 4.0 — iOS 26 Liquid Glass Effects
 // =============================================================================
 
-/// Standard glass blur sigma
-const double kGlassBlurSigma = 24.0;
+/// Light blur — subtle frosted effect
+const double kGlassBlurLight = 12.0;
+
+/// Standard glass blur sigma (enhanced for Liquid Glass)
+const double kGlassBlurSigma = 20.0;
 
 /// Heavy glass blur for modals
 const double kGlassBlurHeavy = 40.0;
 
-/// Light glass blur for subtle effects
-const double kGlassBlurLight = 12.0;
+/// Extra heavy blur for full overlays
+const double kGlassBlurXHeavy = 60.0;
 
-/// Glass surface color with transparency
-const Color kGlassSurface = Color(0x1AFFFFFF); // 10% white
+/// Glass surface color with transparency (lower for cleaner look)
+const Color kGlassSurface = Color(0x14FFFFFF); // 8% white
 
-/// Glass border color
-const Color kGlassBorder = Color(0x33FFFFFF); // 20% white
+/// Glass border color (rim light effect)
+const Color kGlassBorder = Color(0x1AFFFFFF); // 10% white
+
+/// Glass opacity levels
+const double kGlassOpacityLight = 0.05;
+const double kGlassOpacityMedium = 0.08;
+const double kGlassOpacityHeavy = 0.12;
 
 // =============================================================================
 // TYPOGRAPHY TOKENS — Premium Number Display System
 // =============================================================================
 
 /// Giant thin numbers — for stats, metrics, scores (Thin/Light weight)
-TextStyle get kGiantNumber => GoogleFonts.inter(
+TextStyle get kGiantNumber => GoogleFonts.manrope(
   fontSize: 72,
-  fontWeight: FontWeight.w100, // Thin
+  fontWeight: FontWeight.w300, // Light
   height: 1.0,
-  letterSpacing: -2,
+  letterSpacing: 0,
   color: kTextPrimary,
 );
 
 /// Large thin numbers — secondary stats
-TextStyle get kLargeNumber => GoogleFonts.inter(
+TextStyle get kLargeNumber => GoogleFonts.manrope(
   fontSize: 48,
-  fontWeight: FontWeight.w200, // ExtraLight
+  fontWeight: FontWeight.w300, // Light
   height: 1.1,
-  letterSpacing: -1.5,
+  letterSpacing: 0,
   color: kTextPrimary,
 );
 
 /// Medium numbers — tertiary stats
-TextStyle get kMediumNumber => GoogleFonts.inter(
+TextStyle get kMediumNumber => GoogleFonts.manrope(
   fontSize: 32,
-  fontWeight: FontWeight.w300, // Light
+  fontWeight: FontWeight.w400,
   height: 1.2,
-  letterSpacing: -1,
+  letterSpacing: 0,
   color: kTextPrimary,
 );
 
 /// Dense heading — bold, compact titles
-TextStyle get kDenseHeading => GoogleFonts.inter(
+TextStyle get kDenseHeading => GoogleFonts.manrope(
   fontSize: 24,
   fontWeight: FontWeight.w800, // ExtraBold
   height: 1.1,
-  letterSpacing: -0.5,
+  letterSpacing: 0,
   color: kTextPrimary,
 );
 
 /// Dense subheading
-TextStyle get kDenseSubheading => GoogleFonts.inter(
+TextStyle get kDenseSubheading => GoogleFonts.manrope(
   fontSize: 18,
   fontWeight: FontWeight.w700, // Bold
   height: 1.2,
-  letterSpacing: -0.3,
+  letterSpacing: 0,
   color: kTextPrimary,
 );
 
 /// Body text
-TextStyle get kBodyText => GoogleFonts.inter(
+TextStyle get kBodyText => GoogleFonts.manrope(
   fontSize: 15,
   fontWeight: FontWeight.w400,
   height: 1.5,
@@ -168,7 +236,7 @@ TextStyle get kBodyText => GoogleFonts.inter(
 );
 
 /// Caption text
-TextStyle get kCaptionText => GoogleFonts.inter(
+TextStyle get kCaptionText => GoogleFonts.manrope(
   fontSize: 12,
   fontWeight: FontWeight.w500,
   height: 1.4,
@@ -177,11 +245,11 @@ TextStyle get kCaptionText => GoogleFonts.inter(
 );
 
 /// Overline text — small labels
-TextStyle get kOverlineText => GoogleFonts.inter(
+TextStyle get kOverlineText => GoogleFonts.manrope(
   fontSize: 10,
   fontWeight: FontWeight.w600,
   height: 1.3,
-  letterSpacing: 1.5,
+  letterSpacing: 1.0,
   color: kTextTertiary,
 );
 
@@ -387,8 +455,12 @@ ThemeData buildPremiumDarkTheme() {
     onPrimary: kOledBlack,
   );
 
-  // Build text theme with premium typography
-  final textTheme = GoogleFonts.interTextTheme(base.textTheme).copyWith(
+  // Build text theme with premium typography (Manrope - Big Tech 2025 aesthetic)
+  final baseTextTheme = GoogleFonts.manropeTextTheme(base.textTheme);
+  final textTheme = baseTextTheme.apply(
+    bodyColor: kTextPrimary,
+    displayColor: kTextPrimary,
+  ).copyWith(
     // Display — Giant thin numbers
     displayLarge: kGiantNumber,
     displayMedium: kLargeNumber,

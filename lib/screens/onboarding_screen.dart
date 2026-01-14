@@ -1,20 +1,22 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/theme.dart';
-import '../core/design_tokens.dart';
-import '../core/modern_components.dart';
-import '../core/apple_components.dart';
+import '../theme/noir_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/user_state.dart';
 import '../services/storage_service.dart';
 import '../widgets/app_alert.dart';
 import 'generating_program_screen.dart';
+import '../providers/unit_system_provider.dart';
+import '../providers/profile_provider.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 
 import '../l10n/app_localizations.dart';
+import '../providers/locale_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -78,13 +80,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // STRICT RULE: All UI text must use AppLocalizations.of(context)!
     final l10n = AppLocalizations.of(context)!;
-    final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+    // Use isRussianProvider for locale-specific formatting (units, etc.)
+    final isRussian = ref.watch(isRussianProvider);
     
-    return GradientScaffold(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
+    // Watch unit system for conversion
+    final unitSystem = ref.watch(unitSystemProvider);
+    final isMetric = unitSystem == UnitSystem.metric;
+    
+    return Scaffold(
+      backgroundColor: kNoirBlack,
+      body: Container(
+        // Noir Glass: RadialGradient for realistic glass blur visibility
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center,
+            radius: 1.2,
+            colors: [
+              Color(0xFF1A1A1A), // Carbon center - subtle glow
+              Color(0xFF0D0D0D), // Near-black
+              Color(0xFF000000), // Pure black edges
+            ],
+            stops: [0.0, 0.5, 1.0],
+          ),
+        ),
+        child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
             children: [
@@ -97,7 +118,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withValues(alpha: 0.3),
+                        color: Colors.white.withOpacity(0.1),
                         blurRadius: 20,
                         spreadRadius: 0,
                         offset: const Offset(0, 10),
@@ -122,10 +143,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               // Title
               Text(
                 l10n.welcome,
-                style: const TextStyle(
-                  color: DesignTokens.textPrimary,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
+                style: kNoirDisplayMedium.copyWith(
+                  color: kContentHigh,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: -0.5,
                 ),
                 textAlign: TextAlign.center,
@@ -135,14 +155,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               
               const SizedBox(height: 8),
               
+              // Use localized string instead of inline language check
               Text(
-                isRussian 
-                    ? 'Расскажите о себе для персональной программы'
-                    : 'Tell us about yourself for a personalized program',
-                style: TextStyle(
-                  color: DesignTokens.textSecondary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
+                l10n.tellUsAboutYourself,
+                style: kNoirBodyLarge.copyWith(
+                  color: kContentMedium,
                 ),
                 textAlign: TextAlign.center,
               ).animate()
@@ -196,7 +213,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       icon: Icons.height_rounded,
                       keyboardType: TextInputType.number,
                       delay: 600,
-                      suffix: isRussian ? 'см' : 'cm',
+                      // Dynamic unit based on unit system
+                      suffix: isMetric ? l10n.cm : 'in',
                       errorText: _height.text.isNotEmpty && !_isValidHeight(_height.text)
                           ? '100-250'
                           : null,
@@ -213,11 +231,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 icon: Icons.monitor_weight_outlined,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 delay: 700,
-                suffix: isRussian ? 'кг' : 'kg',
+                // Dynamic unit based on unit system
+                suffix: isMetric ? l10n.kg : 'lb',
                 errorText: _weight.text.isNotEmpty && !_isValidWeight(_weight.text)
                     ? '20-300'
                     : null,
               ),
+              const SizedBox(height: 16),
+              
+              // Unit System Toggle
+              _buildUnitSystemToggle(l10n, isMetric),
               const SizedBox(height: 16),
 
               // Goal dropdown with icons
@@ -230,9 +253,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
+        ),
+      );
+    }
   
   Widget _buildPremiumTextField({
     required TextEditingController controller,
@@ -243,42 +266,39 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     String? suffix,
     String? errorText,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: DesignTokens.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: errorText != null 
-              ? DesignTokens.error.withValues(alpha: 0.5)
-              : DesignTokens.cardSurface,
-          width: 1,
-        ),
-      ),
-      child: TextField(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            // Noir Glass: Semi-transparent frosted glass effect
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: errorText != null 
+                  ? const Color(0xFFF87171).withOpacity(0.5)
+                  : Colors.white.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
+          child: TextField(
         controller: controller,
         keyboardType: keyboardType,
         textInputAction: TextInputAction.next,
-        style: const TextStyle(
-          color: DesignTokens.textPrimary,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
+        style: kNoirBodyLarge.copyWith(color: kContentHigh),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-            color: DesignTokens.textSecondary,
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(icon, color: DesignTokens.textSecondary, size: 22),
+          labelStyle: kNoirBodyMedium.copyWith(color: kContentMedium),
+          prefixIcon: Icon(icon, color: kContentMedium, size: 22),
           suffixText: suffix,
-          suffixStyle: TextStyle(
-            color: DesignTokens.textSecondary,
-            fontSize: 14,
-          ),
+          suffixStyle: kNoirBodyMedium.copyWith(color: kContentMedium),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           errorText: errorText,
           errorStyle: const TextStyle(fontSize: 11),
+        ),
+      ),
         ),
       ),
     ).animate()
@@ -294,35 +314,123 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     required ValueChanged<String?> onChanged,
     required int delay,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: DesignTokens.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DesignTokens.cardSurface, width: 1),
-      ),
-      child: DropdownButtonFormField<String>(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            // Noir Glass: Semi-transparent frosted glass effect
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+          ),
+          child: DropdownButtonFormField<String>(
         value: value,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-            color: DesignTokens.textSecondary,
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(icon, color: DesignTokens.textSecondary, size: 22),
+          labelStyle: kNoirBodyMedium.copyWith(color: kContentMedium),
+          prefixIcon: Icon(icon, color: kContentMedium, size: 22),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
-        dropdownColor: DesignTokens.surface,
-        style: const TextStyle(
-          color: DesignTokens.textPrimary,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
+        dropdownColor: const Color(0xFF1A1A1A),
+        style: kNoirBodyLarge.copyWith(color: kContentHigh),
         items: items,
         onChanged: onChanged,
+        iconEnabledColor: kContentMedium,
+      ),
+        ),
       ),
     ).animate()
      .fadeIn(duration: 500.ms, delay: Duration(milliseconds: delay))
+     .slideX(begin: -0.05, end: 0);
+  }
+  
+  Widget _buildUnitSystemToggle(AppLocalizations l10n, bool isMetric) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            // Noir Glass: Semi-transparent frosted glass effect
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+          ),
+          child: Row(
+        children: [
+          Icon(Icons.straighten_rounded, color: kContentMedium, size: 22),
+          const SizedBox(width: 12),
+          Text(
+            l10n.unitSystem,
+            style: kNoirBodyMedium.copyWith(color: kContentMedium),
+          ),
+          const Spacer(),
+          // Toggle between Metric and Imperial
+          Container(
+            decoration: BoxDecoration(
+              color: kNoirCarbon,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Metric button
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    ref.read(unitSystemStateProvider.notifier).setUnitSystem(UnitSystem.metric);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isMetric ? kContentHigh : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'kg/cm',
+                      style: kNoirBodySmall.copyWith(
+                        color: isMetric ? kNoirBlack : kContentMedium,
+                        fontWeight: isMetric ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                // Imperial button
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    ref.read(unitSystemStateProvider.notifier).setUnitSystem(UnitSystem.imperial);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: !isMetric ? kContentHigh : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'lb/in',
+                      style: kNoirBodySmall.copyWith(
+                        color: !isMetric ? kNoirBlack : kContentMedium,
+                        fontWeight: !isMetric ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+          ),
+        ),
+      ),
+    ).animate()
+     .fadeIn(duration: 500.ms, delay: 750.ms)
      .slideX(begin: -0.05, end: 0);
   }
   
@@ -332,19 +440,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         'value': 'fat_loss',
         'label': l10n.weightLoss,
         'icon': Icons.local_fire_department_rounded,
-        'color': Colors.orange,
       },
       {
         'value': 'muscle_gain',
         'label': l10n.muscleGain,
         'icon': Icons.fitness_center_rounded,
-        'color': Colors.blue,
       },
       {
         'value': 'fitness',
         'label': l10n.fitness,
         'icon': Icons.favorite_rounded,
-        'color': Colors.green,
       },
     ];
     
@@ -355,57 +460,61 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
             l10n.goal,
-            style: TextStyle(
-              color: DesignTokens.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: kNoirBodyMedium.copyWith(color: kContentMedium),
           ),
         ),
         Row(
           children: goals.map((goal) {
             final isSelected = _goal == goal['value'];
-            final color = goal['color'] as Color;
             
             return Expanded(
               child: GestureDetector(
-                onTap: () => setState(() => _goal = goal['value'] as String),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: EdgeInsets.only(
-                    right: goal != goals.last ? 8 : 0,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                        ? color.withValues(alpha: 0.15)
-                        : DesignTokens.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected ? color : DesignTokens.cardSurface,
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        goal['icon'] as IconData,
-                        color: isSelected ? color : DesignTokens.textSecondary,
-                        size: 28,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _goal = goal['value'] as String);
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: EdgeInsets.only(
+                        right: goal != goals.last ? 8 : 0,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        goal['label'] as String,
-                        style: TextStyle(
-                          color: isSelected ? color : DesignTokens.textSecondary,
-                          fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        // Noir Glass: Semi-transparent frosted glass
+                        color: isSelected 
+                            ? Colors.white.withOpacity(0.12)
+                            : Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                          color: isSelected ? Colors.white.withOpacity(0.3) : Colors.white.withOpacity(0.1),
+                          width: isSelected ? 2 : 1,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
+                      child: Column(
+                        children: [
+                          Icon(
+                            goal['icon'] as IconData,
+                            color: isSelected ? kContentHigh : kContentMedium,
+                            size: 28,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            goal['label'] as String,
+                            style: kNoirBodySmall.copyWith(
+                              color: isSelected ? kContentHigh : kContentMedium,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -424,10 +533,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         if (!_canContinue) {
           AppAlert.show(
             context,
-            title: isRussian ? 'Заполните все поля' : 'Incomplete form',
-            description: isRussian 
-                ? 'Пожалуйста, заполните все поля'
-                : 'Please fill in all fields',
+            title: l10n.error,
+            description: l10n.pleaseFillAllFields,
             type: AlertType.warning,
           );
           return;
@@ -440,38 +547,65 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           final userId = prefs.getString('user_id') ?? 'anonymous';
           final email = prefs.getString('user_email') ?? '';
           
+          // Parse values
+          final name = _name.text.trim();
+          final age = int.tryParse(_age.text);
+          final height = int.tryParse(_height.text);
+          final weight = double.tryParse(_weight.text);
+          final gender = _gender;
+          final goal = _goal;
+          
+          // 1. Update legacy userProvider (for backward compatibility)
           final n = ref.read(userProvider.notifier);
           await n.createOrUpdateProfile(
             id: userId,
             email: email,
-            name: _name.text.trim(),
-            age: int.tryParse(_age.text),
-            height: int.tryParse(_height.text),
-            weight: double.tryParse(_weight.text),
-            gender: _gender,
-            goal: _goal,
+            name: name,
+            age: age,
+            height: height,
+            weight: weight,
+            gender: gender,
+            goal: goal,
           );
           
+          // 2. Save to StorageService
           final user = ref.read(userProvider);
           if (user != null) {
             await StorageService.saveUser(user);
-            
-            try {
-              await SupabaseConfig.client.from('profiles').upsert({
-                'id': userId,
-                'email': email,
-                'name': user.name,
-                'age': user.age,
-                'height': user.height,
-                'weight': user.weight,
-                'gender': user.gender,
-                'goal': user.goal,
-                'updated_at': DateTime.now().toIso8601String(),
-              });
-            } catch (e) {
-              debugPrint('[Onboarding] Supabase sync failed: $e');
-            }
           }
+          
+          // 3. Sync to Supabase directly (PRIMARY data source)
+          try {
+            await SupabaseConfig.client.from('profiles').upsert({
+              'id': userId,
+              'email': email,
+              'name': name,
+              'age': age,
+              'height': height,
+              'weight': weight,
+              'gender': gender,
+              'goal': goal,
+              'updated_at': DateTime.now().toIso8601String(),
+            }, onConflict: 'id');
+            debugPrint('[Onboarding] ✅ Supabase profile synced');
+          } catch (e) {
+            debugPrint('[Onboarding] ⚠️ Supabase sync failed: $e');
+          }
+          
+          // 4. CRITICAL: Update profileProvider to sync ProfileScreen
+          await ref.read(profileProvider.notifier).updateProfile(
+            name: name,
+            age: age,
+            height: height,
+            weight: weight,
+            gender: gender,
+            goal: goal,
+          );
+          
+          // 5. Force refresh to ensure ProfileScreen gets fresh data
+          await ref.read(profileProvider.notifier).refresh();
+          
+          debugPrint('[Onboarding] ✅ All providers synced');
 
           if (mounted) {
             Navigator.of(context).pushReplacement(
@@ -483,7 +617,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           if (mounted) {
             AppAlert.show(
               context,
-              title: 'Error',
+              title: l10n.error,
               description: e.toString(),
               type: AlertType.error,
             );
@@ -494,18 +628,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          gradient: _canContinue 
-              ? LinearGradient(
-                  colors: [Colors.blue.shade400, Colors.blue.shade600],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: _canContinue ? null : DesignTokens.cardSurface,
+          color: _canContinue ? kContentHigh : kNoirSteel,
           borderRadius: BorderRadius.circular(16),
           boxShadow: _canContinue ? [
             BoxShadow(
-              color: Colors.blue.withValues(alpha: 0.3),
+              color: Colors.white.withOpacity(0.1),
               blurRadius: 20,
               spreadRadius: 0,
               offset: const Offset(0, 8),
@@ -519,16 +646,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   height: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                    valueColor: AlwaysStoppedAnimation(kNoirBlack),
                   ),
                 )
               : Text(
                   l10n.continueButton,
-                  style: TextStyle(
-                    color: _canContinue ? Colors.white : DesignTokens.textSecondary,
-                    fontSize: 18,
+                  style: kNoirBodyLarge.copyWith(
+                    color: _canContinue ? kNoirBlack : kContentMedium,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
                   ),
                 ),
         ),

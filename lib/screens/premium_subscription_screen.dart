@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/app_alert.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/noir_theme.dart';
 
 class PremiumSubscriptionScreen extends StatefulWidget {
   const PremiumSubscriptionScreen({super.key});
@@ -14,6 +15,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
     with SingleTickerProviderStateMixin {
   String _selectedPlan = 'year'; // 'month' or 'year'
   late AnimationController _shimmerController;
+  bool _isProcessing = false; // Debounce flag for double-tap prevention
 
   @override
   void initState() {
@@ -36,26 +38,42 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
     final isRussian = Localizations.localeOf(context).languageCode == 'ru';
     
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Back Button
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+      backgroundColor: kNoirBlack,
+      body: Container(
+        // Noir Glass: RadialGradient for realistic glass blur visibility
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center,
+            radius: 1.2,
+            colors: [
+              Color(0xFF1A1A1A), // Carbon center - subtle glow
+              Color(0xFF0D0D0D), // Near-black
+              Color(0xFF000000), // Pure black edges
+            ],
+            stops: [0.0, 0.5, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Back Button
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                ),
               ),
-            ),
-            
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 20),
+              
+              Expanded(
+                child: ScrollConfiguration(
+                  behavior: ScrollBehavior().copyWith(scrollbars: false),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 20),
                     
                     // "Sorry, but I want it" Title with shimmer effect
                     ShaderMask(
@@ -72,12 +90,13 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
                           transform: _ShimmerGradientTransform(_shimmerController.value),
                         ).createShader(bounds);
                       },
-                      child: Text(
-                        isRussian ? 'Прости, но я\nхочу это' : 'Sorry, but I\nwant it',
-                        style: const TextStyle(
+                      child: const Text(
+                        // ALWAYS in English - brand statement
+                        'Sorry, but I\nwant it',
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 52,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                           height: 1.1,
                           letterSpacing: -1,
                         ),
@@ -87,68 +106,65 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
                      .fadeIn(duration: 600.ms, curve: Curves.easeOut)
                      .slideY(begin: -0.1, end: 0, duration: 600.ms),
                     
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 20),
                     
-                    // G-Wagon Image - requires PNG with transparent background
-                    // If white bg is visible, replace gwagon.png with a transparent PNG
-                    Container(
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.withValues(alpha: 0.15),
-                            blurRadius: 40,
-                            spreadRadius: 0,
-                            offset: const Offset(0, 20),
+                    // G-Wagon Image - Clean, no glow, reduced size, shifted left 9px
+                    Transform.translate(
+                      offset: const Offset(-9, 0),
+                      child: SizedBox(
+                        height: 460,
+                        child: OverflowBox(
+                          maxWidth: MediaQuery.of(context).size.width * 1.2,
+                          maxHeight: 520,
+                          child: Image.asset(
+                            'assets/images/gwagon.png',
+                            width: MediaQuery.of(context).size.width * 1.2,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 460,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Colors.grey[900]!, Colors.grey[850]!],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: Icon(
+                                  Icons.directions_car,
+                                  size: 160,
+                                  color: Colors.grey[700],
+                                ),
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                      child: Image.asset(
-                        'assets/images/gwagon.png',
-                        height: 280,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 280,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.grey[900]!, Colors.grey[850]!],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Icon(
-                              Icons.directions_car,
-                              size: 100,
-                              color: Colors.grey[700],
-                            ),
-                          );
-                        },
+                        ),
                       ),
                     ).animate()
                      .fadeIn(duration: 800.ms, delay: 200.ms)
-                     .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
+                     .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1)),
                     
                     const SizedBox(height: 40),
                     
-                    // Benefits - Minimal Style with checkmarks
+                    // Benefits - Now using l10n
                     _buildMinimalBenefit(
-                      isRussian ? 'Персонализированные тренировки' : 'Personalized workouts',
+                      l10n.personalizedWorkouts,
                       delay: 400,
                     ),
                     const SizedBox(height: 16),
                     _buildMinimalBenefit(
-                      isRussian ? 'AI анализ техники' : 'AI form feedback',
+                      l10n.aiFormFeedback,
                       delay: 500,
                     ),
                     const SizedBox(height: 16),
                     _buildMinimalBenefit(
-                      isRussian ? 'Отслеживание прогресса' : 'Progress tracking',
+                      l10n.progressTracking,
                       delay: 600,
                     ),
                     const SizedBox(height: 16),
                     _buildMinimalBenefit(
-                      isRussian ? 'Неограниченный AI чат' : 'Unlimited AI chat',
+                      l10n.unlimitedAiChat,
                       delay: 700,
                     ),
                     
@@ -214,7 +230,11 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: _isProcessing ? null : () {
+                            // Debounce: prevent double-tap
+                            if (_isProcessing) return;
+                            setState(() => _isProcessing = true);
+                            
                             AppAlert.show(
                               context,
                               title: isRussian ? 'Обработка платежа' : 'Processing payment',
@@ -224,6 +244,11 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
                               type: AlertType.info,
                               duration: const Duration(seconds: 3),
                             );
+                            
+                            // Reset after delay
+                            Future.delayed(const Duration(seconds: 3), () {
+                              if (mounted) setState(() => _isProcessing = false);
+                            });
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
@@ -267,9 +292,11 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
                     const SizedBox(height: 40),
                   ],
                 ),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -284,15 +311,11 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue[400]!, Colors.blue[600]!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: kContentHigh,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withValues(alpha: 0.3),
+                color: Colors.white.withOpacity(0.15),
                 blurRadius: 8,
                 spreadRadius: 0,
               ),
@@ -300,7 +323,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen>
           ),
           child: const Icon(
             Icons.check,
-            color: Colors.white,
+            color: kNoirBlack,
             size: 18,
           ),
         ),

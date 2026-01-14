@@ -1,13 +1,18 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme.dart';
 import '../../core/modern_components.dart';
+import '../../theme/noir_theme.dart';
+import '../../widgets/noir_glass_components.dart';
 import '../../state/meal_schedule_state.dart';
 import '../../state/fridge_state.dart';
 import '../../models/meal_group.dart';
+import '../../services/noir_toast_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class NutritionTab extends ConsumerStatefulWidget {
   const NutritionTab({super.key});
@@ -430,50 +435,90 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
     // Показываем диалог для ввода названия нового приёма пищи
     showDialog(
       context: context,
-      builder: (context) {
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) {
         String mealName = '';
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: const Text(
-            'Добавить приём пищи',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            autofocus: true,
-            onChanged: (value) => mealName = value,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              hintText: 'Название (например, Перекус)',
-              hintStyle: TextStyle(color: Colors.white54),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white54),
+        return Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(kRadiusXL),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.85,
+                padding: const EdgeInsets.all(kSpaceLG),
+                decoration: BoxDecoration(
+                  color: kNoirGraphite.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(kRadiusXL),
+                  border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Добавить приём пищи', style: kNoirTitleMedium.copyWith(color: kContentHigh)),
+                      const SizedBox(height: kSpaceMD),
+                      TextField(
+                        autofocus: true,
+                        onChanged: (value) => mealName = value,
+                        style: kNoirBodyMedium.copyWith(color: kContentHigh),
+                        decoration: InputDecoration(
+                          hintText: 'Название (например, Перекус)',
+                          hintStyle: kNoirBodyMedium.copyWith(color: kContentLow),
+                          filled: true,
+                          fillColor: kNoirBlack,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(kRadiusMD),
+                            borderSide: BorderSide(color: kBorderLight),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(kRadiusMD),
+                            borderSide: BorderSide(color: kBorderLight),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(kRadiusMD),
+                            borderSide: const BorderSide(color: kContentHigh),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: kSpaceLG),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: TextButton.styleFrom(foregroundColor: kContentMedium),
+                              child: const Text('Отмена'),
+                            ),
+                          ),
+                          const SizedBox(width: kSpaceMD),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (mealName.trim().isNotEmpty) {
+                                  ref.read(mealScheduleProvider.notifier).addMeal(mealName.trim());
+                                  Navigator.pop(ctx);
+                                  final l10n = AppLocalizations.of(context)!;
+                                  NoirToast.success(context, l10n.mealAdded);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kContentHigh,
+                                foregroundColor: kNoirBlack,
+                                padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMD)),
+                              ),
+                              child: const Text('Добавить'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (mealName.trim().isNotEmpty) {
-                  ref.read(mealScheduleProvider.notifier).addMeal(mealName.trim());
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Приём пищи "$mealName" добавлен'),
-                      backgroundColor: Colors.greenAccent,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Добавить'),
-            ),
-          ],
         );
       },
     );
@@ -482,91 +527,112 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
   void _renameMeal(int index, String currentName) {
     showDialog(
       context: context,
-      builder: (context) {
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) {
         String newName = currentName;
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: const Text(
-            'Переименовать приём пищи',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            controller: TextEditingController(text: currentName),
-            autofocus: true,
-            onChanged: (value) => newName = value,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              hintText: 'Название',
-              hintStyle: TextStyle(color: Colors.white54),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white54),
+        return Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(kRadiusXL),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.85,
+                padding: const EdgeInsets.all(kSpaceLG),
+                decoration: BoxDecoration(
+                  color: kNoirGraphite.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(kRadiusXL),
+                  border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Переименовать приём пищи', style: kNoirTitleMedium.copyWith(color: kContentHigh)),
+                      const SizedBox(height: kSpaceMD),
+                      TextField(
+                        controller: TextEditingController(text: currentName),
+                        autofocus: true,
+                        onChanged: (value) => newName = value,
+                        style: kNoirBodyMedium.copyWith(color: kContentHigh),
+                        decoration: InputDecoration(
+                          hintText: 'Название',
+                          hintStyle: kNoirBodyMedium.copyWith(color: kContentLow),
+                          filled: true,
+                          fillColor: kNoirBlack,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(kRadiusMD),
+                            borderSide: BorderSide(color: kBorderLight),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(kRadiusMD),
+                            borderSide: BorderSide(color: kBorderLight),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(kRadiusMD),
+                            borderSide: const BorderSide(color: kContentHigh),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: kSpaceLG),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: TextButton.styleFrom(foregroundColor: kContentMedium),
+                              child: const Text('Отмена'),
+                            ),
+                          ),
+                          const SizedBox(width: kSpaceMD),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (newName.trim().isNotEmpty) {
+                                  ref.read(mealScheduleProvider.notifier).renameMeal(index, newName.trim());
+                                  Navigator.pop(ctx);
+                                  final l10n = AppLocalizations.of(context)!;
+                                  NoirToast.success(context, l10n.mealRenamed, subtitle: l10n.nameChangedTo(newName.trim()));
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kContentHigh,
+                                foregroundColor: kNoirBlack,
+                                padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMD)),
+                              ),
+                              child: const Text('Сохранить'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (newName.trim().isNotEmpty) {
-                  ref.read(mealScheduleProvider.notifier).renameMeal(index, newName.trim());
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Приём пищи переименован в "$newName"'),
-                      backgroundColor: Colors.blueAccent,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Сохранить'),
-            ),
-          ],
         );
       },
     );
   }
 
-  void _deleteMeal(int index, String mealName) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text(
-          'Удалить приём пищи?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'Вы уверены, что хотите удалить "$mealName"?',
-          style: const TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(mealScheduleProvider.notifier).removeMeal(index);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Приём пищи "$mealName" удалён'),
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
+  void _deleteMeal(int index, String mealName) async {
+    final confirmed = await NoirGlassDialog.showConfirmation(
+      context,
+      title: 'Удалить приём пищи?',
+      content: 'Вы уверены, что хотите удалить "$mealName"?',
+      icon: Icons.delete_rounded,
+      confirmText: 'Удалить',
+      cancelText: 'Отмена',
+      isDestructive: true,
     );
+    
+    if (confirmed == true) {
+      ref.read(mealScheduleProvider.notifier).removeMeal(index);
+      final l10n = AppLocalizations.of(context)!;
+      NoirToast.info(context, l10n.deleted);
+    }
   }
 
   Future<void> _takeFridgePhoto() async {
@@ -582,22 +648,14 @@ class _NutritionTabState extends ConsumerState<NutritionTab>
         ref.read(fridgeProvider.notifier).setImagePath(image.path);
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Фото холодильника загружено!'),
-              backgroundColor: Colors.greenAccent,
-            ),
-          );
+          final l10n = AppLocalizations.of(context)!;
+          NoirToast.success(context, l10n.photoUploaded);
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при загрузке фото: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        final l10n = AppLocalizations.of(context)!;
+        NoirToast.error(context, l10n.error);
       }
     }
   }

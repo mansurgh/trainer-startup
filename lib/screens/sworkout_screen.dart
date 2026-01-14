@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../core/sexy_components.dart';
+import '../services/noir_toast_service.dart';
 import 'workout_screen.dart';
 import 'workout_schedule/widgets/customize_workout_sheet.dart';
 import '../models/workout_day.dart';
@@ -455,13 +456,7 @@ class _SexyWorkoutScreenState extends State<SexyWorkoutScreen> {
                   
                   // Если тренировка завершена, показываем уведомление
                   if (completed == true && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🎉 Упражнение записано в статистику!'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    NoirToast.success(context, '🎉 Упражнение записано в статистику!');
                   }
                 },
                 child: const Text('Начать упражнение'),
@@ -814,13 +809,7 @@ class _SexyWorkoutScreenState extends State<SexyWorkoutScreen> {
                       
                       // Если тренировка завершена, обновляем статистику
                       if (completed == true && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('🎉 Тренировка записана в статистику!'),
-                            backgroundColor: Colors.green,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
+                        NoirToast.success(context, '🎉 Тренировка записана в статистику!');
                       }
                     } : null,
                     backgroundColor: isToday 

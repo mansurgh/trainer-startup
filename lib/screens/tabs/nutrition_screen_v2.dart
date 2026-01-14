@@ -1,9 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/design_tokens.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_theme.dart' hide kSpaceXS, kSpaceSM, kSpaceMD, kSpaceLG, kSpaceXL, kSpaceXXL, kRadiusSM, kRadiusMD, kRadiusLG, kRadiusXL, kRadiusXXL, kRadiusFull;
+import '../../theme/noir_theme.dart';
+import '../../widgets/noir_glass_components.dart';
 import '../../models/meal.dart';
 import '../../services/meal_service.dart';
 import '../../state/user_state.dart';
@@ -16,6 +20,7 @@ import '../../l10n/app_localizations.dart';
 import '../../widgets/app_alert.dart';
 import '../../state/activity_state.dart';
 import '../../services/nutrition_goal_checker.dart';
+import '../../widgets/navigation/navigation.dart';
 
 final mealServiceProvider = Provider((ref) => MealService());
 
@@ -138,7 +143,7 @@ class NutritionScreenV2 extends ConsumerWidget {
                         Icon(Icons.add, color: kElectricAmberStart, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          AppLocalizations.of(context)!.addMeal,
+                          AppLocalizations.of(context)!.addMealEntry,
                           style: TextStyle(
                             color: kTextPrimary,
                             fontWeight: FontWeight.w600,
@@ -152,6 +157,9 @@ class NutritionScreenV2 extends ConsumerWidget {
             ),
             
             const SliverToBoxAdapter(child: SizedBox(height: 80)), // Отступ снизу
+            
+            // Spacer for floating nav bar clearance
+            const SliverNavBarSpacer(),
           ],
         ),
       ),
@@ -166,48 +174,91 @@ class NutritionScreenV2 extends ConsumerWidget {
     
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: DesignTokens.cardSurface,
-        title: Text(l10n.addMeal, style: DesignTokens.h3),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${l10n.name}:', style: DesignTokens.bodyMedium),
-            const SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              style: DesignTokens.bodyMedium,
-              decoration: InputDecoration(
-                hintText: '${l10n.breakfast}, ${l10n.lunch}, ${l10n.dinner}, ${l10n.snack}...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                filled: true,
-                fillColor: DesignTokens.bgBase,
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) => Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(kRadiusXL),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.85,
+              padding: const EdgeInsets.all(kSpaceLG),
+              decoration: BoxDecoration(
+                color: kNoirGraphite.withOpacity(0.95),
+                borderRadius: BorderRadius.circular(kRadiusXL),
+                border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.addMeal, style: kNoirTitleMedium.copyWith(color: kContentHigh)),
+                    const SizedBox(height: kSpaceMD),
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      style: kNoirBodyMedium.copyWith(color: kContentHigh),
+                      decoration: InputDecoration(
+                        hintText: '${l10n.breakfast}, ${l10n.lunch}, ${l10n.dinner}, ${l10n.snack}...',
+                        hintStyle: kNoirBodyMedium.copyWith(color: kContentLow),
+                        filled: true,
+                        fillColor: kNoirBlack,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: BorderSide(color: kBorderLight),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: BorderSide(color: kBorderLight),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: const BorderSide(color: kContentHigh),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: kSpaceLG),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              controller.dispose();
+                              Navigator.pop(ctx);
+                            },
+                            style: TextButton.styleFrom(foregroundColor: kContentMedium),
+                            child: Text(l10n.cancel),
+                          ),
+                        ),
+                        const SizedBox(width: kSpaceMD),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final name = controller.text.trim();
+                              if (name.isNotEmpty) {
+                                await _createNewMeal(context, ref, MealType.snack, today, name);
+                                controller.dispose();
+                                Navigator.pop(ctx);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kContentHigh,
+                              foregroundColor: kNoirBlack,
+                              padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMD)),
+                            ),
+                            child: Text(l10n.save),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.dispose();
-              Navigator.pop(ctx);
-            },
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                await _createNewMeal(context, ref, MealType.snack, today, name);
-                controller.dispose();
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(l10n.save),
-          ),
-        ],
       ),
     );
   }
@@ -230,7 +281,7 @@ class NutritionScreenV2 extends ConsumerWidget {
       final l10n = AppLocalizations.of(context)!;
       AppAlert.show(
         context,
-        title: 'Meal Added', // TODO: Add to l10n
+        title: l10n.mealAdded,
         description: '$customName ${l10n.addedTo} ${l10n.nutrition}',
         type: AlertType.success,
         duration: const Duration(seconds: 2),
@@ -244,99 +295,134 @@ class NutritionScreenV2 extends ConsumerWidget {
     
     await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: DesignTokens.cardSurface,
-        title: Text('Rename Meal', style: DesignTokens.h3), // TODO: Localize
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${l10n.newDishName}:', style: DesignTokens.bodyMedium),
-            const SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              style: DesignTokens.bodyMedium,
-              decoration: InputDecoration(
-                hintText: l10n.enterDishName,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                filled: true,
-                fillColor: DesignTokens.bgBase,
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) => Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(kRadiusXL),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.85,
+              padding: const EdgeInsets.all(kSpaceLG),
+              decoration: BoxDecoration(
+                color: kNoirGraphite.withOpacity(0.95),
+                borderRadius: BorderRadius.circular(kRadiusXL),
+                border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.rename, style: kNoirTitleMedium.copyWith(color: kContentHigh)),
+                    const SizedBox(height: kSpaceMD),
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      style: kNoirBodyMedium.copyWith(color: kContentHigh),
+                      decoration: InputDecoration(
+                        hintText: l10n.enterDishName,
+                        hintStyle: kNoirBodyMedium.copyWith(color: kContentLow),
+                        filled: true,
+                        fillColor: kNoirBlack,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: BorderSide(color: kBorderLight),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: BorderSide(color: kBorderLight),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          borderSide: const BorderSide(color: kContentHigh),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: kSpaceLG),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              controller.dispose();
+                              Navigator.pop(ctx);
+                            },
+                            style: TextButton.styleFrom(foregroundColor: kContentMedium),
+                            child: Text(l10n.cancel),
+                          ),
+                        ),
+                        const SizedBox(width: kSpaceMD),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final newName = controller.text.trim();
+                              if (newName.isNotEmpty) {
+                                final service = ref.read(mealServiceProvider);
+                                await service.updateMealName(mealId, newName, date);
+                                ref.invalidate(mealsProvider);
+                                ref.invalidate(dailyTotalsProvider);
+                                controller.dispose();
+                                Navigator.pop(ctx);
+                                if (context.mounted) {
+                                  AppAlert.show(
+                                    context,
+                                    title: l10n.mealRenamed,
+                                    description: '${l10n.name}: $newName',
+                                    type: AlertType.success,
+                                    duration: const Duration(seconds: 2),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kContentHigh,
+                              foregroundColor: kNoirBlack,
+                              padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMD)),
+                            ),
+                            child: Text(l10n.save),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.dispose();
-              Navigator.pop(ctx);
-            },
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final newName = controller.text.trim();
-              if (newName.isNotEmpty) {
-                final service = ref.read(mealServiceProvider);
-                await service.updateMealName(mealId, newName, date);
-                ref.invalidate(mealsProvider);
-                ref.invalidate(dailyTotalsProvider);
-                controller.dispose();
-                Navigator.pop(ctx);
-                if (context.mounted) {
-                  AppAlert.show(
-                    context,
-                    title: 'Meal Renamed', // TODO: Localize
-                    description: 'Name changed to "$newName"',
-                    type: AlertType.success,
-                    duration: const Duration(seconds: 2),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.save),
-          ),
-        ],
       ),
     );
   }
 
-  void _showDeleteMealDialog(BuildContext context, WidgetRef ref, String mealId, DateTime date) {
+  void _showDeleteMealDialog(BuildContext context, WidgetRef ref, String mealId, DateTime date) async {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: DesignTokens.cardSurface,
-        title: Text(l10n.deleteMeal, style: DesignTokens.h3),
-        content: Text(l10n.deleteMealConfirm, style: DesignTokens.bodyMedium),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final service = ref.read(mealServiceProvider);
-              await service.deleteMeal(mealId, date);
-              ref.invalidate(mealsProvider);
-              ref.invalidate(dailyTotalsProvider);
-              Navigator.pop(ctx);
-              if (context.mounted) {
-                AppAlert.show(
-                  context,
-                  title: l10n.mealDeleted,
-                  type: AlertType.warning,
-                  duration: const Duration(seconds: 2),
-                );
-              }
-            },
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    
+    final confirmed = await NoirGlassDialog.showConfirmation(
+      context,
+      title: l10n.deleteMeal,
+      content: l10n.deleteMealConfirm,
+      icon: Icons.delete_rounded,
+      confirmText: l10n.delete,
+      cancelText: l10n.cancel,
+      isDestructive: true,
     );
+    
+    if (confirmed == true) {
+      final service = ref.read(mealServiceProvider);
+      await service.deleteMeal(mealId, date);
+      ref.invalidate(mealsProvider);
+      ref.invalidate(dailyTotalsProvider);
+      if (context.mounted) {
+        AppAlert.show(
+          context,
+          title: l10n.mealDeleted,
+          type: AlertType.warning,
+          duration: const Duration(seconds: 2),
+        );
+      }
+    }
   }
 
   Widget _buildMacroCards(BuildContext context, Map<String, dynamic> totals) {
@@ -373,7 +459,7 @@ class NutritionScreenV2 extends ConsumerWidget {
                   label: l10n.protein,
                   consumed: completedProtein.toString(),
                   target: targetProtein.toString(),
-                  unit: 'g', // Keep 'g' as universal or add to l10n if needed (usually 'g' is fine, but user asked)
+                  unit: l10n.grams,
                   color: DesignTokens.textPrimary,
                   onTap: () => _showEditGoalDialog(context, 'protein', targetProtein),
                 ),
@@ -389,7 +475,7 @@ class NutritionScreenV2 extends ConsumerWidget {
                   label: l10n.fat,
                   consumed: completedFat.toString(),
                   target: targetFat.toString(),
-                  unit: 'g',
+                  unit: l10n.grams,
                   color: DesignTokens.textPrimary,
                   onTap: () => _showEditGoalDialog(context, 'fat', targetFat),
                 ),
@@ -400,7 +486,7 @@ class NutritionScreenV2 extends ConsumerWidget {
                   label: l10n.carbs,
                   consumed: completedCarbs.toString(),
                   target: targetCarbs.toString(),
-                  unit: 'g',
+                  unit: l10n.grams,
                   color: DesignTokens.textPrimary,
                   onTap: () => _showEditGoalDialog(context, 'carbs', targetCarbs),
                 ),
@@ -418,6 +504,7 @@ class NutritionScreenV2 extends ConsumerWidget {
     
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.8),
       builder: (ctx) => Consumer(
         builder: (context, ref, child) {
           final user = ref.watch(userProvider);
@@ -457,117 +544,150 @@ class NutritionScreenV2 extends ConsumerWidget {
             }
           }
           
-          return AlertDialog(
-            backgroundColor: DesignTokens.cardSurface,
-            title: Text(
-              l10n.editGoal,
-              style: DesignTokens.h3,
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (recommended != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.blue.withOpacity(0.3),
-                      ),
-                    ),
+          return Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(kRadiusXL),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  padding: const EdgeInsets.all(kSpaceLG),
+                  decoration: BoxDecoration(
+                    color: kNoirGraphite.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(kRadiusXL),
+                    border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Center(
+                          child: Text(l10n.editGoal, style: kNoirTitleMedium.copyWith(color: kContentHigh)),
+                        ),
+                        const SizedBox(height: kSpaceMD),
+                        if (recommended != null) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: kContentHigh.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(kRadiusMD),
+                              border: Border.all(color: kContentHigh.withOpacity(0.3)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.lightbulb_outline, color: kContentHigh, size: 16),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      l10n.recommended,
+                                      style: kNoirBodySmall.copyWith(color: kContentHigh, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '$recommended ${type == 'calories' ? l10n.kcal : l10n.grams}',
+                                  style: kNoirTitleMedium.copyWith(color: kContentHigh),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(l10n.basedOnYourData, style: kNoirBodySmall.copyWith(color: kContentMedium)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: kSpaceSM),
+                          TextButton(
+                            onPressed: () => controller.text = recommended.toString(),
+                            style: TextButton.styleFrom(foregroundColor: kContentHigh),
+                            child: Text(l10n.useRecommended),
+                          ),
+                          const SizedBox(height: kSpaceSM),
+                        ],
+                        TextField(
+                          controller: controller,
+                          keyboardType: TextInputType.number,
+                          style: kNoirBodyMedium.copyWith(color: kContentHigh),
+                          decoration: InputDecoration(
+                            labelText: l10n.goal,
+                            labelStyle: kNoirBodyMedium.copyWith(color: kContentMedium),
+                            suffixText: type == 'calories' ? l10n.kcal : l10n.grams,
+                            suffixStyle: kNoirBodyMedium.copyWith(color: kContentMedium),
+                            filled: true,
+                            fillColor: kNoirBlack,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(kRadiusMD),
+                              borderSide: BorderSide(color: kBorderLight),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(kRadiusMD),
+                              borderSide: BorderSide(color: kBorderLight),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(kRadiusMD),
+                              borderSide: const BorderSide(color: kContentHigh),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: kSpaceLG),
                         Row(
                           children: [
-                            const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              l10n.recommended,
-                              style: DesignTokens.bodySmall.copyWith(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.w600,
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                style: TextButton.styleFrom(foregroundColor: kContentMedium),
+                                child: Text(l10n.cancel),
+                              ),
+                            ),
+                            const SizedBox(width: kSpaceMD),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  final newValue = int.tryParse(controller.text);
+                                  if (newValue != null && newValue > 0) {
+                                    // Сохраняем в SharedPreferences (user-specific)
+                                    final prefs = await SharedPreferences.getInstance();
+                                    final userId = prefs.getString('user_id') ?? 'anonymous';
+                                    await prefs.setInt('nutrition_goal_${userId}_$type', newValue);
+                                    
+                                    // Обновляем провайдер для немедленного отображения
+                                    ref.invalidate(dailyTotalsProvider);
+                                    
+                                    // Принудительно проверяем цели
+                                    await NutritionGoalChecker.checkNow(ref);
+                                    
+                                    Navigator.pop(ctx);
+                                    if (context.mounted) {
+                                      AppAlert.show(
+                                        context,
+                                        title: l10n.goalUpdated,
+                                        description: '${l10n.goal}: $newValue ${type == 'calories' ? l10n.kcal : 'g'}',
+                                        type: AlertType.success,
+                                        duration: const Duration(seconds: 3),
+                                      );
+                                    }
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kContentHigh,
+                                  foregroundColor: kNoirBlack,
+                                  padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMD)),
+                                ),
+                                child: Text(l10n.save),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '$recommended ${type == 'calories' ? l10n.kcal : 'g'}',
-                          style: DesignTokens.h3.copyWith(
-                            color: Colors.blue,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.basedOnYourData,
-                          style: DesignTokens.bodySmall.copyWith(
-                            color: DesignTokens.textSecondary,
-                          ),
-                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      controller.text = recommended.toString();
-                    },
-                    child: Text(l10n.useRecommended),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  style: DesignTokens.bodyMedium,
-                  decoration: InputDecoration(
-                    labelText: l10n.goal,
-                    suffixText: type == 'calories' ? l10n.kcal : 'g',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                 ),
-              ],
+              ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(l10n.cancel),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  final newValue = int.tryParse(controller.text);
-                  if (newValue != null && newValue > 0) {
-                    // Сохраняем в SharedPreferences (user-specific)
-                    final prefs = await SharedPreferences.getInstance();
-                    final userId = prefs.getString('user_id') ?? 'anonymous';
-                    await prefs.setInt('nutrition_goal_${userId}_$type', newValue);
-                    
-                    // Обновляем провайдер для немедленного отображения
-                    ref.invalidate(dailyTotalsProvider);
-                    
-                    // Принудительно проверяем цели
-                    await NutritionGoalChecker.checkNow(ref);
-                    
-                    Navigator.pop(ctx);
-                    if (context.mounted) {
-                      AppAlert.show(
-                        context,
-                        title: l10n.goalUpdated,
-                        description: '${l10n.goal}: $newValue ${type == 'calories' ? l10n.kcal : 'g'}',
-                        type: AlertType.success,
-                        duration: const Duration(seconds: 3),
-                      );
-                    }
-                  }
-                },
-                child: Text(l10n.save),
-              ),
-            ],
           );
         },
       ),
@@ -653,22 +773,31 @@ class NutritionScreenV2 extends ConsumerWidget {
   String _getLocalizedMealName(BuildContext context, String name) {
     final l10n = AppLocalizations.of(context)!;
     final lowerName = name.toLowerCase();
+    // English variants
     if (lowerName == 'breakfast') return l10n.breakfast;
     if (lowerName == 'lunch') return l10n.lunch;
     if (lowerName == 'dinner') return l10n.dinner;
     if (lowerName == 'snack') return l10n.snack;
+    // Russian variants (from MealType.displayNameRu)
+    if (lowerName == 'завтрак') return l10n.breakfast;
+    if (lowerName == 'обед') return l10n.lunch;
+    if (lowerName == 'ужин') return l10n.dinner;
+    if (lowerName == 'перекус') return l10n.snack;
     return name;
   }
 
   Widget _buildMealsList(BuildContext context, WidgetRef ref, List<Meal> meals) {
     return Column(
-      children: meals.map((meal) => _MealSection(
-        meal: meal,
-        displayName: _getLocalizedMealName(context, meal.displayName),
-        ref: ref,
-        onRename: () => _showRenameMealDialog(context, ref, meal.id, meal.displayName, meal.date),
-        onDelete: () => _showDeleteMealDialog(context, ref, meal.id, meal.date),
-      )).toList(),
+      children: meals.map((meal) {
+        final localizedName = _getLocalizedMealName(context, meal.displayName);
+        return _MealSection(
+          meal: meal,
+          displayName: localizedName,
+          ref: ref,
+          onRename: () => _showRenameMealDialog(context, ref, meal.id, localizedName, meal.date),
+          onDelete: () => _showDeleteMealDialog(context, ref, meal.id, meal.date),
+        );
+      }).toList(),
     );
   }
 }
@@ -692,35 +821,25 @@ class _MacroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCalories = label.toLowerCase().contains('cal') || label.toLowerCase().contains('кал');
+    // Uniform styling for all macro cards (NO special highlighting for calories)
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
-          color: isCalories 
-              ? kObsidianSurface
-              : kObsidianSurface,
+          color: kObsidianSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isCalories ? kElectricAmberStart.withOpacity(0.3) : kObsidianBorder,
+            color: kObsidianBorder,
             width: 1,
           ),
-          gradient: isCalories ? LinearGradient(
-            colors: [
-              kElectricAmberStart.withOpacity(0.1),
-              kElectricAmberEnd.withOpacity(0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ) : null,
         ),
       child: Column(
         children: [
           Text(
             label,
             style: TextStyle(
-              color: isCalories ? kElectricAmberStart : kTextPrimary,
+              color: kTextPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -728,7 +847,7 @@ class _MacroCard extends StatelessWidget {
           const SizedBox(height: 8),
           RichText(
             text: TextSpan(
-              style: TextStyle(
+              style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w700,
                 fontSize: 24,
                 color: kTextPrimary,
@@ -737,7 +856,7 @@ class _MacroCard extends StatelessWidget {
                 TextSpan(text: consumed),
                 TextSpan(
                   text: ' / ',
-                  style: TextStyle(
+                  style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w400,
                     fontSize: 20,
                     color: kTextSecondary,
@@ -745,15 +864,15 @@ class _MacroCard extends StatelessWidget {
                 ),
                 TextSpan(
                   text: target,
-                  style: TextStyle(
+                  style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w500,
                     fontSize: 22,
                     color: kTextSecondary,
                   ),
                 ),
                 TextSpan(
-                  text: unit,
-                  style: TextStyle(
+                  text: ' $unit',
+                  style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w500,
                     fontSize: 12,
                     color: kTextTertiary,
@@ -1007,7 +1126,7 @@ class _DishItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${dish.calories} kcal • P: ${dish.protein.toInt()}g F: ${dish.fat.toInt()}g C: ${dish.carbs.toInt()}g',
+                  '${dish.calories} ${AppLocalizations.of(context)?.kcal ?? 'kcal'} • ${AppLocalizations.of(context)?.protein ?? 'P'}: ${dish.protein.toInt()}${AppLocalizations.of(context)?.grams ?? 'g'} ${AppLocalizations.of(context)?.fat ?? 'F'}: ${dish.fat.toInt()}${AppLocalizations.of(context)?.grams ?? 'g'} ${AppLocalizations.of(context)?.carbs ?? 'C'}: ${dish.carbs.toInt()}${AppLocalizations.of(context)?.grams ?? 'g'}',
                   style: DesignTokens.bodySmall.copyWith(
                     color: DesignTokens.textSecondary,
                   ),

@@ -1,4 +1,5 @@
 import 'dart:io' show File;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 
@@ -8,61 +9,51 @@ class StatsService {
   final SupabaseClient _client = SupabaseConfig.client;
 
   /// Get user's current streak (consecutive days of activity)
+  /// Minimum streak is 1 if user is logged in (current visit counts)
   Future<int> getStreak() async {
     try {
       final userId = SupabaseConfig.currentUserId;
-      if (userId == null) return 0;
+      if (userId == null) return 1; // User logged in = at least 1 day streak
 
       final now = DateTime.now();
       final ninetyDaysAgo = now.subtract(const Duration(days: 90));
+      final todayStr = DateTime(now.year, now.month, now.day).toIso8601String().split('T')[0];
+      final yesterdayStr = DateTime(now.year, now.month, now.day)
+          .subtract(const Duration(days: 1))
+          .toIso8601String().split('T')[0];
 
-      final workoutsResponse = await _client
-          .from('workout_sessions')
-          .select('workout_date')
-          .eq('user_id', userId)
-          .eq('status', 'completed')
-          .gte('workout_date', ninetyDaysAgo.toIso8601String().split('T')[0])
-          .order('workout_date', ascending: false);
-
-      final nutritionResponse = await _client
-          .from('nutrition_logs')
-          .select('meal_date')
-          .eq('user_id', userId)
-          .gte('meal_date', ninetyDaysAgo.toIso8601String().split('T')[0])
-          .order('meal_date', ascending: false);
-
-      final Set<String> activeDates = {};
+      // Get last visit date from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final lastVisitKey = 'last_visit_$userId';
+      final lastVisit = prefs.getString(lastVisitKey);
       
-      for (final row in workoutsResponse) {
-        activeDates.add(row['workout_date'].toString().split('T')[0]);
-      }
-      for (final row in nutritionResponse) {
-        activeDates.add(row['meal_date'].toString().split('T')[0]);
-      }
-
-      if (activeDates.isEmpty) return 0;
-
-      int streak = 0;
-      DateTime checkDate = DateTime(now.year, now.month, now.day);
+      // Save today as last visit
+      await prefs.setString(lastVisitKey, todayStr);
       
-      String todayStr = checkDate.toIso8601String().split('T')[0];
-      if (!activeDates.contains(todayStr)) {
-        checkDate = checkDate.subtract(const Duration(days: 1));
+      // Get streak count
+      final streakKey = 'streak_count_$userId';
+      int currentStreak = prefs.getInt(streakKey) ?? 1;
+      
+      // If first visit or yesterday was visited, increment/maintain streak
+      if (lastVisit == null) {
+        // First visit ever
+        currentStreak = 1;
+      } else if (lastVisit == todayStr) {
+        // Already visited today, keep current streak
+      } else if (lastVisit == yesterdayStr) {
+        // Visited yesterday, increment streak
+        currentStreak++;
+      } else {
+        // Missed one or more days, reset to 1
+        currentStreak = 1;
       }
-
-      while (true) {
-        final dateStr = checkDate.toIso8601String().split('T')[0];
-        if (activeDates.contains(dateStr)) {
-          streak++;
-          checkDate = checkDate.subtract(const Duration(days: 1));
-        } else {
-          break;
-        }
-      }
-
-      return streak;
+      
+      // Save updated streak
+      await prefs.setInt(streakKey, currentStreak);
+      
+      return currentStreak;
     } catch (_) {
-      return 0;
+      return 1; // Default to 1 if any error
     }
   }
 
@@ -97,50 +88,45 @@ class StatsService {
       final userId = SupabaseConfig.currentUserId;
       if (userId == null) return null;
 
-      final now = DateTime.now();
-      final thirtyDaysAgo = now.subtract(const Duration(days: 30));
-
-      final latestResponse = await _client
+      // Get all weight measurements ordered by date
+      final allMeasurements = await _client
           .from('body_measurements')
           .select('weight, measurement_date')
           .eq('user_id', userId)
           .not('weight', 'is', null)
-          .order('measurement_date', ascending: false)
-          .limit(1)
-          .maybeSingle();
+          .order('measurement_date', ascending: false);
 
-      if (latestResponse == null || latestResponse['weight'] == null) {
+      if (allMeasurements == null || (allMeasurements as List).isEmpty) {
         return null;
       }
 
-      final currentWeight = (latestResponse['weight'] as num).toDouble();
-
-      final oldResponse = await _client
-          .from('body_measurements')
-          .select('weight, measurement_date')
-          .eq('user_id', userId)
-          .not('weight', 'is', null)
-          .lte('measurement_date', thirtyDaysAgo.toIso8601String().split('T')[0])
-          .order('measurement_date', ascending: false)
-          .limit(1)
+      final List<dynamic> measurements = allMeasurements;
+      
+      // Latest weight is first in list
+      final currentWeight = (measurements[0]['weight'] as num).toDouble();
+      
+      // If we have at least 2 measurements, compare with previous
+      if (measurements.length >= 2) {
+        final previousWeight = (measurements[1]['weight'] as num).toDouble();
+        return currentWeight - previousWeight;
+      }
+      
+      // Only one measurement - compare with profile initial weight
+      final profileResponse = await _client
+          .from('profiles')
+          .select('weight')
+          .eq('id', userId)
           .maybeSingle();
-
-      if (oldResponse == null || oldResponse['weight'] == null) {
-        final profileResponse = await _client
-            .from('profiles')
-            .select('weight')
-            .eq('id', userId)
-            .maybeSingle();
-        
-        if (profileResponse != null && profileResponse['weight'] != null) {
-          final initialWeight = (profileResponse['weight'] as num).toDouble();
+      
+      if (profileResponse != null && profileResponse['weight'] != null) {
+        final initialWeight = (profileResponse['weight'] as num).toDouble();
+        // Only return change if different from current
+        if ((currentWeight - initialWeight).abs() >= 0.1) {
           return currentWeight - initialWeight;
         }
-        return null;
       }
-
-      final oldWeight = (oldResponse['weight'] as num).toDouble();
-      return currentWeight - oldWeight;
+      
+      return null;
     } catch (_) {
       return null;
     }
@@ -335,6 +321,12 @@ class StatsService {
   }
 
   /// Get user characteristics for the radar chart
+  /// RPG-style stats that grow with user activity:
+  /// - Discipline = streak / 10 (max 100 at 1000 day streak)
+  /// - Strength = 0.1 * total workouts (max 100 at 1000 workouts)
+  /// - Nutrition = based on logged meals
+  /// - Endurance = based on workout duration
+  /// - Balance = based on muscle group variety
   Future<Map<String, double>> getCharacteristics() async {
     try {
       final userId = SupabaseConfig.currentUserId;
@@ -343,15 +335,11 @@ class StatsService {
       final now = DateTime.now();
       final thirtyDaysAgo = now.subtract(const Duration(days: 30));
 
-      // 1. DISCIPLINE
+      // 1. DISCIPLINE = streak / 10 (simple formula)
       final streak = await getStreak();
-      final workoutsThisMonth = await getWorkoutsThisMonth();
-      
-      final streakScore = (streak / 30 * 50).clamp(0.0, 50.0);
-      final regularityScore = (workoutsThisMonth / 20 * 50).clamp(0.0, 50.0);
-      final discipline = (streakScore + regularityScore).clamp(0.0, 100.0);
+      final discipline = (streak / 10.0).clamp(0.0, 100.0);
 
-      // 2. NUTRITION
+      // 2. NUTRITION — based on logged meals in last 30 days
       final nutritionResponse = await _client
           .from('nutrition_logs')
           .select('meal_date, is_completed')
@@ -368,24 +356,17 @@ class StatsService {
       final completionBonus = (completedMeals / 90 * 30).clamp(0.0, 30.0);
       final nutrition = (nutritionDaysScore + completionBonus).clamp(0.0, 100.0);
 
-      // 3. STRENGTH
-      final strengthResponse = await _client
-          .from('exercise_logs')
-          .select('weight, sets, reps')
+      // 3. STRENGTH = 0.1 * total workouts (all time)
+      final totalWorkoutsResponse = await _client
+          .from('workout_sessions')
+          .select('id')
           .eq('user_id', userId)
-          .gte('created_at', thirtyDaysAgo.toIso8601String())
-          .not('weight', 'is', null);
+          .eq('status', 'completed');
+      
+      final totalWorkouts = (totalWorkoutsResponse as List).length;
+      final strength = (totalWorkouts * 0.1).clamp(0.0, 100.0);
 
-      double totalVolume = 0;
-      for (final log in strengthResponse) {
-        final sets = (log['sets'] as int?) ?? 1;
-        final reps = (log['reps'] as int?) ?? 10;
-        final weight = (log['weight'] as num?)?.toDouble() ?? 0;
-        totalVolume += sets * reps * weight;
-      }
-      final strength = (totalVolume / 50000 * 100).clamp(0.0, 100.0);
-
-      // 4. ENDURANCE
+      // 4. ENDURANCE — based on total workout duration in last 30 days
       final enduranceResponse = await _client
           .from('workout_sessions')
           .select('duration_minutes')
@@ -399,7 +380,7 @@ class StatsService {
       }
       final endurance = (totalMinutes / 600 * 100).clamp(0.0, 100.0);
 
-      // 5. BALANCE
+      // 5. BALANCE — based on muscle group variety in last 30 days
       final balanceResponse = await _client
           .from('exercise_logs')
           .select('muscle_group')
@@ -426,12 +407,384 @@ class StatsService {
   }
 
   Map<String, double> _getDefaultCharacteristics() {
+    // New users start at 0 - no fake data
     return {
-      'discipline': 10.0,
-      'nutrition': 10.0,
-      'strength': 10.0,
-      'endurance': 10.0,
-      'balance': 10.0,
+      'discipline': 0.0,
+      'nutrition': 0.0,
+      'strength': 0.0,
+      'endurance': 0.0,
+      'balance': 0.0,
     };
   }
+
+  // ===========================================================================
+  // 7-Day History Methods
+  // ===========================================================================
+
+  /// Get workout history for last 7 days
+  Future<List<WorkoutDayStatus>> getWorkoutHistory7Days() async {
+    try {
+      final userId = SupabaseConfig.currentUserId;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      final results = <WorkoutDayStatus>[];
+      
+      for (int i = 6; i >= 0; i--) {
+        final date = today.subtract(Duration(days: i));
+        final dateStr = date.toIso8601String().split('T')[0];
+        
+        if (i == 0) {
+          // Today - check if has workout
+          if (userId != null) {
+            final response = await _client
+                .from('workout_sessions')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('workout_date', dateStr)
+                .eq('status', 'completed');
+            
+            results.add(WorkoutDayStatus(
+              date: date,
+              status: response.isNotEmpty ? WorkoutStatus.completed : WorkoutStatus.today,
+              workoutCount: response.length,
+            ));
+          } else {
+            results.add(WorkoutDayStatus(
+              date: date,
+              status: WorkoutStatus.today,
+            ));
+          }
+        } else {
+          // Past days
+          if (userId != null) {
+            final response = await _client
+                .from('workout_sessions')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('workout_date', dateStr)
+                .eq('status', 'completed');
+            
+            results.add(WorkoutDayStatus(
+              date: date,
+              status: response.isNotEmpty ? WorkoutStatus.completed : WorkoutStatus.missed,
+              workoutCount: response.isNotEmpty ? response.length : null,
+            ));
+          } else {
+            results.add(WorkoutDayStatus(
+              date: date,
+              status: WorkoutStatus.missed,
+            ));
+          }
+        }
+      }
+      
+      return results;
+    } catch (e) {
+      // Return empty history on error
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return List.generate(7, (i) => WorkoutDayStatus(
+        date: today.subtract(Duration(days: 6 - i)),
+        status: i == 6 ? WorkoutStatus.today : WorkoutStatus.missed,
+      ));
+    }
+  }
+
+  /// Get nutrition history for last 7 days
+  Future<List<NutritionDayStatus>> getNutritionHistory7Days() async {
+    try {
+      final userId = SupabaseConfig.currentUserId;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      // Get user's calorie target
+      int targetCalories = 2000;
+      if (userId != null) {
+        final prefs = await SharedPreferences.getInstance();
+        targetCalories = prefs.getInt('nutrition_goal_${userId}_calories') ?? 2000;
+      }
+      
+      final results = <NutritionDayStatus>[];
+      
+      for (int i = 6; i >= 0; i--) {
+        final date = today.subtract(Duration(days: i));
+        final dateStr = date.toIso8601String().split('T')[0];
+        
+        if (i == 0) {
+          // Today
+          if (userId != null) {
+            final response = await _client
+                .from('nutrition_logs')
+                .select('calories')
+                .eq('user_id', userId)
+                .eq('meal_date', dateStr);
+            
+            int totalCalories = 0;
+            for (final log in response) {
+              totalCalories += (log['calories'] as int?) ?? 0;
+            }
+            
+            final percentage = targetCalories > 0 ? totalCalories / targetCalories : 0.0;
+            
+            results.add(NutritionDayStatus(
+              date: date,
+              status: NutritionStatus.today,
+              caloriePercentage: percentage,
+            ));
+          } else {
+            results.add(NutritionDayStatus(
+              date: date,
+              status: NutritionStatus.today,
+              caloriePercentage: 0,
+            ));
+          }
+        } else {
+          // Past days
+          if (userId != null) {
+            final response = await _client
+                .from('nutrition_logs')
+                .select('calories')
+                .eq('user_id', userId)
+                .eq('meal_date', dateStr);
+            
+            int totalCalories = 0;
+            for (final log in response) {
+              totalCalories += (log['calories'] as int?) ?? 0;
+            }
+            
+            final percentage = targetCalories > 0 ? totalCalories / targetCalories : 0.0;
+            final status = _getNutritionStatus(percentage);
+            
+            results.add(NutritionDayStatus(
+              date: date,
+              status: status,
+              caloriePercentage: percentage,
+            ));
+          } else {
+            results.add(NutritionDayStatus(
+              date: date,
+              status: NutritionStatus.empty,
+              caloriePercentage: 0,
+            ));
+          }
+        }
+      }
+      
+      return results;
+    } catch (e) {
+      // Return empty history on error
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return List.generate(7, (i) => NutritionDayStatus(
+        date: today.subtract(Duration(days: 6 - i)),
+        status: i == 6 ? NutritionStatus.today : NutritionStatus.empty,
+        caloriePercentage: 0,
+      ));
+    }
+  }
+  
+  NutritionStatus _getNutritionStatus(double percentage) {
+    if (percentage >= 0.9 && percentage <= 1.1) return NutritionStatus.excellent;
+    if (percentage >= 0.7) return NutritionStatus.good;
+    if (percentage > 0) return NutritionStatus.poor;
+    return NutritionStatus.empty;
+  }
+
+  /// Get last 7 days nutrition data for profile widget
+  /// Returns list of _DayNutrition objects (defined in profile_screen.dart)
+  Future<List<dynamic>> getLast7DaysNutrition() async {
+    try {
+      final userId = SupabaseConfig.currentUserId;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final sevenDaysAgo = today.subtract(const Duration(days: 6));
+      
+      // Default target calories
+      int targetCalories = 2000;
+      
+      // Try to get user's target from profile
+      if (userId != null) {
+        try {
+          final profileResponse = await _client
+              .from('profiles')
+              .select('target_calories')
+              .eq('id', userId)
+              .maybeSingle();
+          
+          if (profileResponse != null && profileResponse['target_calories'] != null) {
+            targetCalories = profileResponse['target_calories'] as int;
+          }
+        } catch (_) {
+          // Use default
+        }
+      }
+      
+      // Fetch nutrition logs for last 7 days
+      final List<Map<String, int>> results = [];
+      
+      for (int i = 0; i < 7; i++) {
+        final date = sevenDaysAgo.add(Duration(days: i));
+        final dateStr = date.toIso8601String().split('T')[0];
+        
+        int totalCalories = 0;
+        
+        if (userId != null) {
+          try {
+            final response = await _client
+                .from('nutrition_logs')
+                .select('calories')
+                .eq('user_id', userId)
+                .eq('meal_date', dateStr);
+            
+            for (final log in response) {
+              totalCalories += (log['calories'] as int?) ?? 0;
+            }
+          } catch (_) {
+            // Day has no data
+          }
+        }
+        
+        results.add({
+          'year': date.year,
+          'month': date.month,
+          'day': date.day,
+          'weekday': date.weekday,
+          'calories': totalCalories,
+          'target': targetCalories,
+        });
+      }
+      
+      return results;
+    } catch (e) {
+      // Return empty data on error
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return List.generate(7, (i) {
+        final date = today.subtract(Duration(days: 6 - i));
+        return {
+          'year': date.year,
+          'month': date.month,
+          'day': date.day,
+          'weekday': date.weekday,
+          'calories': 0,
+          'target': 2000,
+        };
+      });
+    }
+  }
+  
+  /// Get last 7 days workout data for profile widget
+  /// Returns list of workout counts per day
+  Future<List<dynamic>> getLast7DaysWorkouts() async {
+    try {
+      final userId = SupabaseConfig.currentUserId;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final sevenDaysAgo = today.subtract(const Duration(days: 6));
+      
+      final List<Map<String, int>> results = [];
+      
+      for (int i = 0; i < 7; i++) {
+        final date = sevenDaysAgo.add(Duration(days: i));
+        final dateStr = date.toIso8601String().split('T')[0];
+        
+        int workoutCount = 0;
+        
+        if (userId != null) {
+          try {
+            final response = await _client
+                .from('workout_sessions')
+                .select('id')
+                .eq('user_id', userId)
+                .gte('started_at', '$dateStr 00:00:00')
+                .lt('started_at', '${date.add(const Duration(days: 1)).toIso8601String().split('T')[0]} 00:00:00')
+                .eq('status', 'completed');
+            
+            workoutCount = response.length;
+          } catch (_) {
+            // Day has no data
+          }
+        }
+        
+        results.add({
+          'year': date.year,
+          'month': date.month,
+          'day': date.day,
+          'weekday': date.weekday,
+          'workouts': workoutCount,
+        });
+      }
+      
+      return results;
+    } catch (e) {
+      // Return empty data on error
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return List.generate(7, (i) {
+        final date = today.subtract(Duration(days: 6 - i));
+        return {
+          'year': date.year,
+          'month': date.month,
+          'day': date.day,
+          'weekday': date.weekday,
+          'workouts': 0,
+        };
+      });
+    }
+  }
+
+  /// Get meals for a specific date (for nutrition history detail view)
+  Future<List<Map<String, dynamic>>> getMealsByDate(DateTime date) async {
+    try {
+      final userId = SupabaseConfig.currentUserId;
+      if (userId == null) return [];
+
+      final dateStr = DateTime(date.year, date.month, date.day)
+          .toIso8601String()
+          .split('T')[0];
+
+      final response = await _client
+          .from('nutrition_logs')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('meal_date', dateStr)
+          .order('created_at', ascending: true);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (_) {
+      return [];
+    }
+  }
+}
+
+// ===========================================================================
+// Data Classes for History
+// ===========================================================================
+
+enum WorkoutStatus { completed, missed, today, future }
+enum NutritionStatus { excellent, good, poor, empty, today, future }
+
+class WorkoutDayStatus {
+  final DateTime date;
+  final WorkoutStatus status;
+  final int? workoutCount;
+  
+  const WorkoutDayStatus({
+    required this.date,
+    required this.status,
+    this.workoutCount,
+  });
+}
+
+class NutritionDayStatus {
+  final DateTime date;
+  final NutritionStatus status;
+  final double? caloriePercentage;
+  
+  const NutritionDayStatus({
+    required this.date,
+    required this.status,
+    this.caloriePercentage,
+  });
 }

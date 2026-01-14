@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import '../theme/noir_theme.dart';
 
 class WorkoutMedia extends StatefulWidget {
   final String? imageUrl;
@@ -69,15 +70,38 @@ class _WorkoutMediaState extends State<WorkoutMedia> {
           width: double.infinity,
           fit: BoxFit.contain,
           placeholder: (_, __) => const Center(child: CircularProgressIndicator()),
-          errorWidget: (_, __, ___) => const Center(child: Text('Ошибка загрузки медиа')),
+          // Fallback on 404 or any error: show neutral placeholder
+          errorWidget: (_, __, ___) => _buildPlaceholderIcon(),
         ),
       );
     }
 
-    // 3) заглушка - пустой контейнер вместо текста
+    // 3) заглушка - пустой контейнер с иконкой
     return _WhiteCard(
-      child: const Center(
-        child: SizedBox.shrink(), // Пустой виджет вместо "Медиа недоступно"
+      child: _buildPlaceholderIcon(),
+    );
+  }
+  
+  /// Neutral placeholder when media unavailable (404 or missing)
+  Widget _buildPlaceholderIcon() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.fitness_center,
+            size: 48,
+            color: kContentLow.withOpacity(0.3),
+          ),
+          const SizedBox(height: kSpaceSM),
+          Text(
+            '🏋️',
+            style: TextStyle(
+              fontSize: 24,
+              color: kContentLow.withOpacity(0.5),
+            ),
+          ),
+        ],
       ),
     );
   }

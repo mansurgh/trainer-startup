@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 /// Workout History Screen - история тренировок
 class WorkoutHistoryScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
-        throw Exception('Пользователь не авторизован');
+        throw Exception(AppLocalizations.of(context)?.userNotAuthorized ?? 'User not authorized');
       }
 
       final response = await _supabase
@@ -61,8 +62,9 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      final l10n = AppLocalizations.of(context);
       setState(() {
-        _error = 'Ошибка загрузки: $e';
+        _error = '${l10n?.error ?? "Error"}: $e';
         _isLoading = false;
       });
     }
@@ -140,6 +142,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: kOledBlack,
       body: CustomScrollView(
@@ -147,7 +150,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
           // App Bar
           SliverAppBar(
             backgroundColor: kOledBlack,
-            title: Text('История тренировок', style: kDenseHeading),
+            title: Text(l10n.workoutHistory, style: kDenseHeading),
             floating: true,
             pinned: true,
             expandedHeight: 200,
@@ -164,6 +167,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
   }
 
   Widget _buildStatsHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -184,25 +188,25 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
               _StatBadge(
                 icon: Icons.fitness_center,
                 value: '$_totalWorkouts',
-                label: 'Всего',
+                label: l10n.totalWorkouts,
                 color: kElectricAmberStart,
               ),
               _StatBadge(
                 icon: Icons.calendar_month,
                 value: '$_thisMonthWorkouts',
-                label: 'В этом мес.',
+                label: l10n.thisMonth,
                 color: kInfoCyan,
               ),
               _StatBadge(
                 icon: Icons.timer,
                 value: _formatTotalDuration(),
-                label: 'Время',
+                label: l10n.time,
                 color: kSuccessGreen,
               ),
               _StatBadge(
                 icon: Icons.local_fire_department,
                 value: '$_currentStreak',
-                label: 'Серия',
+                label: l10n.streak,
                 color: Colors.orange,
               ),
             ],
@@ -221,6 +225,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const SliverFillRemaining(
         child: Center(
@@ -241,7 +246,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
               const SizedBox(height: kSpaceMD),
               ElevatedButton(
                 onPressed: _loadWorkouts,
-                child: const Text('Повторить'),
+                child: Text(l10n.retry),
               ),
             ],
           ),
@@ -270,12 +275,12 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
               ),
               const SizedBox(height: kSpaceLG),
               Text(
-                'Нет тренировок',
+                l10n.noWorkouts,
                 style: kDenseHeading.copyWith(color: kTextSecondary),
               ),
               const SizedBox(height: kSpaceSM),
               Text(
-                'Начните тренироваться,\nчтобы видеть свою историю',
+                l10n.startWorkingOutHint,
                 style: kBodyText.copyWith(color: kTextTertiary),
                 textAlign: TextAlign.center,
               ),
@@ -315,9 +320,17 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
   }
 
   String _getMonthYearKey(DateTime date) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      final monthsEn = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      return '${monthsEn[date.month - 1]} ${date.year}';
+    }
     final months = [
-      'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-      'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+      l10n.january, l10n.february, l10n.march, l10n.april, l10n.may, l10n.june,
+      l10n.july, l10n.august, l10n.september, l10n.october, l10n.november, l10n.december
     ];
     return '${months[date.month - 1]} ${date.year}';
   }

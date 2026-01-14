@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../models/daily_plan_model.dart';
 import '../models/exercise.dart';
@@ -301,6 +302,23 @@ class StorageService {
     
     sessionsData.add(jsonEncode(session));
     await prefs.setStringList(_sessionsKey, sessionsData);
+    
+    // Also save to Supabase for stats tracking
+    try {
+      final userId = SupabaseConfig.currentUserId;
+      if (userId != null && completed) {
+        await Supabase.instance.client.from('workout_sessions').insert({
+          'user_id': userId,
+          'workout_date': date.toIso8601String().split('T')[0],
+          'title': exerciseName.split(',').first.trim(),
+          'duration_minutes': (duration / 60).round(),
+          'status': 'completed',
+          'notes': exerciseName,
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('[StorageService] Failed to save workout to Supabase: $e');
+    }
   }
 
   static Future<List<Map<String, dynamic>>> getWorkoutSessions() async {
@@ -356,12 +374,18 @@ class StorageService {
       // Очищаем питание и прогресс фото для нового пользователя
       await prefs.remove('progress_photos');
       
-      // Очищаем все ключи, связанные с питанием
+      // Очищаем все ключи, связанные с питанием и тренировками
       final keys = prefs.getKeys();
       for (final key in keys) {
         if (key.startsWith('meal_') || 
+            key.startsWith('meals_') ||   // NEW: meals_<userId>_<date> format
             key.startsWith('nutrition_') || 
-            key.startsWith('food_')) {
+            key.startsWith('food_') ||
+            key.startsWith('custom_workout_') ||
+            key.startsWith('workout_completed_') ||
+            key.startsWith('daily_') ||   // daily calories/protein/etc
+            key.startsWith('streak_') ||  // streak data
+            key.startsWith('last_visit_')) { // visit tracking
           await prefs.remove(key);
         }
       }
@@ -538,9 +562,11 @@ class StorageService {
             continue;
           }
           
-          // Переносим в Supabase
+          // Переносим в Supabase - CRITICAL: include email
+          final currentEmail = Supabase.instance.client.auth.currentUser?.email;
           await SupabaseConfig.client.from('profiles').insert({
             'id': userId,
+            'email': currentEmail ?? profile['email'] ?? 'unknown@local.migration',
             'name': profile['name'],
             'age': profile['age'],
             'height': profile['height'],

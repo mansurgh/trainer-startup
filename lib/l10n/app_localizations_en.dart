@@ -15,10 +15,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome';
 
   @override
+  String get athlete => 'Athlete';
+
+  @override
   String get onboardingTitle => 'Welcome to PulseFit Pro';
 
   @override
   String get onboardingSubtitle => 'Your personal AI fitness trainer';
+
+  @override
+  String get tellUsAboutYourself =>
+      'Tell us about yourself for a personalized program';
+
+  @override
+  String get unitSystem => 'Units';
+
+  @override
+  String get cm => 'cm';
+
+  @override
+  String get kg => 'kg';
 
   @override
   String get name => 'Name';
@@ -90,6 +106,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addMeal => 'Add Meal';
 
   @override
+  String get newDish => 'New Dish';
+
+  @override
   String get bmi => 'BMI';
 
   @override
@@ -136,6 +155,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Try Again';
+
+  @override
+  String get outOf => 'of';
 
   @override
   String get save => 'Save';
@@ -280,7 +302,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workouts => 'Workouts';
 
   @override
-  String get completed => 'Completed';
+  String get completed => 'Done';
 
   @override
   String get streak => 'Streak';
@@ -296,6 +318,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logout => 'Logout';
+
+  @override
+  String get consistency => 'Consistency';
+
+  @override
+  String get change => 'Change';
 
   @override
   String get user => 'User';
@@ -533,7 +561,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progressGallery => 'Progress Gallery';
 
   @override
-  String get noProgressPhotos => 'No Progress Photos';
+  String get noProgressPhotos => 'No progress photos';
 
   @override
   String get addFirstPhoto =>
@@ -543,25 +571,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takePhoto => 'Take Photo';
 
   @override
-  String get photoAdded => 'Photo added successfully';
+  String get photoAdded => 'Photo added!';
 
   @override
-  String get photoDeleted => 'Photo deleted successfully';
+  String get photoDeleted => 'Photo deleted';
 
   @override
   String get trialRoulette => 'Trial Roulette';
 
   @override
-  String get spinTheWheel => 'Spin the wheel to get your trial period!';
+  String get spinTheWheel => 'SPIN THE WHEEL';
 
   @override
   String get spin => 'Spin';
 
   @override
-  String get congratulations => 'Congratulations!';
+  String get congratulations => 'Congratulations! 🎉';
 
   @override
-  String youWonDays(Object days) {
+  String youWonDays(int days) {
     return 'You won $days days of free trial!';
   }
 
@@ -575,7 +603,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlockFullPotential => 'Unlock Your Full Potential';
 
   @override
-  String get personalizedWorkouts => 'Personalized AI Workouts';
+  String get personalizedWorkouts => 'Personalized workouts';
 
   @override
   String get personalizedWorkoutsDesc =>
@@ -749,7 +777,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dishUpdated => 'Dish Updated';
 
   @override
-  String get enterDishName => 'Enter dish name';
+  String get enterDishName => 'Please enter dish name';
+
+  @override
+  String get replaceWithAnotherDish => 'Replace with another dish';
 
   @override
   String get enterValidCalories => 'Please enter valid calories';
@@ -874,7 +905,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logoutButton => 'Logout';
 
   @override
-  String get workoutCompleted => 'Workout Completed!';
+  String get workoutCompleted => 'Workout completed';
 
   @override
   String get workoutCompletedDesc =>
@@ -972,15 +1003,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generatingProgramSubtitle => 'This will take just a few seconds';
 
   @override
-  String streakDays(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count days',
-      one: '1 day',
-    );
-    return '$_temp0';
-  }
+  String get streakDays => 'Day streak';
 
   @override
   String get streakLabel => 'Streak';
@@ -1058,4 +1081,760 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workoutAndNutritionCheck => 'Workout ✓ Nutrition ✓';
+
+  @override
+  String get minutes => 'Minutes';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get updateWeight => 'Update Weight';
+
+  @override
+  String get successDay => 'Success Day';
+
+  @override
+  String get characteristics => 'Characteristics';
+
+  @override
+  String setNumber(Object current, Object total) {
+    return 'Set $current/$total';
+  }
+
+  @override
+  String get restPhase => 'Rest';
+
+  @override
+  String get front => 'Front';
+
+  @override
+  String get backView => 'Back';
+
+  @override
+  String get month => 'month';
+
+  @override
+  String get year => 'year';
+
+  @override
+  String get aiFormFeedback => 'AI form feedback';
+
+  @override
+  String get progressTracking => 'Progress tracking';
+
+  @override
+  String get unlimitedAiChat => 'Unlimited AI chat';
+
+  @override
+  String nameChangedTo(Object name) {
+    return 'Name changed to \"$name\"';
+  }
+
+  @override
+  String get grams => 'g';
+
+  @override
+  String get avatarUpdated => 'Avatar updated';
+
+  @override
+  String get profileUpdated => 'Profile updated';
+
+  @override
+  String get dataSaved => 'Data saved';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get deleted => 'Deleted';
+
+  @override
+  String get added => 'Added';
+
+  @override
+  String get updated => 'Updated';
+
+  @override
+  String get sent => 'Sent';
+
+  @override
+  String get errorOccurred => 'An error occurred';
+
+  @override
+  String get networkError => 'Network error';
+
+  @override
+  String get tryAgainLater => 'Please try again later';
+
+  @override
+  String get customMeal => 'Other';
+
+  @override
+  String get exerciseSkipped => 'Exercise skipped';
+
+  @override
+  String get setCompleted => 'Set completed';
+
+  @override
+  String get restTime => 'Rest time';
+
+  @override
+  String get startWorkoutButton => 'Start workout';
+
+  @override
+  String get endWorkout => 'End workout';
+
+  @override
+  String get availableOnTrainingDay => 'Available on training day';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String get photoUploaded => 'Photo uploaded';
+
+  @override
+  String get totalVolume => 'Volume';
+
+  @override
+  String get discipline => 'Discipline';
+
+  @override
+  String get goalProgress => 'Progress';
+
+  @override
+  String get weightTrend => 'Weight trend';
+
+  @override
+  String get noData => 'No data';
+
+  @override
+  String get trainToSeeStats => 'Train to see your stats';
+
+  @override
+  String get progressPhotos => 'Progress Photos';
+
+  @override
+  String get viewAll => 'View all';
+
+  @override
+  String get noProgressPhotosYet => 'No photos yet';
+
+  @override
+  String get tapToAdd => 'Tap to add';
+
+  @override
+  String get errorLoadingPhotos => 'Error loading photos';
+
+  @override
+  String get languageChanged => 'Language changed';
+
+  @override
+  String get interfaceLanguage => 'Interface language';
+
+  @override
+  String get aboutApp => 'About App';
+
+  @override
+  String get howWeUseYourData => 'How we use your data';
+
+  @override
+  String get appUsageRules => 'Application usage rules';
+
+  @override
+  String get contactUs => 'Contact us';
+
+  @override
+  String get workoutsLabel => 'Workouts';
+
+  @override
+  String get last7Days => 'Last 7 days';
+
+  @override
+  String get nutritionHistory => 'Nutrition History';
+
+  @override
+  String get workoutHistory => 'Workout History';
+
+  @override
+  String get profileData => 'Profile Data';
+
+  @override
+  String get enterName => 'Enter name';
+
+  @override
+  String get noNutritionData => 'No nutrition data yet';
+
+  @override
+  String get totalWorkouts => 'Total';
+
+  @override
+  String get thisMonth => 'This Month';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get noWorkouts => 'No workouts';
+
+  @override
+  String get startWorkingOutHint => 'Start working out\nto see your history';
+
+  @override
+  String get noMealsLogged => 'No meals logged';
+
+  @override
+  String get checkForm => 'Check Form';
+
+  @override
+  String get formAnalysis => 'Form Analysis';
+
+  @override
+  String get errorsDetected => 'Errors Detected';
+
+  @override
+  String get recommendations => 'Recommendations';
+
+  @override
+  String get videoGuide => 'Video Guide';
+
+  @override
+  String get getReady => 'Get Ready';
+
+  @override
+  String get recording => 'Recording';
+
+  @override
+  String get processing => 'Processing';
+
+  @override
+  String get aiAnalyzingForm => 'AI is analyzing your form';
+
+  @override
+  String get countdownTimer => 'Countdown Timer';
+
+  @override
+  String get tapToStartRecording => 'Tap to start recording';
+
+  @override
+  String tapToStopOrWait(Object seconds) {
+    return 'Tap to stop or wait ${seconds}s';
+  }
+
+  @override
+  String get searchExercises => 'Search exercises...';
+
+  @override
+  String get selected => 'Selected';
+
+  @override
+  String get clearAll => 'Clear All';
+
+  @override
+  String get current => 'Current';
+
+  @override
+  String get addPhoto => 'Add Photo';
+
+  @override
+  String get weeklyHistory => 'Weekly History';
+
+  @override
+  String get trackYourProgress => 'Track your progress';
+
+  @override
+  String get checkPermissions => 'Check permissions';
+
+  @override
+  String get logoutConfirmation => 'Are you sure you want to log out?';
+
+  @override
+  String get core => 'Core';
+
+  @override
+  String get welcomeBack => 'Welcome back!';
+
+  @override
+  String get signInToContinue => 'Sign in to continue';
+
+  @override
+  String get enterEmail => 'Enter email';
+
+  @override
+  String get enterValidEmail => 'Enter a valid email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get enterPassword => 'Enter password';
+
+  @override
+  String get passwordTooShort => 'Minimum 6 characters';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get or => 'or';
+
+  @override
+  String get createAccount => 'Create Account';
+
+  @override
+  String get signUp => 'Sign Up';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account?';
+
+  @override
+  String get pleaseFillAllFields => 'Please fill in all fields';
+
+  @override
+  String get incompleteForm => 'Incomplete form';
+
+  @override
+  String get trialEnded => 'Your Free Trial\nHas Ended';
+
+  @override
+  String get trialEndedSubtitle =>
+      '7 days of free access have expired.\nSubscribe to continue using the app.';
+
+  @override
+  String get mealPlans => 'Meal plans';
+
+  @override
+  String get aiCoach247 => 'AI coach 24/7';
+
+  @override
+  String get subscribeNow => 'Subscribe Now';
+
+  @override
+  String get restorePurchases => 'Restore Purchases';
+
+  @override
+  String get restoringPurchases => 'Restore Purchases';
+
+  @override
+  String get checkingPurchases => 'Checking your purchases...';
+
+  @override
+  String get testYourLuck => 'Test Your Luck!';
+
+  @override
+  String get spinWheelSubtitle =>
+      'Spin the wheel for a chance to win free trial days';
+
+  @override
+  String daysFreeTrial(int days) {
+    return '$days Days Free Trial!';
+  }
+
+  @override
+  String get noLuckThisTime => 'No Luck This Time';
+
+  @override
+  String get tryAgain => 'Try Again!';
+
+  @override
+  String get noLuckButPremium =>
+      'No luck this time, but you can still get premium!';
+
+  @override
+  String get getPremiumNow => 'Get Premium Now';
+
+  @override
+  String get buyPremiumNow => 'Buy Premium Now';
+
+  @override
+  String get premiumFeatures => 'Premium Features';
+
+  @override
+  String get premiumFeaturesList =>
+      '• AI Personal Trainer & Nutritionist\n• Custom Workout Plans\n• Meal Planning & Tracking\n• Progress Analytics\n• Unlimited Everything';
+
+  @override
+  String get targetMuscle => 'Target muscle';
+
+  @override
+  String get equipment => 'Equipment';
+
+  @override
+  String get instructions => 'Instructions';
+
+  @override
+  String get calorieGoal => 'of daily goal';
+
+  @override
+  String get changeAvatar => 'Change Avatar';
+
+  @override
+  String get takePhotoCamera => 'Take Photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from Gallery';
+
+  @override
+  String get offlineMode => 'Offline Mode';
+
+  @override
+  String get disciplineRating => 'Discipline Rating';
+
+  @override
+  String get consistencyLabel => 'Consistency';
+
+  @override
+  String get nutritionLabel => 'Nutrition';
+
+  @override
+  String get strengthLabel => 'Strength';
+
+  @override
+  String get enduranceLabel => 'Endurance';
+
+  @override
+  String get balanceLabel => 'Balance';
+
+  @override
+  String get howRatingCalculated => 'How is the rating calculated?';
+
+  @override
+  String get ratingExplanation =>
+      'Discipline rating measures your workout consistency and dedication.\n\n• Consistency (400 max) — active day streak\n• Nutrition (150 max) — meal plan adherence\n• Strength (150 max) — exercise progress\n• Endurance (150 max) — workout duration\n• Balance (150 max) — exercise variety';
+
+  @override
+  String successDayTitle(int percentage) {
+    return 'Day Success — $percentage%';
+  }
+
+  @override
+  String get appLogin => 'App login';
+
+  @override
+  String get workoutActivity => 'Workout';
+
+  @override
+  String get completeAllForHundred => 'Complete all activities to reach 100%!';
+
+  @override
+  String get workoutsThisMonth => 'Workouts This Month';
+
+  @override
+  String monthlyGoal(int target) {
+    return 'Goal: $target workouts per month.';
+  }
+
+  @override
+  String workoutsRemaining(int remaining) {
+    return 'Remaining: $remaining workouts.';
+  }
+
+  @override
+  String get activityStreak => 'Activity Streak';
+
+  @override
+  String daysInRow(int days) {
+    return '$days days in a row';
+  }
+
+  @override
+  String get streakExplanation =>
+      'Your streak counts for each day when you:\n• Completed a workout\n• Or logged a meal\n\nMaintain your streak to earn bonuses!';
+
+  @override
+  String get cancelButton => 'Cancel';
+
+  @override
+  String get weightLabel => 'Weight';
+
+  @override
+  String get doneButton => 'Done';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get mondayShort => 'M';
+
+  @override
+  String get tuesdayShort => 'T';
+
+  @override
+  String get wednesdayShort => 'W';
+
+  @override
+  String get thursdayShort => 'T';
+
+  @override
+  String get fridayShort => 'F';
+
+  @override
+  String get saturdayShort => 'S';
+
+  @override
+  String get sundayShort => 'S';
+
+  @override
+  String get cmUnit => 'cm';
+
+  @override
+  String get kgUnit => 'kg';
+
+  @override
+  String get yearsUnit => 'y.o.';
+
+  @override
+  String get disciplineDesc => 'Regularity and plan adherence';
+
+  @override
+  String get nutritionDesc => 'Following nutrition schedule';
+
+  @override
+  String get strengthDesc => 'Max weight in basic exercises';
+
+  @override
+  String get enduranceDesc => 'Ability for prolonged loads';
+
+  @override
+  String get balanceDesc => 'Coordination and balance';
+
+  @override
+  String get addMealEntry => 'Add Meal';
+
+  @override
+  String get lowerBody => 'Lower Body';
+
+  @override
+  String get upperBody => 'Upper Body';
+
+  @override
+  String get fullBody => 'Full Body';
+
+  @override
+  String get push => 'Push';
+
+  @override
+  String get pull => 'Pull';
+
+  @override
+  String get kcalUnit => 'kcal';
+
+  @override
+  String get userNotAuthorized => 'User not authorized';
+
+  @override
+  String get photoLoadError => 'Photo load error';
+
+  @override
+  String get noteHint => 'Add a note about this photo...';
+
+  @override
+  String get saveNote => 'Save Note';
+
+  @override
+  String get deletePhoto => 'Delete Photo';
+
+  @override
+  String get comparePhotos => 'Compare Photos';
+
+  @override
+  String get addPhotoShort => 'Add';
+
+  @override
+  String get repeatAction => 'Retry';
+
+  @override
+  String get addFirstPhotoHint => 'Add your first photo\nto track your changes';
+
+  @override
+  String get photoNoteTitle => 'Photo Note';
+
+  @override
+  String get describeProgress => 'Describe your progress...';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get deletePhotoConfirm => 'Delete photo?';
+
+  @override
+  String get actionCannotBeUndone => 'This action cannot be undone.';
+
+  @override
+  String get deleteError => 'Delete error';
+
+  @override
+  String get needMinPhotosForCompare => 'Need at least 2 photos to compare';
+
+  @override
+  String get comparison => 'Comparison';
+
+  @override
+  String get selectBefore => 'Select \"Before\"';
+
+  @override
+  String get selectAfter => 'Select \"After\"';
+
+  @override
+  String get before => 'Before';
+
+  @override
+  String get after => 'After';
+
+  @override
+  String get difference => 'Difference';
+
+  @override
+  String get lessThanOneDay => 'Less than 1 day';
+
+  @override
+  String get oneDay => '1 day';
+
+  @override
+  String daysPlural(int count) {
+    return '$count days';
+  }
+
+  @override
+  String weeksPlural(int count) {
+    return '$count weeks';
+  }
+
+  @override
+  String monthsPlural(int count) {
+    return '$count months';
+  }
+
+  @override
+  String yearsPlural(int count) {
+    return '$count year(s)';
+  }
+
+  @override
+  String get janShort => 'Jan';
+
+  @override
+  String get febShort => 'Feb';
+
+  @override
+  String get marShort => 'Mar';
+
+  @override
+  String get aprShort => 'Apr';
+
+  @override
+  String get mayShort => 'May';
+
+  @override
+  String get junShort => 'Jun';
+
+  @override
+  String get julShort => 'Jul';
+
+  @override
+  String get augShort => 'Aug';
+
+  @override
+  String get sepShort => 'Sep';
+
+  @override
+  String get octShort => 'Oct';
+
+  @override
+  String get novShort => 'Nov';
+
+  @override
+  String get decShort => 'Dec';
+
+  @override
+  String get january => 'January';
+
+  @override
+  String get february => 'February';
+
+  @override
+  String get march => 'March';
+
+  @override
+  String get april => 'April';
+
+  @override
+  String get may => 'May';
+
+  @override
+  String get june => 'June';
+
+  @override
+  String get july => 'July';
+
+  @override
+  String get august => 'August';
+
+  @override
+  String get september => 'September';
+
+  @override
+  String get october => 'October';
+
+  @override
+  String get november => 'November';
+
+  @override
+  String get december => 'December';
+
+  @override
+  String get rankNovice => 'NOVICE';
+
+  @override
+  String get rankApprentice => 'APPRENTICE';
+
+  @override
+  String get rankWarrior => 'WARRIOR';
+
+  @override
+  String get rankChampion => 'CHAMPION';
+
+  @override
+  String get rankMachine => 'MACHINE';
+
+  @override
+  String get rankLegend => 'LEGEND';
+
+  @override
+  String get aiTrainer => 'AI Trainer';
+
+  @override
+  String get aiNutritionist => 'AI Nutritionist';
+
+  @override
+  String get aiAssistant => 'AI Assistant';
+
+  @override
+  String get featureNotAvailable => 'This feature is not available yet';
+
+  @override
+  String get uploadFailed => 'Upload failed. Please try again';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get noWorkoutsYet => 'No workouts yet';
 }

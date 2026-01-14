@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/design_tokens.dart';
 import '../theme/app_theme.dart';
 import '../services/ai_service.dart';
+import '../services/noir_toast_service.dart';
 import '../models/ai_response.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -146,12 +147,7 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('История чата очищена'),
-            backgroundColor: kSuccessGreen,
-          ),
-        );
+        NoirToast.success(context, 'История чата очищена');
       }
     } catch (e) {
       debugPrint('Error clearing chat: $e');

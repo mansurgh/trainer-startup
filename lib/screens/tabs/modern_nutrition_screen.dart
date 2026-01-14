@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 
 import '../../core/design_tokens.dart';
+import '../../services/noir_toast_service.dart';
 import '../ai_chat_screen.dart';
 
 /// Modern Nutrition Screen (based on screenshot 3)
@@ -302,9 +303,7 @@ class ModernNutritionScreen extends ConsumerWidget {
     return GestureDetector(
       onTap: () {
         // TODO: Navigate to meal program screen with manual editing
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meal Program - Coming Soon')),
-        );
+        NoirToast.info(context, '📋 Meal Program — Coming Soon');
       },
       child: Container(
         height: 60,
@@ -338,9 +337,7 @@ class ModernNutritionScreen extends ConsumerWidget {
     return GestureDetector(
       onTap: () async {
         // TODO: Implement fridge photo upload
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fridge Photo Upload - Coming Soon')),
-        );
+        NoirToast.info(context, '📷 Fridge Photo Upload — Coming Soon');
       },
       child: Container(
         height: 60,

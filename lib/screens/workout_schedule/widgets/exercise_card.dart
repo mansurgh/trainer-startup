@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../models/exercise.dart';
 import '../../../theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/translation_service.dart';
 
 class ExerciseCard extends StatelessWidget {
   final Exercise exercise;
@@ -110,33 +111,6 @@ class ExerciseCard extends StatelessWidget {
   }
 
   String _getLocalizedName(BuildContext context, String name) {
-    final map = {
-      'barbell squat': 'Приседания со штангой',
-      'push up': 'Отжимания',
-      'barbell bench press': 'Жим лежа',
-      'lateral raise': 'Махи гантелями в стороны',
-      'cable lateral raise': 'Махи в кроссовере',
-      'pull up': 'Подтягивания',
-      'dumbbell shoulder press': 'Жим гантелей сидя',
-      'dumbbell bicep curl': 'Сгибание на бицепс',
-      'tricep pushdown': 'Разгибание на трицепс',
-      'leg press': 'Жим ногами',
-      'leg extension': 'Разгибание ног',
-      'leg curl': 'Сгибание ног',
-      'crunch': 'Скручивания',
-      'plank': 'Планка',
-      'deadlift': 'Становая тяга',
-      'overhead press': 'Армейский жим',
-      'lunges': 'Выпады',
-      'face pull': 'Тяга к лицу',
-      'lat pulldown': 'Тяга верхнего блока',
-      'seated row': 'Тяга нижнего блока',
-    };
-    
-    final locale = Localizations.localeOf(context).languageCode;
-    if (locale == 'ru' && map.containsKey(name.toLowerCase())) {
-      return map[name.toLowerCase()]!;
-    }
-    return name;
+    return TranslationService.translateExercise(name, context);
   }
 }

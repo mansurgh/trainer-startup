@@ -130,7 +130,9 @@ class WorkoutService {
   /// Получить историю тренировок
   Future<List<Map<String, dynamic>>> getWorkoutHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    final historyJson = prefs.getStringList(_workoutHistoryKey) ?? [];
+    final userId = await _getUserId();
+    // Use consistent key with userId suffix (same as finishWorkout)
+    final historyJson = prefs.getStringList('${_workoutHistoryKey}_$userId') ?? [];
     
     return historyJson.map((json) {
       try {
@@ -149,7 +151,9 @@ class WorkoutService {
     workout['completedAt'] = DateTime.now().toIso8601String();
     
     final prefs = await SharedPreferences.getInstance();
-    final history = prefs.getStringList(_workoutHistoryKey) ?? [];
+    final userId = await _getUserId();
+    // Use consistent key with userId suffix
+    final history = prefs.getStringList('${_workoutHistoryKey}_$userId') ?? [];
     history.add(jsonEncode(workout));
     
     // Храним только последние 50 тренировок
@@ -157,7 +161,6 @@ class WorkoutService {
       history.removeAt(0);
     }
     
-    final userId = await _getUserId();
     await prefs.setStringList('${_workoutHistoryKey}_$userId', history);
     await clearCurrentWorkout();
   }

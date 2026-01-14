@@ -8,6 +8,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/design_tokens.dart';
 import '../../core/premium_components.dart';
 import '../../core/theme.dart';
+import '../../theme/noir_theme.dart';
+import '../../widgets/noir_glass_components.dart';
 import '../../state/user_state.dart';
 import '../../models/user_model.dart';
 import '../body_scan_screen.dart';
@@ -486,19 +488,12 @@ class _PremiumProfileTabState extends ConsumerState<PremiumProfileTab> {
   }
 
   void _showProgressInfo() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: DesignTokens.cardSurface,
-        title: Text('Как считается %', style: DesignTokens.h3),
-        content: Text(
-          'Процент рассчитывается как доля пройденного пути к целевому весу относительно начального.',
-          style: DesignTokens.bodySmall,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Понятно')),
-        ],
-      ),
+    NoirGlassDialog.showAlert(
+      context,
+      title: 'Как считается %',
+      content: 'Процент рассчитывается как доля пройденного пути к целевому весу относительно начального.',
+      icon: Icons.info_rounded,
+      confirmText: 'Понятно',
     );
   }
 

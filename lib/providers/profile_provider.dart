@@ -294,19 +294,41 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     
     final user = Supabase.instance.client.auth.currentUser;
     final email = user?.email;
+    final now = DateTime.now();
     
-    // Create minimal profile
+    // Email is required by database schema (NOT NULL constraint)
+    if (email == null || email.isEmpty) {
+      if (kDebugMode) {
+        print('[ProfileProvider] ⚠️ Cannot create profile: email is null');
+      }
+      // Return local-only model without syncing to DB
+      return UserModel(
+        id: userId,
+        email: null,
+        name: 'Атлет',
+        createdAt: now,
+        lastActive: now,
+      );
+    }
+    
+    // Create profile with sensible defaults
     final initialData = {
       'id': userId,
       'email': email,
-      'created_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
+      'name': 'Атлет', // Default name for new users
+      'subscription_status': 'trial',
+      'created_at': now.toIso8601String(),
+      'updated_at': now.toIso8601String(),
     };
     
     try {
       await Supabase.instance.client
           .from('profiles')
-          .upsert(initialData);
+          .upsert(initialData, onConflict: 'id');
+      
+      if (kDebugMode) {
+        print('[ProfileProvider] ✅ Created initial profile with name: Атлет');
+      }
     } catch (e) {
       if (kDebugMode) {
         print('[ProfileProvider] ⚠️ Could not create profile: $e');
@@ -316,8 +338,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     return UserModel(
       id: userId,
       email: email,
-      createdAt: DateTime.now(),
-      lastActive: DateTime.now(),
+      name: 'Атлет',
+      createdAt: now,
+      lastActive: now,
     );
   }
 
@@ -473,8 +496,42 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   }
 
   /// Update weight specifically (common operation)
+  /// Also saves to body_measurements table for trend tracking
   Future<void> updateWeight(double weight) async {
     await updateProfile(weight: weight);
+    
+    // Also record in body_measurements for weight trend tracking
+    try {
+      final userId = SupabaseConfig.currentUserId;
+      if (userId == null) return;
+      
+      final now = DateTime.now();
+      final measurementDate = now.toIso8601String().split('T')[0];
+      
+      // Delete existing record for today (if any) then insert new one
+      // This avoids ON CONFLICT issues since table lacks unique constraint
+      await Supabase.instance.client
+          .from('body_measurements')
+          .delete()
+          .eq('user_id', userId)
+          .eq('measurement_date', measurementDate);
+      
+      await Supabase.instance.client.from('body_measurements').insert({
+        'user_id': userId,
+        'weight': weight,
+        'measurement_date': measurementDate,
+        'created_at': now.toIso8601String(),
+      });
+      
+      if (kDebugMode) {
+        print('[ProfileProvider] ✅ Weight recorded in body_measurements: $weight kg');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('[ProfileProvider] ⚠️ Could not save to body_measurements: $e');
+      }
+      // Don't rethrow - profile update succeeded, this is secondary
+    }
   }
 
   /// Upload and update avatar
@@ -540,15 +597,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  /// Sign out and clear all data
-  Future<void> signOut() async {
-    try {
-      await Supabase.instance.client.auth.signOut();
-      // Auth listener will handle state clearing
-    } catch (e) {
-      if (kDebugMode) {
-        print('[ProfileProvider] ❌ Sign out error: $e');
-      }
+  /// Clear profile state (called by AuthNotifier on sign out)
+  void clearProfile() {
+    state = const ProfileState();
+    if (kDebugMode) {
+      print('[ProfileProvider] 🗑️ Profile state cleared');
     }
   }
 

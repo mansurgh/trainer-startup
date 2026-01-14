@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/theme.dart';
-import '../core/design_tokens.dart';
-import '../state/user_state.dart';
+import '../theme/noir_theme.dart';
+import '../providers/profile_provider.dart';
+import '../services/noir_toast_service.dart';
+import '../l10n/app_localizations.dart';
 
 class EditProfileDataScreen extends ConsumerStatefulWidget {
   const EditProfileDataScreen({super.key});
@@ -16,8 +17,7 @@ class _EditProfileDataScreenState extends ConsumerState<EditProfileDataScreen> {
   final _age = TextEditingController();
   final _height = TextEditingController();
   final _weight = TextEditingController();
-  final _fat = TextEditingController(text: '20');
-  final _muscle = TextEditingController(text: '40');
+  bool _isSaving = false;
 
   bool _isValidAge(String value) {
     final age = int.tryParse(value);
@@ -34,168 +34,198 @@ class _EditProfileDataScreenState extends ConsumerState<EditProfileDataScreen> {
     return weight != null && weight >= 20 && weight <= 300;
   }
 
-  bool _isValidPercentage(String value) {
-    final pct = double.tryParse(value);
-    return pct != null && pct >= 0 && pct <= 100;
-  }
-
   @override
   void initState() {
     super.initState();
-    final u = ref.read(userProvider);
-    _name.text = u?.name ?? '';
-    _age.text = (u?.age ?? '').toString();
-    _height.text = (u?.height ?? '').toString();
-    _weight.text = (u?.weight ?? '').toString();
-    _fat.text = (u?.bodyFatPct ?? 20).toString();
-    _muscle.text = (u?.musclePct ?? 70).toString();
+    // Load from ProfileProvider (not userProvider)
+    final profile = ref.read(profileProvider).profile;
+    _name.text = profile?.name ?? '';
+    _age.text = (profile?.age ?? '').toString();
+    _height.text = (profile?.height ?? '').toString();
+    _weight.text = (profile?.weight ?? '').toString();
     
-    // Добавляем слушатели для валидации
+    // Add listeners for validation
     _name.addListener(() => setState(() {}));
     _age.addListener(() => setState(() {}));
     _height.addListener(() => setState(() {}));
     _weight.addListener(() => setState(() {}));
-    _fat.addListener(() => setState(() {}));
-    _muscle.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _name.dispose(); _age.dispose(); _height.dispose(); _weight.dispose();
-    _fat.dispose(); _muscle.dispose();
+    _name.dispose();
+    _age.dispose();
+    _height.dispose();
+    _weight.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    final notifier = ref.read(userProvider.notifier);
+    if (_isSaving) return;
     
-    // Сохраняем имя
-    if (_name.text.trim().isNotEmpty) {
-      await notifier.setName(_name.text.trim());
-    }
+    setState(() => _isSaving = true);
     
-    // Сохраняем остальные параметры
-    final a = int.tryParse(_age.text);
-    final h = int.tryParse(_height.text);
-    final w = double.tryParse(_weight.text);
-    await notifier.setParams(age: a, height: h, weight: w);
-    
-    // Сохраняем композицию тела
-    await notifier.setComposition(
-      fatPct: double.tryParse(_fat.text) ?? 20,
-      musclePct: double.tryParse(_muscle.text) ?? 70,
-    );
-    
-    // ПРИНУДИТЕЛЬНО обновляем профиль из Supabase
-    await notifier.refreshFromSupabase();
-    
-    // Показываем уведомление об успешном сохранении
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('✅ Данные профиля сохранены!'),
-          backgroundColor: DesignTokens.primaryAccent,
-          duration: const Duration(seconds: 2),
-        ),
+    try {
+      final notifier = ref.read(profileProvider.notifier);
+      final l10n = AppLocalizations.of(context)!;
+      
+      // Update profile with all fields
+      await notifier.updateProfile(
+        name: _name.text.trim().isNotEmpty ? _name.text.trim() : null,
+        age: int.tryParse(_age.text),
+        height: int.tryParse(_height.text),
+        weight: double.tryParse(_weight.text),
       );
       
-      // Небольшая задержка перед возвратом для синхронизации
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      // Возвращаемся в профиль
-      Navigator.pop(context);
+      if (mounted) {
+        NoirToast.success(context, l10n.dataSaved);
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        NoirToast.error(context, 'Ошибка сохранения: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(title: const Text('Данные профиля')),
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          children: [
-            _Field(
-              label: 'Имя', 
-              controller: _name,
-              errorText: _name.text.isNotEmpty && _name.text.trim().isEmpty 
-                  ? 'Введите имя' 
-                  : null,
+    final l10n = AppLocalizations.of(context)!;
+    
+    return Scaffold(
+      backgroundColor: kNoirBlack,
+      appBar: AppBar(
+        backgroundColor: kNoirBlack,
+        foregroundColor: kContentHigh,
+        title: Text(l10n.profileData, style: kNoirTitleLarge),
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        children: [
+          _NoirField(
+            label: l10n.name,
+            controller: _name,
+            errorText: _name.text.isNotEmpty && _name.text.trim().isEmpty 
+                ? l10n.enterName
+                : null,
+          ),
+          _NoirField(
+            label: l10n.age,
+            controller: _age,
+            keyboardType: TextInputType.number,
+            errorText: _age.text.isNotEmpty && !_isValidAge(_age.text)
+                ? '10-120'
+                : null,
+          ),
+          _NoirField(
+            label: l10n.height,
+            controller: _height,
+            keyboardType: TextInputType.number,
+            suffix: l10n.cm,
+            errorText: _height.text.isNotEmpty && !_isValidHeight(_height.text)
+                ? '100-250'
+                : null,
+          ),
+          _NoirField(
+            label: l10n.weight,
+            controller: _weight,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            suffix: l10n.kg,
+            errorText: _weight.text.isNotEmpty && !_isValidWeight(_weight.text)
+                ? '20-300'
+                : null,
+          ),
+          const SizedBox(height: 24),
+          // Save button
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kContentHigh,
+                foregroundColor: kNoirBlack,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(kRadiusMD),
+                ),
+                elevation: 0,
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(kNoirBlack),
+                      ),
+                    )
+                  : Text(
+                      l10n.save,
+                      style: kNoirBodyLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: kNoirBlack,
+                      ),
+                    ),
             ),
-            _Field(
-              label: 'Возраст', 
-              controller: _age, 
-              keyboardType: TextInputType.number,
-              errorText: _age.text.isNotEmpty && !_isValidAge(_age.text)
-                  ? 'Возраст от 10 до 120 лет'
-                  : null,
-            ),
-            _Field(
-              label: 'Рост (см)', 
-              controller: _height, 
-              keyboardType: TextInputType.number,
-              errorText: _height.text.isNotEmpty && !_isValidHeight(_height.text)
-                  ? 'Рост от 100 до 250 см'
-                  : null,
-            ),
-            _Field(
-              label: 'Вес (кг)', 
-              controller: _weight, 
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              errorText: _weight.text.isNotEmpty && !_isValidWeight(_weight.text)
-                  ? 'Вес от 20 до 300 кг'
-                  : null,
-            ),
-            _Field(
-              label: 'Жир (%)', 
-              controller: _fat, 
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              errorText: _fat.text.isNotEmpty && !_isValidPercentage(_fat.text)
-                  ? 'Процент от 0 до 100'
-                  : null,
-            ),
-            _Field(
-              label: 'Мышцы (%)', 
-              controller: _muscle, 
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              errorText: _muscle.text.isNotEmpty && !_isValidPercentage(_muscle.text)
-                  ? 'Процент от 0 до 100'
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: _save, child: const Text('Сохранить')),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _Field extends StatelessWidget {
-  final String label; 
-  final TextEditingController controller; 
+/// Noir Glass styled text field
+class _NoirField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
   final TextInputType? keyboardType;
   final String? errorText;
+  final String? suffix;
   
-  const _Field({
-    required this.label, 
-    required this.controller, 
+  const _NoirField({
+    required this.label,
+    required this.controller,
     this.keyboardType,
     this.errorText,
+    this.suffix,
   });
   
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          errorText: errorText,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: kNoirGraphite,
+          borderRadius: BorderRadius.circular(kRadiusMD),
+          border: Border.all(
+            color: errorText != null
+                ? const Color(0xFFF87171).withOpacity(0.5)
+                : kBorderLight,
+          ),
+        ),
+        child: TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: kNoirBodyLarge.copyWith(color: kContentHigh),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: kNoirBodyMedium.copyWith(color: kContentMedium),
+            suffixText: suffix,
+            suffixStyle: kNoirBodyMedium.copyWith(color: kContentMedium),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            errorText: errorText,
+            errorStyle: const TextStyle(fontSize: 11),
+          ),
         ),
       ),
     );

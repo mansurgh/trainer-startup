@@ -1,12 +1,17 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import '../../../core/design_tokens.dart';
+import '../../../core/translation_service.dart';
 import '../../../models/meal.dart';
 import '../../../services/meal_service.dart';
 import '../../../widgets/app_alert.dart';
+import '../../../widgets/noir_glass_components.dart';
+import '../../../theme/noir_theme.dart';
 import '../nutrition_screen_v2.dart';
 import './edit_fridge_dish_dialog.dart';
 import '../../../l10n/app_localizations.dart';
@@ -40,11 +45,13 @@ class AddDishDialogState extends ConsumerState<AddDishDialog> {
   }
 
   Future<void> _saveDish() async {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_nameController.text.isEmpty) {
       AppAlert.show(
         context,
-        title: 'Missing information',
-        description: 'Please enter a dish name',
+        title: l10n.enterDishName,
+        description: l10n.enterDishName,
         type: AlertType.warning,
       );
       return;
@@ -73,114 +80,132 @@ class AddDishDialogState extends ConsumerState<AddDishDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: DesignTokens.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Add Dish',
-                style: DesignTokens.h2.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+    final l10n = AppLocalizations.of(context)!;
+    
+    return Material(
+      type: MaterialType.transparency,
+      child: Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(kRadiusXL),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              constraints: const BoxConstraints(maxWidth: 400),
+              decoration: BoxDecoration(
+                color: kNoirGraphite.withOpacity(0.95),
+                borderRadius: BorderRadius.circular(kRadiusXL),
+                border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+              ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(kSpaceLG),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.addDish,
+                        style: kNoirTitleMedium.copyWith(
+                          color: kContentHigh,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: kSpaceLG),
+                      _buildNoirTextField(l10n.dishName, _nameController),
+                      const SizedBox(height: kSpaceMD),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildNoirTextField('${l10n.calories} (${l10n.kcal})', _caloriesController, isNumber: true),
+                          ),
+                          const SizedBox(width: kSpaceSM),
+                          Expanded(
+                            child: _buildNoirTextField('${l10n.protein} (${l10n.grams})', _proteinController, isNumber: true),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: kSpaceMD),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildNoirTextField('${l10n.fat} (${l10n.grams})', _fatController, isNumber: true),
+                          ),
+                          const SizedBox(width: kSpaceSM),
+                          Expanded(
+                            child: _buildNoirTextField('${l10n.carbs} (${l10n.grams})', _carbsController, isNumber: true),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: kSpaceLG),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: kContentMedium,
+                                side: BorderSide(color: kContentMedium.withOpacity(0.5)),
+                                padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(kRadiusMD),
+                                ),
+                              ),
+                              child: Text(l10n.cancel),
+                            ),
+                          ),
+                          const SizedBox(width: kSpaceMD),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _saveDish,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kContentHigh,
+                                foregroundColor: kNoirBlack,
+                                padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(kRadiusMD),
+                                ),
+                              ),
+                              child: Text(l10n.save),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-              
-              _buildTextField('Dish name', _nameController),
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField('Calories', _caloriesController, isNumber: true),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildTextField('Protein (g)', _proteinController, isNumber: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField('Fat (g)', _fatController, isNumber: true),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildTextField('Carbs (g)', _carbsController, isNumber: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: DesignTokens.textSecondary,
-                        side: BorderSide(color: DesignTokens.textSecondary),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _saveDish,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: DesignTokens.textPrimary,
-                        foregroundColor: DesignTokens.bgBase,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Add'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildNoirTextField(String label, TextEditingController controller, {bool isNumber = false}) {
     return TextField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: DesignTokens.textPrimary),
+      inputFormatters: isNumber ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))] : null,
+      style: kNoirBodyMedium.copyWith(color: kContentHigh),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: DesignTokens.textSecondary),
+        labelStyle: kNoirBodySmall.copyWith(color: kContentLow),
         filled: true,
-        fillColor: DesignTokens.cardSurface,
+        fillColor: kNoirBlack,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(kRadiusMD),
+          borderSide: BorderSide(color: kBorderLight),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(kRadiusMD),
+          borderSide: BorderSide(color: kBorderLight),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: DesignTokens.textPrimary, width: 2),
+          borderRadius: BorderRadius.circular(kRadiusMD),
+          borderSide: const BorderSide(color: kContentHigh, width: 2),
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: kSpaceMD, vertical: kSpaceSM),
       ),
     );
   }
@@ -333,14 +358,19 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
             _generatedDishes.removeAt(index);
           });
         },
-        onReplace: (oldDishName) {
-          // В реальном приложении здесь будет запрос к AI для замены блюда
-          AppAlert.show(
-            context,
-            title: 'Replacement requested',
-            description: 'AI will suggest a replacement for "$oldDishName"',
-            type: AlertType.info,
-          );
+        onReplace: (newDishName) {
+          // Создаём новое блюдо с тем же ID но новым именем
+          setState(() {
+            _generatedDishes[index] = Dish(
+              id: dish.id,
+              name: newDishName,
+              calories: dish.calories,
+              protein: dish.protein,
+              fat: dish.fat,
+              carbs: dish.carbs,
+              isCompleted: dish.isCompleted,
+            );
+          });
         },
       ),
     );
@@ -348,221 +378,230 @@ class FridgeMealPlanDialogState extends ConsumerState<FridgeMealPlanDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: DesignTokens.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.fridgeBasedMealPlan,
-                style: DesignTokens.h2.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Upload a photo of your fridge and AI will suggest meals',
-                style: DesignTokens.bodySmall.copyWith(
-                  color: DesignTokens.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Фото холодильника
-              if (_selectedImagePath != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(_selectedImagePath!),
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                )
-              else
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: DesignTokens.cardSurface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: DesignTokens.textSecondary.withOpacity(0.3),
-                      width: 2,
-                      style: BorderStyle.solid,
+    final l10n = AppLocalizations.of(context)!;
+    final isRussian = TranslationService.isRussian(context);
+    
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(kRadiusXL),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            constraints: const BoxConstraints(maxWidth: 450),
+            decoration: BoxDecoration(
+              color: kNoirGraphite.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(kRadiusXL),
+              border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(kSpaceLG),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.fridgeBasedMealPlan,
+                      style: kNoirTitleMedium.copyWith(
+                        color: kContentHigh,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.kitchen_outlined,
-                          size: 48,
-                          color: DesignTokens.textSecondary,
+                    const SizedBox(height: kSpaceSM),
+                    Text(
+                      isRussian 
+                        ? 'Загрузите фото холодильника, и AI предложит блюда'
+                        : 'Upload a photo of your fridge and AI will suggest meals',
+                      style: kNoirBodySmall.copyWith(color: kContentLow),
+                    ),
+                    const SizedBox(height: kSpaceLG),
+                    
+                    // Фото холодильника
+                    if (_selectedImagePath != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(kRadiusMD),
+                        child: Image.file(
+                          File(_selectedImagePath!),
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No photo selected',
-                          style: TextStyle(color: DesignTokens.textSecondary),
+                      )
+                    else
+                      Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: kNoirBlack,
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                          border: Border.all(
+                            color: kBorderLight,
+                            width: 2,
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              
-              const SizedBox(height: 16),
-              
-              // Кнопка выбора фото
-              OutlinedButton.icon(
-                onPressed: _pickImage,
-                icon: const Icon(Icons.photo_library),
-                label: const Text('Select Photo'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: DesignTokens.textPrimary,
-                  side: BorderSide(color: DesignTokens.textPrimary),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              
-              if (_selectedImagePath != null && _generatedDishes.isEmpty) ...[
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: _isGenerating ? null : _generateMealPlan,
-                  icon: _isGenerating
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.auto_awesome),
-                  label: Text(_isGenerating ? 'Generating...' : 'Generate Meal Plan'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignTokens.textPrimary,
-                    foregroundColor: DesignTokens.bgBase,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
-              
-              // Сгенерированные блюда
-              if (_generatedDishes.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Text(
-                  'Generated Dishes',
-                  style: DesignTokens.h3.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                
-                ..._generatedDishes.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final dish = entry.value;
-                  
-                  return GestureDetector(
-                    onTap: () => _showEditDishDialog(dish, index),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: DesignTokens.cardSurface,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: DesignTokens.textSecondary.withOpacity(0.2),
-                          width: 1,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.kitchen_outlined,
+                                size: 48,
+                                color: kContentLow,
+                              ),
+                              const SizedBox(height: kSpaceSM),
+                              Text(
+                                isRussian ? 'Фото не выбрано' : 'No photo selected',
+                                style: kNoirBodySmall.copyWith(color: kContentLow),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    
+                    const SizedBox(height: kSpaceMD),
+                    
+                    // Кнопка выбора фото
+                    OutlinedButton.icon(
+                      onPressed: _pickImage,
+                      icon: const Icon(Icons.photo_library),
+                      label: Text(isRussian ? 'Выбрать фото' : 'Select Photo'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: kContentHigh,
+                        side: const BorderSide(color: kContentHigh),
+                        padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(kRadiusMD),
+                        ),
+                      ),
+                    ),
+                    
+                    if (_selectedImagePath != null && _generatedDishes.isEmpty) ...[
+                      const SizedBox(height: kSpaceMD),
+                      ElevatedButton.icon(
+                        onPressed: _isGenerating ? null : _generateMealPlan,
+                        icon: _isGenerating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                              )
+                            : const Icon(Icons.auto_awesome),
+                        label: Text(_isGenerating 
+                          ? (isRussian ? 'Генерация...' : 'Generating...') 
+                          : (isRussian ? 'Сгенерировать рацион' : 'Generate Meal Plan')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kContentHigh,
+                          foregroundColor: kNoirBlack,
+                          padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(kRadiusMD),
+                          ),
+                        ),
+                      ),
+                    ],
+                    
+                    // Сгенерированные блюда
+                    if (_generatedDishes.isNotEmpty) ...[
+                      const SizedBox(height: kSpaceLG),
+                      Text(
+                        isRussian ? 'Предложенные блюда' : 'Suggested Dishes',
+                        style: kNoirTitleSmall.copyWith(
+                          color: kContentHigh,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: kSpaceSM),
+                      
+                      ..._generatedDishes.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final dish = entry.value;
+                        
+                        return GestureDetector(
+                          onTap: () => _showEditDishDialog(dish, index),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: kSpaceSM),
+                            padding: const EdgeInsets.all(kSpaceMD),
+                            decoration: BoxDecoration(
+                              color: kNoirBlack,
+                              borderRadius: BorderRadius.circular(kRadiusMD),
+                              border: Border.all(color: kBorderLight),
+                            ),
+                            child: Row(
                               children: [
-                                Text(
-                                  dish.name,
-                                  style: DesignTokens.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        TranslationService.translateFood(dish.name, context),
+                                        style: kNoirBodyMedium.copyWith(
+                                          color: kContentHigh,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${dish.calories} ${l10n.kcal} • ${l10n.protein}: ${dish.protein.toInt()}${l10n.grams} ${l10n.fat}: ${dish.fat.toInt()}${l10n.grams} ${l10n.carbs}: ${dish.carbs.toInt()}${l10n.grams}',
+                                        style: kNoirBodySmall.copyWith(color: kContentLow),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${dish.calories} kcal • P: ${dish.protein.toInt()}g F: ${dish.fat.toInt()}g C: ${dish.carbs.toInt()}g',
-                                  style: DesignTokens.bodySmall.copyWith(
-                                    color: DesignTokens.textSecondary,
-                                  ),
-                                ),
+                                Icon(Icons.edit_outlined, size: 18, color: kContentLow),
                               ],
                             ),
                           ),
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 18,
-                            color: DesignTokens.textSecondary,
+                        );
+                      }),
+                      
+                      const SizedBox(height: kSpaceMD),
+                      
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: kContentMedium,
+                                side: BorderSide(color: kContentMedium.withOpacity(0.5)),
+                                padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(kRadiusMD),
+                                ),
+                              ),
+                              child: Text(l10n.cancel),
+                            ),
+                          ),
+                          const SizedBox(width: kSpaceMD),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _applyMealPlan,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kContentHigh,
+                                foregroundColor: kNoirBlack,
+                                padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(kRadiusMD),
+                                ),
+                              ),
+                              child: Text(isRussian ? 'Применить' : 'Apply'),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  );
-                }),
-                
-                const SizedBox(height: 16),
-                
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: DesignTokens.textSecondary,
-                          side: BorderSide(color: DesignTokens.textSecondary),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                    ] else if (_selectedImagePath == null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: kSpaceMD),
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(foregroundColor: kContentMedium),
+                          child: Text(isRussian ? 'Закрыть' : 'Close'),
                         ),
-                        child: const Text('Cancel'),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _applyMealPlan,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: DesignTokens.textPrimary,
-                          foregroundColor: DesignTokens.bgBase,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Apply'),
-                      ),
-                    ),
                   ],
                 ),
-              ] else if (_selectedImagePath == null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Close'),
-                  ),
-                ),
-            ],
+              ),
+            ),
           ),
         ),
       ),

@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,9 +11,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/theme.dart';
-import 'theme/app_theme.dart';
-import 'core/design_tokens.dart';
+import 'theme/noir_theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
@@ -19,13 +20,67 @@ import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'services/nutrition_goal_checker.dart';
 import 'services/auth_service.dart';
-import 'state/user_state.dart';
-import 'models/user_model.dart';
+import 'widgets/auth_wrapper.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
+import 'providers/auth_provider.dart';
+
+// =============================================================================
+// LOG FILTER — Only show custom [TAG] logs, suppress Flutter framework noise
+// =============================================================================
+class _LogFilter {
+  static final Set<String> _suppressedPatterns = {
+    'KeyDown',
+    'KeyUp', 
+    'RawKeyEvent',
+    'FocusManager',
+    'Scrollable',
+    'GestureBinding',
+    'RendererBinding',
+    'SchedulerBinding',
+    'ServicesBinding',
+    'SemanticsBinding',
+    'flutter:',
+    'package:flutter/',
+  };
+
+  /// Check if log should be shown (only [TAG] formatted logs)
+  static bool shouldShow(String message) {
+    // Always show custom tagged logs like [Auth], [Profile], etc.
+    if (message.startsWith('[') && message.contains(']')) {
+      return true;
+    }
+    // Suppress framework noise
+    for (final pattern in _suppressedPatterns) {
+      if (message.contains(pattern)) {
+        return false;
+      }
+    }
+    return false; // By default, suppress untagged logs
+  }
+}
+
+/// Custom logger that only shows [TAG] formatted logs
+void log(String message, {String? tag}) {
+  if (!kDebugMode) return;
+  
+  final formatted = tag != null ? '[$tag] $message' : message;
+  if (_LogFilter.shouldShow(formatted)) {
+    developer.log(formatted);
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Suppress Flutter framework debug logs in debug mode
+  if (kDebugMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null && _LogFilter.shouldShow(message)) {
+        debugPrintSynchronously(message, wrapWidth: wrapWidth);
+      }
+    };
+  }
   
   try {
     await dotenv.load(fileName: '.env');
@@ -77,48 +132,25 @@ Future<void> main() async {
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
   
-  // Загрузка данных пользователя из локальной БД (асинхронная версия)
-  Future<UserModel?> _loadUserDataAsync(WidgetRef ref, String userId) async {
-    try {
-      // Проверяем что userId в SharedPreferences совпадает с сессией
-      final prefs = await SharedPreferences.getInstance();
-      final storedUserId = prefs.getString('user_id');
-      
-      if (storedUserId != userId) {
-        // Очищаем данные неправильного пользователя
-        if (storedUserId != null) {
-          final keys = prefs.getKeys().toList();
-          for (final key in keys) {
-            if (key.contains('_${storedUserId}_') || key.contains('_$storedUserId')) {
-              await prefs.remove(key);
-            }
-          }
-        }
-        
-        // Устанавливаем правильный userId
-        await prefs.setString('user_id', userId);
-      }
-      
-      final user = await StorageService.getUser();
-      
-      if (user != null && user.id == userId) {
-        ref.read(userProvider.notifier).state = user;
-        return user;
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
-  }
-  
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch locale from provider (reactive to changes)
     final locale = ref.watch(localeProvider);
+    final isLocaleInitialized = ref.watch(localeInitializedProvider);
+    
+    // Show loading while locale is being detected
+    if (!isLocaleInitialized) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildNoirGlassTheme(),
+        home: const _NoirSplashScreen(),
+      );
+    }
     
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Trainer',
-      theme: buildPremiumDarkTheme(),
+      theme: buildNoirGlassTheme(),
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -126,58 +158,155 @@ class MyApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en', ''),
-        Locale('ru', ''),
-      ],
+      supportedLocales: AppLocales.supported,
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
       },
-      home: FutureBuilder<Session?>(
-        future: Future(() async {
-          try {
-            return SupabaseConfig.client.auth.currentSession;
-          } catch (_) {
-            return null;
-          }
-        }),
-        builder: (context, snapshot) {
-          // Показываем загрузку пока проверяем сессию
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Container(
-              color: DesignTokens.bgBase,
-              child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-            );
-          }
-          
-          // Проверяем реальную текущую сессию
-          final session = snapshot.data;
-          
-          if (session != null && session.user.id.isNotEmpty) {
-            // Сессия активна - загружаем данные пользователя асинхронно
-            return FutureBuilder<UserModel?>(
-              future: _loadUserDataAsync(ref, session.user.id),
-              builder: (context, userSnapshot) {
-                if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return Container(
-                    color: DesignTokens.bgBase,
-                    child: const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    ),
+      home: const AuthWrapper(),
+    );
+  }
+}
+
+// =============================================================================
+// NOIR SPLASH SCREEN — Premium Loading Experience
+// =============================================================================
+class _NoirSplashScreen extends StatefulWidget {
+  const _NoirSplashScreen();
+
+  @override
+  State<_NoirSplashScreen> createState() => _NoirSplashScreenState();
+}
+
+class _NoirSplashScreenState extends State<_NoirSplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _breatheController;
+  late Animation<double> _breatheAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _breatheController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    
+    _breatheAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _breatheController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _breatheController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kNoirBlack,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.topCenter,
+            radius: 1.5,
+            colors: [
+              Color(0xFF2A2A2A), // Light source at top
+              Color(0xFF0D0D0D),
+              kNoirBlack,
+            ],
+            stops: [0.0, 0.4, 1.0],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Breathing Logo with Glow
+              AnimatedBuilder(
+                animation: _breatheAnimation,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _breatheAnimation.value,
+                    child: child,
                   );
-                }
-                
-                return HomeScreen(key: ValueKey(session.user.id), initialIndex: 0);
-              },
-            );
-          }
-          // Нет сессии - всегда начинаем с экрана авторизации (LoginScreen)
-          return const LoginScreen(key: ValueKey('login'));
-        },
+                },
+                child: Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.15),
+                        blurRadius: 50,
+                        spreadRadius: 15,
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.05),
+                        blurRadius: 100,
+                        spreadRadius: 25,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.05),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.1),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Image.asset(
+                            'assets/logo/app_logo.png',
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.fitness_center_rounded,
+                              size: 56,
+                              color: kContentHigh,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // App Name
+              Text(
+                'TRAINER',
+                style: kNoirTitleLarge.copyWith(
+                  letterSpacing: 8,
+                  fontWeight: FontWeight.w300,
+                  color: kContentHigh,
+                ),
+              ),
+              const SizedBox(height: 48),
+              // Loading indicator
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.white.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

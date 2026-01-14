@@ -15,10 +15,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get welcome => 'Добро пожаловать';
 
   @override
+  String get athlete => 'Атлет';
+
+  @override
   String get onboardingTitle => 'Добро пожаловать в PulseFit Pro';
 
   @override
   String get onboardingSubtitle => 'Ваш персональный AI-тренер';
+
+  @override
+  String get tellUsAboutYourself =>
+      'Расскажите о себе для персональной программы';
+
+  @override
+  String get unitSystem => 'Единицы';
+
+  @override
+  String get cm => 'см';
+
+  @override
+  String get kg => 'кг';
 
   @override
   String get name => 'Название';
@@ -90,6 +106,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addMeal => 'Добавить блюдо';
 
   @override
+  String get newDish => 'Новое блюдо';
+
+  @override
   String get bmi => 'ИМТ';
 
   @override
@@ -136,6 +155,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get retry => 'Попробовать снова';
+
+  @override
+  String get outOf => 'из';
 
   @override
   String get save => 'Сохранить';
@@ -280,7 +302,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get workouts => 'Тренировки';
 
   @override
-  String get completed => 'Завершено';
+  String get completed => 'Готово';
 
   @override
   String get streak => 'Серия';
@@ -296,6 +318,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get logout => 'Выйти';
+
+  @override
+  String get consistency => 'Стабильность';
+
+  @override
+  String get change => 'Изменить';
 
   @override
   String get user => 'Пользователь';
@@ -536,7 +564,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get progressGallery => 'Галерея прогресса';
 
   @override
-  String get noProgressPhotos => 'Нет фотографий прогресса';
+  String get noProgressPhotos => 'Нет фото прогресса';
 
   @override
   String get addFirstPhoto =>
@@ -546,26 +574,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get takePhoto => 'Сделать фото';
 
   @override
-  String get photoAdded => 'Фото добавлено успешно';
+  String get photoAdded => 'Фото добавлено!';
 
   @override
-  String get photoDeleted => 'Фото удалено успешно';
+  String get photoDeleted => 'Фото удалено';
 
   @override
   String get trialRoulette => 'Рулетка пробного периода';
 
   @override
-  String get spinTheWheel => 'Крути колесо и получи пробный период!';
+  String get spinTheWheel => 'КРУТИТЬ';
 
   @override
   String get spin => 'Крутить';
 
   @override
-  String get congratulations => 'Поздравляем!';
+  String get congratulations => 'Поздравляем! 🎉';
 
   @override
-  String youWonDays(Object days) {
-    return 'Вы выиграли $days дней бесплатного пробного периода!';
+  String youWonDays(int days) {
+    return 'Вы выиграли $days дней бесплатного доступа!';
   }
 
   @override
@@ -578,7 +606,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get unlockFullPotential => 'Раскрой свой потенциал';
 
   @override
-  String get personalizedWorkouts => 'Персональные AI-тренировки';
+  String get personalizedWorkouts => 'Персональные тренировки';
 
   @override
   String get personalizedWorkoutsDesc => 'Программы тренировок под твои цели';
@@ -754,6 +782,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get enterDishName => 'Введите название блюда';
 
   @override
+  String get replaceWithAnotherDish => 'Заменить другим блюдом';
+
+  @override
   String get enterValidCalories =>
       'Пожалуйста, введите корректное количество калорий';
 
@@ -882,7 +913,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get logoutButton => 'Выйти из аккаунта';
 
   @override
-  String get workoutCompleted => 'Тренировка завершена!';
+  String get workoutCompleted => 'Тренировка завершена';
 
   @override
   String get workoutCompletedDesc =>
@@ -981,17 +1012,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get generatingProgramSubtitle => 'Это займет всего несколько секунд';
 
   @override
-  String streakDays(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count дней',
-      many: '$count дней',
-      few: '$count дня',
-      one: '$count день',
-    );
-    return '$_temp0';
-  }
+  String get streakDays => 'Серия дней';
 
   @override
   String get streakLabel => 'Серия';
@@ -1038,10 +1059,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Вы можете выполнить тренировку только в текущий день. Выберите сегодняшний день.';
 
   @override
-  String get mealAdded => 'Прием пищи добавлен';
+  String get mealAdded => 'Приём пищи добавлен';
 
   @override
-  String get mealRenamed => 'Прием пищи переименован';
+  String get mealRenamed => 'Приём пищи переименован';
 
   @override
   String get dishAdded => 'Блюдо добавлено';
@@ -1069,4 +1090,763 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get workoutAndNutritionCheck => 'Тренировка ✓ Питание ✓';
+
+  @override
+  String get minutes => 'Минут';
+
+  @override
+  String get total => 'Всего';
+
+  @override
+  String get updateWeight => 'Обновить вес';
+
+  @override
+  String get successDay => 'Успех дня';
+
+  @override
+  String get characteristics => 'Характеристики';
+
+  @override
+  String setNumber(Object current, Object total) {
+    return 'Подход $current/$total';
+  }
+
+  @override
+  String get restPhase => 'Отдых';
+
+  @override
+  String get front => 'Спереди';
+
+  @override
+  String get backView => 'Сзади';
+
+  @override
+  String get month => 'месяц';
+
+  @override
+  String get year => 'год';
+
+  @override
+  String get aiFormFeedback => 'AI анализ техники';
+
+  @override
+  String get progressTracking => 'Отслеживание прогресса';
+
+  @override
+  String get unlimitedAiChat => 'Неограниченный AI чат';
+
+  @override
+  String nameChangedTo(Object name) {
+    return 'Название изменено на \"$name\"';
+  }
+
+  @override
+  String get grams => 'г';
+
+  @override
+  String get avatarUpdated => 'Аватар обновлён';
+
+  @override
+  String get profileUpdated => 'Профиль обновлён';
+
+  @override
+  String get dataSaved => 'Данные сохранены';
+
+  @override
+  String get copied => 'Скопировано';
+
+  @override
+  String get deleted => 'Удалено';
+
+  @override
+  String get added => 'Добавлено';
+
+  @override
+  String get updated => 'Обновлено';
+
+  @override
+  String get sent => 'Отправлено';
+
+  @override
+  String get errorOccurred => 'Произошла ошибка';
+
+  @override
+  String get networkError => 'Ошибка сети';
+
+  @override
+  String get tryAgainLater => 'Попробуйте позже';
+
+  @override
+  String get customMeal => 'Другое';
+
+  @override
+  String get exerciseSkipped => 'Упражнение пропущено';
+
+  @override
+  String get setCompleted => 'Подход выполнен';
+
+  @override
+  String get restTime => 'Время отдыха';
+
+  @override
+  String get startWorkoutButton => 'Начать тренировку';
+
+  @override
+  String get endWorkout => 'Завершить тренировку';
+
+  @override
+  String get availableOnTrainingDay => 'Доступно в день тренировки';
+
+  @override
+  String get comingSoon => 'Скоро будет доступно';
+
+  @override
+  String get photoUploaded => 'Фото загружено';
+
+  @override
+  String get totalVolume => 'Объём';
+
+  @override
+  String get discipline => 'Дисциплина';
+
+  @override
+  String get goalProgress => 'Прогресс';
+
+  @override
+  String get weightTrend => 'Тренд веса';
+
+  @override
+  String get noData => 'Нет данных';
+
+  @override
+  String get trainToSeeStats => 'Тренируйтесь для отображения статистики';
+
+  @override
+  String get progressPhotos => 'Прогресс фото';
+
+  @override
+  String get viewAll => 'Все';
+
+  @override
+  String get noProgressPhotosYet => 'Пока нет фото';
+
+  @override
+  String get tapToAdd => 'Нажмите, чтобы добавить';
+
+  @override
+  String get errorLoadingPhotos => 'Ошибка загрузки';
+
+  @override
+  String get languageChanged => 'Язык изменён';
+
+  @override
+  String get interfaceLanguage => 'Язык интерфейса';
+
+  @override
+  String get aboutApp => 'О приложении';
+
+  @override
+  String get howWeUseYourData => 'Как мы используем ваши данные';
+
+  @override
+  String get appUsageRules => 'Правила использования приложения';
+
+  @override
+  String get contactUs => 'Связаться с нами';
+
+  @override
+  String get workoutsLabel => 'Тренировки';
+
+  @override
+  String get last7Days => 'За 7 дней';
+
+  @override
+  String get nutritionHistory => 'История питания';
+
+  @override
+  String get workoutHistory => 'История тренировок';
+
+  @override
+  String get profileData => 'Данные профиля';
+
+  @override
+  String get enterName => 'Введите имя';
+
+  @override
+  String get noNutritionData => 'Нет данных о питании';
+
+  @override
+  String get totalWorkouts => 'Всего';
+
+  @override
+  String get thisMonth => 'В этом мес.';
+
+  @override
+  String get time => 'Время';
+
+  @override
+  String get noWorkouts => 'Нет тренировок';
+
+  @override
+  String get startWorkingOutHint =>
+      'Начните тренироваться,\nчтобы видеть свою историю';
+
+  @override
+  String get noMealsLogged => 'Нет записей о питании';
+
+  @override
+  String get checkForm => 'Проверить технику';
+
+  @override
+  String get formAnalysis => 'Анализ техники';
+
+  @override
+  String get errorsDetected => 'Обнаруженные ошибки';
+
+  @override
+  String get recommendations => 'Рекомендации';
+
+  @override
+  String get videoGuide => 'Видеоурок';
+
+  @override
+  String get getReady => 'Приготовьтесь';
+
+  @override
+  String get recording => 'Запись';
+
+  @override
+  String get processing => 'Обработка';
+
+  @override
+  String get aiAnalyzingForm => 'AI анализирует вашу технику';
+
+  @override
+  String get countdownTimer => 'Таймер обратного отсчёта';
+
+  @override
+  String get tapToStartRecording => 'Нажмите для начала записи';
+
+  @override
+  String tapToStopOrWait(Object seconds) {
+    return 'Нажмите для остановки или дождитесь $secondsс';
+  }
+
+  @override
+  String get searchExercises => 'Поиск упражнений...';
+
+  @override
+  String get selected => 'Выбрано';
+
+  @override
+  String get clearAll => 'Очистить';
+
+  @override
+  String get current => 'Текущее';
+
+  @override
+  String get addPhoto => 'Добавить фото';
+
+  @override
+  String get weeklyHistory => 'История недели';
+
+  @override
+  String get trackYourProgress => 'Отслеживайте свой прогресс';
+
+  @override
+  String get checkPermissions => 'Проверьте разрешения';
+
+  @override
+  String get logoutConfirmation => 'Вы уверены, что хотите выйти?';
+
+  @override
+  String get core => 'Пресс';
+
+  @override
+  String get welcomeBack => 'С возвращением!';
+
+  @override
+  String get signInToContinue => 'Войдите, чтобы продолжить';
+
+  @override
+  String get enterEmail => 'Введите email';
+
+  @override
+  String get enterValidEmail => 'Введите корректный email';
+
+  @override
+  String get password => 'Пароль';
+
+  @override
+  String get enterPassword => 'Введите пароль';
+
+  @override
+  String get passwordTooShort => 'Минимум 6 символов';
+
+  @override
+  String get forgotPassword => 'Забыли пароль?';
+
+  @override
+  String get signIn => 'Войти';
+
+  @override
+  String get or => 'или';
+
+  @override
+  String get createAccount => 'Создать аккаунт';
+
+  @override
+  String get signUp => 'Регистрация';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get confirmPassword => 'Подтвердите пароль';
+
+  @override
+  String get passwordsDoNotMatch => 'Пароли не совпадают';
+
+  @override
+  String get alreadyHaveAccount => 'Уже есть аккаунт?';
+
+  @override
+  String get dontHaveAccount => 'Нет аккаунта?';
+
+  @override
+  String get pleaseFillAllFields => 'Пожалуйста, заполните все поля';
+
+  @override
+  String get incompleteForm => 'Заполните все поля';
+
+  @override
+  String get trialEnded => 'Пробный период\nзавершён';
+
+  @override
+  String get trialEndedSubtitle =>
+      '7 дней бесплатного доступа истекли.\nПодпишитесь, чтобы продолжить.';
+
+  @override
+  String get mealPlans => 'Планы питания';
+
+  @override
+  String get aiCoach247 => 'AI тренер 24/7';
+
+  @override
+  String get subscribeNow => 'Подписаться';
+
+  @override
+  String get restorePurchases => 'Восстановить покупки';
+
+  @override
+  String get restoringPurchases => 'Восстановление покупок';
+
+  @override
+  String get checkingPurchases => 'Проверяем ваши покупки...';
+
+  @override
+  String get testYourLuck => 'Испытай удачу!';
+
+  @override
+  String get spinWheelSubtitle =>
+      'Крути колесо и выигрывай бесплатные дни пробного периода';
+
+  @override
+  String daysFreeTrial(int days) {
+    return '$days Дней бесплатно!';
+  }
+
+  @override
+  String get noLuckThisTime => 'Не повезло';
+
+  @override
+  String get tryAgain => 'Попробуй ещё!';
+
+  @override
+  String get noLuckButPremium =>
+      'Не повезло, но ты всё ещё можешь получить Premium!';
+
+  @override
+  String get getPremiumNow => 'Получить Premium';
+
+  @override
+  String get buyPremiumNow => 'Купить Premium';
+
+  @override
+  String get premiumFeatures => 'Premium возможности';
+
+  @override
+  String get premiumFeaturesList =>
+      '• AI персональный тренер и нутрициолог\n• Индивидуальные программы тренировок\n• Планирование питания\n• Аналитика прогресса\n• Безлимитный доступ';
+
+  @override
+  String get targetMuscle => 'Целевая мышца';
+
+  @override
+  String get equipment => 'Оборудование';
+
+  @override
+  String get instructions => 'Инструкции';
+
+  @override
+  String get calorieGoal => 'от дневной цели';
+
+  @override
+  String get changeAvatar => 'Сменить аватар';
+
+  @override
+  String get takePhotoCamera => 'Сделать фото';
+
+  @override
+  String get chooseFromGallery => 'Выбрать из галереи';
+
+  @override
+  String get offlineMode => 'Офлайн режим';
+
+  @override
+  String get disciplineRating => 'Рейтинг Дисциплины';
+
+  @override
+  String get consistencyLabel => 'Постоянство';
+
+  @override
+  String get nutritionLabel => 'Питание';
+
+  @override
+  String get strengthLabel => 'Сила';
+
+  @override
+  String get enduranceLabel => 'Выносливость';
+
+  @override
+  String get balanceLabel => 'Баланс';
+
+  @override
+  String get howRatingCalculated => 'Как рассчитывается рейтинг?';
+
+  @override
+  String get ratingExplanation =>
+      'Рейтинг дисциплины — это показатель вашей последовательности и приверженности тренировкам.\n\n• Постоянство (400 макс) — серия активных дней\n• Питание (150 макс) — выполнение плана питания\n• Сила (150 макс) — прогресс в упражнениях\n• Выносливость (150 макс) — продолжительность тренировок\n• Баланс (150 макс) — разнообразие упражнений';
+
+  @override
+  String successDayTitle(int percentage) {
+    return 'Успех дня — $percentage%';
+  }
+
+  @override
+  String get appLogin => 'Вход в приложение';
+
+  @override
+  String get workoutActivity => 'Тренировка';
+
+  @override
+  String get completeAllForHundred =>
+      'Выполняйте все активности, чтобы достичь 100%!';
+
+  @override
+  String get workoutsThisMonth => 'Тренировки за месяц';
+
+  @override
+  String monthlyGoal(int target) {
+    return 'Цель: $target тренировок в месяц.';
+  }
+
+  @override
+  String workoutsRemaining(int remaining) {
+    return 'Осталось: $remaining тренировок.';
+  }
+
+  @override
+  String get activityStreak => 'Серия активности';
+
+  @override
+  String daysInRow(int days) {
+    return '$days дней подряд';
+  }
+
+  @override
+  String get streakExplanation =>
+      'Серия засчитывается за каждый день, когда вы:\n• Завершили тренировку\n• Или записали приём пищи\n\nПоддерживайте серию, чтобы получить бонусы!';
+
+  @override
+  String get cancelButton => 'Отмена';
+
+  @override
+  String get weightLabel => 'Вес';
+
+  @override
+  String get doneButton => 'Готово';
+
+  @override
+  String get share => 'Поделиться';
+
+  @override
+  String get mondayShort => 'Пн';
+
+  @override
+  String get tuesdayShort => 'Вт';
+
+  @override
+  String get wednesdayShort => 'Ср';
+
+  @override
+  String get thursdayShort => 'Чт';
+
+  @override
+  String get fridayShort => 'Пт';
+
+  @override
+  String get saturdayShort => 'Сб';
+
+  @override
+  String get sundayShort => 'Вс';
+
+  @override
+  String get cmUnit => 'см';
+
+  @override
+  String get kgUnit => 'кг';
+
+  @override
+  String get yearsUnit => 'лет';
+
+  @override
+  String get disciplineDesc => 'Регулярность и следование плану';
+
+  @override
+  String get nutritionDesc => 'Соблюдение режима питания';
+
+  @override
+  String get strengthDesc => 'Максимальный вес в базовых упражнениях';
+
+  @override
+  String get enduranceDesc => 'Способность к длительным нагрузкам';
+
+  @override
+  String get balanceDesc => 'Координация и равновесие';
+
+  @override
+  String get addMealEntry => 'Добавить приём пищи';
+
+  @override
+  String get lowerBody => 'Низ тела';
+
+  @override
+  String get upperBody => 'Верх тела';
+
+  @override
+  String get fullBody => 'Всё тело';
+
+  @override
+  String get push => 'Жим';
+
+  @override
+  String get pull => 'Тяга';
+
+  @override
+  String get kcalUnit => 'ккал';
+
+  @override
+  String get userNotAuthorized => 'Пользователь не авторизован';
+
+  @override
+  String get photoLoadError => 'Ошибка загрузки фото';
+
+  @override
+  String get noteHint => 'Добавьте заметку к этому фото...';
+
+  @override
+  String get saveNote => 'Сохранить заметку';
+
+  @override
+  String get deletePhoto => 'Удалить фото';
+
+  @override
+  String get comparePhotos => 'Сравнить фото';
+
+  @override
+  String get addPhotoShort => 'Добавить';
+
+  @override
+  String get repeatAction => 'Повторить';
+
+  @override
+  String get addFirstPhotoHint =>
+      'Добавьте первое фото,\nчтобы отслеживать свои изменения';
+
+  @override
+  String get photoNoteTitle => 'Заметка к фото';
+
+  @override
+  String get describeProgress => 'Опишите свой прогресс...';
+
+  @override
+  String get skip => 'Пропустить';
+
+  @override
+  String get deletePhotoConfirm => 'Удалить фото?';
+
+  @override
+  String get actionCannotBeUndone => 'Это действие нельзя отменить.';
+
+  @override
+  String get deleteError => 'Ошибка удаления';
+
+  @override
+  String get needMinPhotosForCompare => 'Нужно минимум 2 фото для сравнения';
+
+  @override
+  String get comparison => 'Сравнение';
+
+  @override
+  String get selectBefore => 'Выберите \"До\"';
+
+  @override
+  String get selectAfter => 'Выберите \"После\"';
+
+  @override
+  String get before => 'До';
+
+  @override
+  String get after => 'После';
+
+  @override
+  String get difference => 'Разница';
+
+  @override
+  String get lessThanOneDay => 'Менее 1 дня';
+
+  @override
+  String get oneDay => '1 день';
+
+  @override
+  String daysPlural(int count) {
+    return '$count дней';
+  }
+
+  @override
+  String weeksPlural(int count) {
+    return '$count нед.';
+  }
+
+  @override
+  String monthsPlural(int count) {
+    return '$count мес.';
+  }
+
+  @override
+  String yearsPlural(int count) {
+    return '$count год(а)';
+  }
+
+  @override
+  String get janShort => 'янв';
+
+  @override
+  String get febShort => 'фев';
+
+  @override
+  String get marShort => 'мар';
+
+  @override
+  String get aprShort => 'апр';
+
+  @override
+  String get mayShort => 'май';
+
+  @override
+  String get junShort => 'июн';
+
+  @override
+  String get julShort => 'июл';
+
+  @override
+  String get augShort => 'авг';
+
+  @override
+  String get sepShort => 'сен';
+
+  @override
+  String get octShort => 'окт';
+
+  @override
+  String get novShort => 'ноя';
+
+  @override
+  String get decShort => 'дек';
+
+  @override
+  String get january => 'января';
+
+  @override
+  String get february => 'февраля';
+
+  @override
+  String get march => 'марта';
+
+  @override
+  String get april => 'апреля';
+
+  @override
+  String get may => 'мая';
+
+  @override
+  String get june => 'июня';
+
+  @override
+  String get july => 'июля';
+
+  @override
+  String get august => 'августа';
+
+  @override
+  String get september => 'сентября';
+
+  @override
+  String get october => 'октября';
+
+  @override
+  String get november => 'ноября';
+
+  @override
+  String get december => 'декабря';
+
+  @override
+  String get rankNovice => 'НОВИЧОК';
+
+  @override
+  String get rankApprentice => 'УЧЕНИК';
+
+  @override
+  String get rankWarrior => 'ВОИН';
+
+  @override
+  String get rankChampion => 'ЧЕМПИОН';
+
+  @override
+  String get rankMachine => 'МАШИНА';
+
+  @override
+  String get rankLegend => 'ЛЕГЕНДА';
+
+  @override
+  String get aiTrainer => 'AI Тренер';
+
+  @override
+  String get aiNutritionist => 'AI Нутрициолог';
+
+  @override
+  String get aiAssistant => 'AI Помощник';
+
+  @override
+  String get featureNotAvailable => 'Эта функция пока недоступна';
+
+  @override
+  String get uploadFailed => 'Не удалось загрузить. Попробуйте ещё раз';
+
+  @override
+  String get somethingWentWrong => 'Что-то пошло не так';
+
+  @override
+  String get noWorkoutsYet => 'Тренировок пока нет';
 }

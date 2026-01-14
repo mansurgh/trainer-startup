@@ -1,4 +1,4 @@
-name: Trainer
+name: pulsefit_pro # Я оставил имя pulsefit_pro, чтобы не сломались импорты в Dart файлах. Если сменишь на Trainer, придется менять везде 'package:pulsefit_pro/...'
 description: Trainer - Your personal AI fitness trainer. Track progress, get personalized workouts, and nutrition advice powered by AI.
 publish_to: "none"
 version: 1.0.0+1
@@ -18,12 +18,11 @@ dependencies:
   shimmer: ^3.0.0
   image_picker: ^1.1.2
   intl: ^0.20.2
-  window_manager: ^0.3.9 # опционально, чтобы на десктопе заголовок окна был "trainer."
+  window_manager: ^0.3.9
   http: ^1.2.2
   cached_network_image: ^3.4.1
   video_player: ^2.8.6
   chewie: ^1.7.5
-  # ← вернули, чтобы не править твои файлы, где уже есть import 'flutter_dotenv'
   flutter_dotenv: ^5.1.0
   shared_preferences: ^2.2.2
   permission_handler: ^11.3.1
@@ -32,41 +31,41 @@ dependencies:
   sqflite: ^2.3.0
   sqflite_common_ffi: ^2.3.0
   path: ^1.9.0
+  path_provider: ^2.1.2
   url_launcher: ^6.2.2
-  # Barcode scanner для сканирования продуктов (работает без Firebase)
   mobile_scanner: ^5.2.3
-  # Supabase для backend (auth, database, storage)
   supabase_flutter: ^2.8.0
-  # Шифрование для хранения токенов
   flutter_secure_storage: ^9.2.2
   muscle_selector: ^1.0.4
-  # Share functionality
   share_plus: ^7.2.2
+  camera: ^0.11.0+2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  flutter_native_splash: ^2.4.6 # опционально, нативный splash
+  flutter_native_splash: ^2.4.6
 
 flutter:
   uses-material-design: true
   generate: true
   assets:
-    #- assets/placeholder/profile.png
     - assets/placeholder/profile.jpg
     - assets/images/champ_avatar.jpg
     - assets/images/gwagon.png
-    - assets/images/muscles/
-    - assets/muscles/
-    - assets/muscles/female/
-    - assets/gifs/motivation/m1.gif
-    - assets/gifs/motivation/m2.gif
     - assets/logo/trainer_mark.png
     - assets/logo/app_logo.png
     - assets/logo/app_logo.jpg
     - secrets.json
-   # - assets/gifs/exercises/squat.gif
+    
+    # --- MUSCLE ASSETS ---
+    # Важно: каждая подпапка должна быть указана отдельно
+    - assets/muscles/ 
+    - assets/muscles/male/   
+    - assets/muscles/female/
+    
+    - assets/gifs/motivation/m1.gif
+    - assets/gifs/motivation/m2.gif
 
 flutter_native_splash:
   color: "#0B0B0F"

@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_tokens.dart';
+import '../../../theme/noir_theme.dart';
+import '../../../widgets/noir_glass_components.dart';
 import '../../../models/meal.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/noir_toast_service.dart';
 
 /// Диалог редактирования блюда из плана холодильника
 class EditFridgeDishDialog extends ConsumerStatefulWidget {
   final Dish dish;
   final Function(Dish updatedDish) onUpdate;
   final VoidCallback onDelete;
-  final Function(String oldDishName) onReplace;
+  final Function(String newDishName) onReplace;
 
   const EditFridgeDishDialog({
     super.key,
@@ -96,158 +99,103 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
     widget.onUpdate(updatedDish);
     Navigator.pop(context);
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Dish updated'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    final l10n = AppLocalizations.of(context)!;
+    NoirToast.success(context, l10n.updated);
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: DesignTokens.error,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    NoirToast.error(context, message);
   }
 
-  void _confirmDelete() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: DesignTokens.surface,
-        title: const Text(
-          'Delete Dish?',
-          style: DesignTokens.h3,
-        ),
-        content: const Text(
-          'Are you sure you want to delete this dish?',
-          style: DesignTokens.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: DesignTokens.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Закрываем confirm dialog
-              Navigator.pop(context); // Закрываем edit dialog
-              widget.onDelete();
-              
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Dish deleted'),
-                  backgroundColor: Colors.orange,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: DesignTokens.error),
-            ),
-          ),
-        ],
-      ),
+  void _confirmDelete() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await NoirGlassDialog.showConfirmation(
+      context,
+      title: l10n.deletePhotoConfirm,
+      content: l10n.actionCannotBeUndone,
+      icon: Icons.delete_rounded,
+      confirmText: l10n.delete,
+      cancelText: l10n.cancel,
+      isDestructive: true,
     );
+    
+    if (confirmed == true && mounted) {
+      Navigator.pop(context); // Закрываем edit dialog
+      widget.onDelete();
+      
+      NoirToast.info(context, l10n.deleted);
+    }
   }
 
   void _showReplaceDialog() {
     final replaceController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: DesignTokens.surface,
-        title: Text(
-          'Replace Dish',
-          style: DesignTokens.h3,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Enter the name of the new dish to replace "${widget.dish.name}"',
-              style: DesignTokens.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: replaceController,
-              style: const TextStyle(color: DesignTokens.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'New dish name',
-                hintStyle: TextStyle(color: DesignTokens.textSecondary),
-                filled: true,
-                fillColor: DesignTokens.cardSurface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (ctx) => NoirGlassDialog(
+        title: l10n.replaceDish,
+        content: '${l10n.enterNewDishName} "${widget.dish.name}"',
+        icon: Icons.swap_horiz_rounded,
+        contentWidget: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: TextField(
+            controller: replaceController,
+            style: TextStyle(color: kContentHigh),
+            decoration: InputDecoration(
+              hintText: l10n.newDishName,
+              hintStyle: TextStyle(color: kContentLow),
+              filled: true,
+              fillColor: kNoirBlack,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(kRadiusMD),
+                borderSide: BorderSide(color: kBorderLight),
               ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(kRadiusMD),
+                borderSide: BorderSide(color: kBorderLight),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(kRadiusMD),
+                borderSide: const BorderSide(color: kContentHigh),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
-          ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: DesignTokens.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final newDishName = replaceController.text.trim();
-              if (newDishName.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a dish name'),
-                    backgroundColor: DesignTokens.error,
-                  ),
-                );
-                return;
-              }
-              
-              Navigator.pop(context); // Закрываем replace dialog
-              Navigator.pop(context); // Закрываем edit dialog
-              widget.onReplace(widget.dish.name);
-              
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Replacement requested'),
-                  backgroundColor: Colors.blue,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            child: const Text(
-              'Replace',
-              style: TextStyle(color: Colors.blue),
-            ),
-          ),
-        ],
+        confirmText: l10n.replace,
+        cancelText: l10n.cancel,
+        onCancel: () => Navigator.pop(ctx),
+        onConfirm: () {
+          final newDishName = replaceController.text.trim();
+          if (newDishName.isEmpty) {
+            NoirToast.error(context, l10n.enterDishName);
+            return;
+          }
+          
+          Navigator.pop(ctx); // Закрываем replace dialog
+          Navigator.pop(context); // Закрываем edit dialog
+          widget.onReplace(newDishName);
+          
+          NoirToast.success(context, l10n.updated);
+        },
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Dialog(
-      backgroundColor: DesignTokens.surface,
+      backgroundColor: kNoirGraphite,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(kRadiusXL),
       ),
-      child: SingleChildScrollView(
+      child: Material(
+        color: Colors.transparent,
+        child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -259,16 +207,16 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Edit Dish',
-                      style: DesignTokens.h2.copyWith(
-                        fontSize: 22,
+                      l10n.editDish,
+                      style: kNoirTitleMedium.copyWith(
                         fontWeight: FontWeight.w700,
+                        color: kContentHigh,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: DesignTokens.textSecondary),
+                    icon: const Icon(Icons.close, color: kContentMedium),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -280,7 +228,7 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
               // Поле названия
               _buildTextField(
                 controller: _nameController,
-                label: 'Dish Name',
+                label: l10n.dishName,
                 icon: Icons.restaurant_menu,
                 keyboardType: TextInputType.text,
               ),
@@ -290,7 +238,7 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
               // Калории
               _buildTextField(
                 controller: _caloriesController,
-                label: 'Calories (kcal)',
+                label: '${l10n.calories} (${l10n.kcal})',
                 icon: Icons.local_fire_department,
                 keyboardType: TextInputType.number,
               ),
@@ -300,7 +248,7 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
               // Белки
               _buildTextField(
                 controller: _proteinController,
-                label: 'Protein (g)',
+                label: '${l10n.protein} (${l10n.grams})',
                 icon: Icons.egg_outlined,
                 keyboardType: TextInputType.number,
               ),
@@ -310,7 +258,7 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
               // Жиры
               _buildTextField(
                 controller: _fatController,
-                label: 'Fat (g)',
+                label: '${l10n.fat} (${l10n.grams})',
                 icon: Icons.water_drop_outlined,
                 keyboardType: TextInputType.number,
               ),
@@ -320,7 +268,7 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
               // Углеводы
               _buildTextField(
                 controller: _carbsController,
-                label: 'Carbs (g)',
+                label: '${l10n.carbs} (${l10n.grams})',
                 icon: Icons.grain,
                 keyboardType: TextInputType.number,
               ),
@@ -331,13 +279,13 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
               OutlinedButton.icon(
                 onPressed: _showReplaceDialog,
                 icon: const Icon(Icons.swap_horiz, size: 20),
-                label: const Text('Replace with another dish'),
+                label: Text(l10n.replaceWithAnotherDish),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                  side: const BorderSide(color: Colors.blue),
+                  foregroundColor: kContentHigh,
+                  side: const BorderSide(color: kContentMedium),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(kRadiusMD),
                   ),
                 ),
               ),
@@ -352,13 +300,13 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
                     child: OutlinedButton.icon(
                       onPressed: _confirmDelete,
                       icon: const Icon(Icons.delete_outline, size: 20),
-                      label: const Text('Delete'),
+                      label: Text(l10n.delete),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: DesignTokens.error,
-                        side: const BorderSide(color: DesignTokens.error),
+                        foregroundColor: const Color(0xFFF87171),
+                        side: const BorderSide(color: Color(0xFFF87171)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(kRadiusMD),
                         ),
                       ),
                     ),
@@ -372,13 +320,13 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
                     child: ElevatedButton.icon(
                       onPressed: _save,
                       icon: const Icon(Icons.check, size: 20),
-                      label: const Text('Save'),
+                      label: Text(l10n.save),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: DesignTokens.textPrimary,
-                        foregroundColor: DesignTokens.bgBase,
+                        backgroundColor: kContentHigh,
+                        foregroundColor: kNoirBlack,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(kRadiusMD),
                         ),
                       ),
                     ),
@@ -388,6 +336,7 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -403,8 +352,8 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
       children: [
         Text(
           label,
-          style: DesignTokens.bodySmall.copyWith(
-            color: DesignTokens.textSecondary,
+          style: kNoirBodySmall.copyWith(
+            color: kContentMedium,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -412,19 +361,16 @@ class _EditFridgeDishDialogState extends ConsumerState<EditFridgeDishDialog> {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: const TextStyle(
-            color: DesignTokens.textPrimary,
-            fontSize: 15,
-          ),
+          style: kNoirBodyMedium.copyWith(color: kContentHigh),
           inputFormatters: keyboardType == TextInputType.number
               ? [FilteringTextInputFormatter.digitsOnly]
               : null,
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: DesignTokens.textSecondary, size: 20),
+            prefixIcon: Icon(icon, color: kContentMedium, size: 20),
             filled: true,
-            fillColor: DesignTokens.cardSurface,
+            fillColor: kNoirBlack,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(kRadiusMD),
               borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

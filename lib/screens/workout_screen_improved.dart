@@ -1,17 +1,24 @@
 // lib/screens/workout_screen_improved.dart
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 
 import '../core/theme.dart';
 import '../core/design_tokens.dart';
+import '../theme/noir_theme.dart';
 import '../state/exercisedb_providers.dart';
 import '../widgets/workout_media.dart';
+import '../widgets/noir_glass_components.dart';
 import '../services/storage_service.dart';
+import '../services/translation_service.dart';
 import '../state/activity_state.dart';
+import '../providers/stats_provider.dart';
+import 'form_check_camera_screen.dart';
 
 class WorkoutScreenImproved extends ConsumerStatefulWidget {
   final String? selectedExercise;
@@ -122,6 +129,7 @@ class _WorkoutScreenImprovedState extends ConsumerState<WorkoutScreenImproved> {
       // Инвалидируем провайдеры для обновления статистики
       ref.invalidate(activityDataProvider);
       ref.invalidate(workoutCountProvider);
+      ref.invalidate(statsProvider); // Refresh profile stats
     } catch (e) {
       if (kDebugMode) print('[Workout] Error saving workout: $e');
     }
@@ -131,19 +139,16 @@ class _WorkoutScreenImprovedState extends ConsumerState<WorkoutScreenImproved> {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: DesignTokens.cardSurface,
-        title: Text(l10n.workoutCompleted, style: DesignTokens.h3),
-        content: Text(l10n.workoutCompletedDesc, style: DesignTokens.bodyMedium),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Закрываем диалог
-              Navigator.pop(context, true); // Возвращаемся с результатом
-            },
-            child: Text(l10n.ok),
-          ),
-        ],
+      barrierColor: Colors.black.withOpacity(0.8),
+      builder: (context) => NoirGlassDialog(
+        title: l10n.workoutCompleted,
+        content: l10n.workoutCompletedDesc,
+        icon: Icons.celebration_rounded,
+        confirmText: l10n.ok,
+        onConfirm: () {
+          Navigator.pop(context); // Закрываем диалог
+          Navigator.pop(context, true); // Возвращаемся с результатом
+        },
       ),
     );
   }
@@ -247,6 +252,43 @@ class _WorkoutScreenImprovedState extends ConsumerState<WorkoutScreenImproved> {
     });
   }
 
+  void _openFormCheck() async {
+    HapticFeedback.mediumImpact();
+    
+    // Save current state and pause workout
+    final wasRunning = _running;
+    final savedSeconds = _seconds;
+    final savedWorkPhase = _workPhase;
+    
+    if (_running) {
+      _timer?.cancel();
+      setState(() => _running = false);
+    }
+    
+    // Navigate to form check and wait for return
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FormCheckCameraScreen(
+          exerciseName: TranslationService.translateExercise(_plan[_currentIdx], context),
+          exerciseId: null,
+        ),
+      ),
+    );
+    
+    // Restore state when returning
+    if (mounted) {
+      setState(() {
+        _seconds = savedSeconds;
+        _workPhase = savedWorkPhase;
+        _total = savedWorkPhase ? _workTime : _restTime;
+      });
+      
+      // Optionally resume if was running (user can manually resume)
+      // Not auto-resuming to let user prepare
+    }
+  }
+
   void _goToPrevious() {
     if (_currentIdx > 0) {
       _timer?.cancel();
@@ -276,31 +318,7 @@ class _WorkoutScreenImprovedState extends ConsumerState<WorkoutScreenImproved> {
   }
 
   String _getLocalizedExerciseName(String name) {
-    // Simple map for common exercises
-    final map = {
-      'barbell squat': 'Приседания со штангой',
-      'push up': 'Отжимания',
-      'barbell bench press': 'Жим лежа',
-      'lateral raise': 'Махи гантелями в стороны',
-      'cable lateral raise': 'Махи в кроссовере',
-      'pull up': 'Подтягивания',
-      'dumbbell shoulder press': 'Жим гантелей сидя',
-      'dumbbell bicep curl': 'Сгибание на бицепс',
-      'tricep pushdown': 'Разгибание на трицепс',
-      'leg press': 'Жим ногами',
-      'leg extension': 'Разгибание ног',
-      'leg curl': 'Сгибание ног',
-      'crunch': 'Скручивания',
-      'plank': 'Планка',
-    };
-    
-    // If localized name exists and locale is Russian, return it
-    final locale = Localizations.localeOf(context).languageCode;
-    if (locale == 'ru' && map.containsKey(name.toLowerCase())) {
-      return map[name.toLowerCase()]!;
-    }
-    
-    return name;
+    return TranslationService.translateExercise(name, context);
   }
 
   @override
@@ -443,6 +461,24 @@ class _WorkoutScreenImprovedState extends ConsumerState<WorkoutScreenImproved> {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              // Check Form Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _openFormCheck,
+                  icon: const Icon(Icons.videocam_rounded, size: 18),
+                  label: Text(l10n.checkForm),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: kContentHigh,
+                    side: BorderSide(color: kBorderLight),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -479,116 +515,148 @@ class _WorkoutSetupDialogState extends State<_WorkoutSetupDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      backgroundColor: DesignTokens.cardSurface,
-      title: Text('⚙️ ${l10n.workoutSettingsTitle}', style: DesignTokens.h3),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.workoutSettingsSubtitle,
-            style: const TextStyle(fontSize: 14, color: DesignTokens.textSecondary),
-          ),
-          const SizedBox(height: 24),
-          
-          // Время упражнения
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l10n.exerciseLabel, style: DesignTokens.bodyMedium),
-              Row(
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(kRadiusXL),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(kSpaceLG),
+            decoration: BoxDecoration(
+              color: kNoirGraphite.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(kRadiusXL),
+              border: Border.all(color: kNoirSteel.withOpacity(0.5)),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    onPressed: () {
-                      if (_workTime > 10) {
-                        setState(() => _workTime -= 5);
-                      }
-                    },
-                    icon: const Icon(Icons.remove_circle_outline, color: DesignTokens.textPrimary),
-                  ),
-                  SizedBox(
-                    width: 60,
-                    child: Text(
-                      '$_workTime ${l10n.seconds}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: DesignTokens.textPrimary,
+                  // Title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.settings_rounded, color: kContentHigh, size: 24),
+                      const SizedBox(width: kSpaceSM),
+                      Text(
+                        l10n.workoutSettingsTitle,
+                        style: kNoirTitleMedium.copyWith(color: kContentHigh, fontWeight: FontWeight.w600),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
+                    ],
                   ),
-                  IconButton(
-                    onPressed: () {
-                      if (_workTime < 300) {
-                        setState(() => _workTime += 5);
-                      }
-                    },
-                    icon: const Icon(Icons.add_circle_outline, color: DesignTokens.textPrimary),
+                  const SizedBox(height: kSpaceSM),
+                  Text(
+                    l10n.workoutSettingsSubtitle,
+                    style: kNoirBodySmall.copyWith(color: kContentMedium),
+                  ),
+                  const SizedBox(height: kSpaceLG),
+                  
+                  // Время упражнения
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(l10n.exerciseLabel, style: kNoirBodyMedium.copyWith(color: kContentHigh)),
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              if (_workTime > 10) setState(() => _workTime -= 5);
+                            },
+                            icon: Icon(Icons.remove_circle_outline, color: kContentMedium),
+                          ),
+                          SizedBox(
+                            width: 70,
+                            child: Text(
+                              '$_workTime ${l10n.seconds}',
+                              style: kNoirTitleSmall.copyWith(color: kContentHigh, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              if (_workTime < 300) setState(() => _workTime += 5);
+                            },
+                            icon: Icon(Icons.add_circle_outline, color: kContentMedium),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: kSpaceMD),
+                  
+                  // Время отдыха
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(l10n.restLabel, style: kNoirBodyMedium.copyWith(color: kContentHigh)),
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              if (_restTime > 5) setState(() => _restTime -= 5);
+                            },
+                            icon: Icon(Icons.remove_circle_outline, color: kContentMedium),
+                          ),
+                          SizedBox(
+                            width: 70,
+                            child: Text(
+                              '$_restTime ${l10n.seconds}',
+                              style: kNoirTitleSmall.copyWith(color: kContentHigh, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              if (_restTime < 180) setState(() => _restTime += 5);
+                            },
+                            icon: Icon(Icons.add_circle_outline, color: kContentMedium),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: kSpaceLG),
+                  
+                  // Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: kContentMedium,
+                            padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                          ),
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                      const SizedBox(width: kSpaceMD),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context, {'workTime': _workTime, 'restTime': _restTime});
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kContentHigh,
+                            foregroundColor: kNoirBlack,
+                            padding: const EdgeInsets.symmetric(vertical: kSpaceMD),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMD)),
+                          ),
+                          child: Text(l10n.start, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Время отдыха
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l10n.restLabel, style: DesignTokens.bodyMedium),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      if (_restTime > 5) {
-                        setState(() => _restTime -= 5);
-                      }
-                    },
-                    icon: const Icon(Icons.remove_circle_outline, color: DesignTokens.textPrimary),
-                  ),
-                  SizedBox(
-                    width: 60,
-                    child: Text(
-                      '$_restTime ${l10n.seconds}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: DesignTokens.textPrimary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      if (_restTime < 180) {
-                        setState(() => _restTime += 5);
-                      }
-                    },
-                    icon: const Icon(Icons.add_circle_outline, color: DesignTokens.textPrimary),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () {
-            Navigator.pop(context, {
-              'workTime': _workTime,
-              'restTime': _restTime,
-            });
-          },
-          child: Text(l10n.start),
-        ),
-      ],
     );
   }
 }

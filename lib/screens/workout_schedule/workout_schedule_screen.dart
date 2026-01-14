@@ -6,9 +6,13 @@ import '../../models/workout_day.dart';
 import '../../models/exercise.dart';
 import '../../models/muscle_group.dart';
 import '../../services/workout_repository.dart';
+import '../../services/noir_toast_service.dart';
+import '../../services/storage_service.dart';
+import '../../services/translation_service.dart';
 import '../../theme/tokens.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_alert.dart';
+import '../../widgets/navigation/navigation.dart';
 import '../workout_screen_improved.dart';
 import '../ai_chat_screen.dart';
 import 'customize_workout_screen.dart';
@@ -50,10 +54,32 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
       final now = DateTime.now();
       final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
       
+      // Сначала проверяем локальные флаги
       for (int i = 0; i < 7; i++) {
         final date = startOfWeek.add(Duration(days: i));
         final dateKey = '${date.year}-${date.month}-${date.day}';
         _completedDays[i] = prefs.getBool('workout_completed_${userId}_$dateKey') ?? false;
+      }
+      
+      // Дополнительно проверяем сохранённые workout sessions
+      final sessions = await StorageService.getWorkoutSessions();
+      for (final session in sessions) {
+        final sessionDateStr = session['date'] as String?;
+        if (sessionDateStr != null && session['completed'] == 1) {
+          final sessionDate = DateTime.tryParse(sessionDateStr);
+          if (sessionDate != null) {
+            // Проверяем, попадает ли сессия в текущую неделю
+            for (int i = 0; i < 7; i++) {
+              final weekDate = startOfWeek.add(Duration(days: i));
+              if (sessionDate.year == weekDate.year &&
+                  sessionDate.month == weekDate.month &&
+                  sessionDate.day == weekDate.day) {
+                _completedDays[i] = true;
+                break;
+              }
+            }
+          }
+        }
       }
       
       if (mounted) setState(() {});
@@ -248,7 +274,7 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
             
             // Current Day Title
             Text(
-              _currentDay.title,
+              TranslationService.translateWorkoutType(_currentDay.title, context),
               style: TextStyle(
                 color: kTextPrimary,
                 fontSize: 24,
@@ -433,6 +459,9 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
             ),
             
             const SizedBox(height: 24),
+            
+            // Spacer for floating nav bar clearance
+            SizedBox(height: NoirGlassScrollPadding.navBarPadding(context).bottom),
           ],
         ),
       ),
@@ -578,27 +607,13 @@ class _WorkoutScheduleScreenState extends State<WorkoutScheduleScreen> with Auto
       await _repository.updateDay(updatedDay);
       
       // Показываем успешное сохранение
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.workoutUpdated),
-          backgroundColor: T.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
+      if (mounted) {
+        NoirToast.success(context, AppLocalizations.of(context)!.workoutUpdated);
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.failedToUpdateWorkout),
-          backgroundColor: T.muscle,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
+      if (mounted) {
+        NoirToast.error(context, AppLocalizations.of(context)!.failedToUpdateWorkout);
+      }
     }
   }
 }

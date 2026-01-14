@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../services/storage_service.dart';
 import '../services/profile_service.dart';
@@ -77,8 +78,12 @@ class UserNotifier extends StateNotifier<UserModel?> {
     if (!SupabaseConfig.isAuthenticated || state == null) return;
     
     try {
+      // CRITICAL: Always include email to satisfy NOT NULL constraint
+      final currentEmail = Supabase.instance.client.auth.currentUser?.email;
+      
       // Only sync fields that exist in Supabase profiles table
       await _profileService.upsertProfile({
+        'email': currentEmail ?? state!.email, // Email is required!
         'name': state!.name,
         'gender': state!.gender,
         'age': state!.age,

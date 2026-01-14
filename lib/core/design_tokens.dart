@@ -1,70 +1,105 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Trainer#1 Design System — Futuristic Luxury Tech
-/// Black + Chrome + Neon Turquoise aesthetic
-/// Inspiration: Apple Design, Mercedes G-Class, premium gym architecture
+/// Trainer#1 Design System — "Liquid Glass" iOS 26 Aesthetic
+/// Electric Blue + Neon Cyan + Deep OLED Black
+/// Inspiration: visionOS, iOS 19, Apple Human Interface Guidelines 2025
 class DesignTokens {
-  // ===== TRAINER#1 COLOR PALETTE =====
+  // ===== LIQUID GLASS COLOR PALETTE =====
   
-  /// Base colors (Pure Black & Gray Theme)
-  static const Color bgBase = Color(0xFF000000);        // Pure black
-  static const Color surface = Color(0xFF1A1A1A);       // Dark gray surface
-  static const Color cardSurface = Color(0xFF2A2A2A);   // Elevated gray
+  /// Base colors (Deep OLED Black with Blue tints)
+  static const Color bgBase = Color(0xFF000000);        // Pure OLED black
+  static const Color midnightBlue = Color(0xFF050A14);  // Deep midnight blue
+  static const Color surface = Color(0xFF0A1628);       // Deep space surface
+  static const Color cardSurface = Color(0xFF101B2E);   // Nebula card surface
   
-  /// Accent colors (White only - NO green!)
-  static const Color primaryAccent = Color(0xFFFFFFFF);  // Pure white
-  static const Color secondaryAccent = Color(0xFFB3B3B3); // Light gray
-  static const Color goldAccent = Color(0xFFFFFFFF);     // Pure white
-  static const Color chromeAccent = Color(0xFFFFFFFF);   // Pure white
+  /// Primary Accent — Electric Blue to Neon Cyan
+  static const Color primaryAccent = Color(0xFF2E5CFF);  // Electric Blue
+  static const Color secondaryAccent = Color(0xFF00F0FF); // Neon Cyan
+  static const Color tertiaryAccent = Color(0xFF7B2FFF); // Deep Violet
   
-  /// Status colors
-  static const Color success = Color(0xFF4CAF50);       // Green success
-  static const Color warning = Color(0xFFFF9800);       // Orange warning
-  static const Color error = Color(0xFFFF5252);         // Red error
-  static const Color info = Color(0xFF00D9A3);          // Turquoise info
+  /// Gradient colors
+  static const Color electricBlue = Color(0xFF2E5CFF);  // Primary gradient start
+  static const Color royalBlue = Color(0xFF3D7AFF);     // Mid blue
+  static const Color skyBlue = Color(0xFF5B9FFF);       // Light blue
+  static const Color neonCyan = Color(0xFF00F0FF);      // Primary gradient end
+  static const Color iceCyan = Color(0xFF7DF9FF);       // Subtle cyan
+  static const Color deepViolet = Color(0xFF7B2FFF);    // Secondary accent
   
-  /// Text colors (per Trainer#1.md)
-  static const Color textPrimary = Color(0xFFFFFFFF);   // Main text white
-  static const Color textSecondary = Color(0xFFB3B3B3); // Subtext gray
-  static const Color textTertiary = Color(0x99FFFFFF);  // 60% opacity
-  static const Color textDisabled = Color(0x66FFFFFF);  // 40% opacity
+  /// Status colors (Neon glow variants)
+  static const Color success = Color(0xFF00FF88);       // Neon green
+  static const Color warning = Color(0xFFFFAA00);       // Neon orange
+  static const Color error = Color(0xFFFF3366);         // Neon red/pink
+  static const Color info = Color(0xFF00F0FF);          // Neon cyan (same as secondary)
   
-  /// Glass overlay (20% transparency, 8px blur per Trainer#1)
-  static const Color glassOverlay = Color(0x33FFFFFF); // 20% white
-  static const double glassBlur = 8.0;                 // 8px blur
-  static const Color glassBorder = Color(0x1AFFFFFF);  // 10% white chrome edge
+  /// Text colors (Blue-grey scale, NOT standard grey)
+  static const Color textPrimary = Color(0xFFFFFFFF);   // Pure white
+  static const Color textSecondary = Color(0xFFAAB8D0); // Blue-grey
+  static const Color textTertiary = Color(0xFF6B7A94);  // Subtle blue-grey
+  static const Color textDisabled = Color(0xFF3A4A64);  // Dark blue-grey
   
-  // ===== GRADIENTS =====
+  /// Glassmorphism tokens (enhanced for iOS 26 feel)
+  static const Color glassOverlay = Color(0x14FFFFFF);  // 8% white
+  static const double glassBlur = 20.0;                 // 20px blur for premium effect
+  static const Color glassBorder = Color(0x1AFFFFFF);   // 10% white rim light
   
-  /// Neon turquoise to pink glow
+  // ===== GRADIENTS — Liquid Glass Blue/Cyan =====
+  
+  /// Primary gradient — Electric Blue to Neon Cyan
   static const LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primaryAccent, secondaryAccent],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [electricBlue, neonCyan],
   );
   
-  /// Pure dark gradient (black to gray)
+  /// Secondary gradient — Deep Violet to Electric Blue
+  static const LinearGradient secondaryGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [deepViolet, electricBlue],
+  );
+  
+  /// Holographic gradient — full spectrum
+  static const LinearGradient holographicGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [deepViolet, electricBlue, neonCyan],
+    stops: [0.0, 0.5, 1.0],
+  );
+  
+  /// Deep background gradient (dark blue/black mesh)
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0xFF000000),  // Pure black
-      Color(0xFF0A0A0A),  // Very dark gray
-      Color(0xFF1A1A1A),  // Dark gray
+      Color(0xFF050A14),  // Midnight blue
+      Color(0xFF000000),  // OLED black
+      Color(0xFF020810),  // Deep space
     ],
-    stops: [0.0, 0.5, 1.0],
+    stops: [0.0, 0.6, 1.0],
   );
   
-  /// Glassmorphic card gradient
+  /// Glassmorphic card gradient (white with low opacity)
   static const LinearGradient cardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0x33FFFFFF), // 20% white
       Color(0x14FFFFFF), // 8% white
+      Color(0x08FFFFFF), // 3% white
     ],
   );
+  
+  /// Glow gradient for active elements
+  static RadialGradient glowGradient(Color color, {double opacity = 0.3}) {
+    return RadialGradient(
+      center: Alignment.center,
+      radius: 1.0,
+      colors: [
+        color.withOpacity(opacity),
+        Colors.transparent,
+      ],
+    );
+  }
   
   // ===== TYPOGRAPHY =====
   
